@@ -1,0 +1,48 @@
+"use client";
+
+import { useId } from "react";
+import { cx } from "@/lib/cx";
+import { type Finish, FINISHES } from "@/lib/preferences";
+import { usePreferences } from "@/lib/stores/preferences";
+
+interface FinishSwatchesProps {
+  /** Called after the finish changes, e.g. to fire an Island activity (Part 4). */
+  onChange?: (finish: Finish) => void;
+  /** Hide the names and keep them for screen readers only. */
+  compact?: boolean;
+  className?: string;
+}
+
+/**
+ * The finish picker (DESIGN.md §4.3), like a product's color options. Each swatch is
+ * drawn by its own data-finish, so it shows that accent in the current tone. A radio
+ * group: arrow keys move between finishes. Part 5 and Search reuse it.
+ */
+export function FinishSwatches({ onChange, compact, className }: FinishSwatchesProps) {
+  const name = useId();
+  const finish = usePreferences((state) => state.finish);
+  const setFinish = usePreferences((state) => state.setFinish);
+
+  return (
+    <fieldset className={cx("flex flex-wrap items-center gap-x-4 gap-y-2", className)}>
+      <legend className="sr-only">Finish</legend>
+      {FINISHES.map((option) => (
+        <label key={option.id} className="inline-flex min-h-target cursor-pointer items-center gap-2">
+          <input
+            type="radio"
+            name={name}
+            value={option.id}
+            checked={finish === option.id}
+            onChange={() => {
+              setFinish(option.id);
+              onChange?.(option.id);
+            }}
+            className="peer sr-only"
+          />
+          <span data-finish={option.id} aria-hidden="true" className="swatch" />
+          <span className={cx("text-caption font-semibold text-fg", compact && "sr-only")}>{option.name}</span>
+        </label>
+      ))}
+    </fieldset>
+  );
+}

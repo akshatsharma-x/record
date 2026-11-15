@@ -1,11 +1,15 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 3100;
+const PRODUCTION = 3100;
+const DEVELOPMENT = 3220;
+const production = `http://localhost:${PRODUCTION}`;
+const development = `http://localhost:${DEVELOPMENT}`;
 
 /**
- * End-to-end tests run against a production build (`next build` + `next start`), Safari
- * first (DESIGN.md §2 rule 8). The server is never reused, so a test can't accidentally
- * hit some other app on the same port.
+ * End-to-end tests, Safari first (DESIGN.md §2 rule 8). Site tests run against a
+ * production build. The kitchen exists only under `next dev`, so its tests get a dev
+ * server of their own. Servers are never reused, so a test can't hit some other app on
+ * the same port.
  */
 export default defineConfig({
   testDir: "tests/e2e",
@@ -13,19 +17,26 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
-  use: {
-    baseURL: `http://localhost:${PORT}`,
-    trace: "on-first-retry",
-  },
+  use: { trace: "on-first-retry" },
   projects: [
-    { name: "webkit", use: { ...devices["Desktop Safari"] } },
-    { name: "mobile-safari", use: { ...devices["iPhone 15"] } },
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "webkit", testIgnore: /kitchen/, use: { ...devices["Desktop Safari"], baseURL: production } },
+    { name: "mobile-safari", testIgnore: /kitchen/, use: { ...devices["iPhone 15"], baseURL: production } },
+    { name: "chromium", testIgnore: /kitchen/, use: { ...devices["Desktop Chrome"], baseURL: production } },
+    { name: "kitchen-webkit", testMatch: /kitchen\.spec/, use: { ...devices["Desktop Safari"], baseURL: development } },
+    { name: "kitchen-chromium", testMatch: /kitchen\.spec/, use: { ...devices["Desktop Chrome"], baseURL: development } },
   ],
-  webServer: {
-    command: `npm run build && npm run start -- --port ${PORT}`,
-    url: `http://localhost:${PORT}`,
-    reuseExistingServer: false,
-    timeout: 240_000,
-  },
+  webServer: [
+    {
+      command: `npm run build && npm run start -- --port ${PRODUCTION}`,
+      url: production,
+      reuseExistingServer: false,
+      timeout: 240_000,
+    },
+    {
+      command: `npx next dev --port ${DEVELOPMENT}`,
+      url: `${development}/dev/kitchen`,
+      reuseExistingServer: false,
+      timeout: 240_000,
+    },
+  ],
 });

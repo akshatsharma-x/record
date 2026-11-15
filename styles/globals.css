@@ -1,15 +1,309 @@
 @import "tailwindcss";
+@import "./tokens.css";
+@import "./components.css";
 
 /*
- * Part 1 baseline. Part 2 replaces it with the tokens in DESIGN.md §4.
- * Until then the page uses the system font stack from §4.4 (Inter joins in Part 2) and
- * the browser's own light and dark colors, so nothing here is a magic number.
+ * Global styles. Every value comes from styles/tokens.css; nothing here is a raw color,
+ * size or duration.
  */
-@theme {
-  --font-sans: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-mono: ui-monospace, monospace;
+
+/* ─── State variants ──────────────────────────────────────────────────────── */
+
+/* Each interactive state also answers to data-force, so /dev/kitchen can show hover,
+   pressed and focus side by side without anyone touching them. Components use these
+   instead of Tailwind's plain hover: and active: variants. */
+@custom-variant hover-state {
+  @media (hover: hover) {
+    &:hover {
+      @slot;
+    }
+  }
+  &[data-force~="hover"] {
+    @slot;
+  }
 }
 
-:root {
-  color-scheme: light dark;
+@custom-variant pressed-state {
+  &:active {
+    @slot;
+  }
+  &[data-force~="pressed"] {
+    @slot;
+  }
+}
+
+@custom-variant reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) & {
+      @slot;
+    }
+  }
+  :root[data-motion="reduce"] & {
+    @slot;
+  }
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-fg);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    letter-spacing: var(--text-body--letter-spacing);
+    /* §4.4: hanging punctuation (Safari), balanced headlines, pretty paragraphs. */
+    hanging-punctuation: first;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  dd,
+  figcaption,
+  blockquote {
+    text-wrap: pretty;
+  }
+
+  /* §6.4: a 3px accent ring at a 2px offset that follows the element's radius. It shows on
+     every keyboard focus and is never removed. */
+  :focus-visible,
+  [data-force~="focus"] {
+    outline: var(--focus-ring-width) solid var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* Selection: the accent at 25%. */
+  ::selection {
+    background-color: var(--color-selection);
+  }
+
+  /* Surfaces (§4.2). A section paints its own surface, so the page reads correctly with
+     no JavaScript and with reduced motion. While the surface controller runs, top-level
+     sections turn transparent and its fixed backdrop crossfades between them. */
+  [data-surface] {
+    background-color: var(--color-surface);
+    color: var(--color-fg);
+  }
+
+  [data-surface-controller] [data-section] {
+    background-color: transparent;
+  }
+
+  /* Lucide icons at a 1.5px stroke (§4.10). */
+  .lucide {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    flex-shrink: 0;
+    stroke-width: var(--icon-stroke);
+  }
+
+  /* Continuous corners where the browser supports them (§4.6). */
+  @supports (corner-shape: squircle) {
+    * {
+      corner-shape: squircle;
+    }
+
+    /* Capsules keep round ends. */
+    .rounded-pill,
+    .segmented,
+    .segmented-thumb,
+    .segmented > label,
+    .swatch {
+      corner-shape: round;
+    }
+  }
+
+  /* Revealed content (the Resolve, the Counter) is hidden only while a script can reveal
+     it, so it always reads without JavaScript, and it shows anyway if the reveal never runs. */
+  @media (scripting: enabled) {
+    [data-resolve]:not([data-resolved]) {
+      opacity: 0;
+    }
+
+    /* data-armed: a script has taken charge, so the failsafe stands down. */
+    [data-resolve]:not([data-resolved], [data-armed]) {
+      animation: reveal-failsafe var(--duration-instant) var(--reveal-failsafe) forwards;
+    }
+  }
+
+  /* With reduced motion the Resolve is a fade (§5.7). */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) [data-resolve] {
+      transition: opacity var(--motion-resolve-duration) var(--ease-out);
+    }
+  }
+
+  :root[data-motion="reduce"] [data-resolve] {
+    transition: opacity var(--motion-resolve-duration) var(--ease-out);
+  }
+
+  @keyframes reveal-failsafe {
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/* ─── Theme switching ─────────────────────────────────────────────────────── */
+
+/* The View Transition reveals the new theme in a circle from the click point
+   (lib/theme.ts runs the clip-path animation). The browser's default crossfade is off. */
+html[data-theme-switching]::view-transition-old(root),
+html[data-theme-switching]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Without View Transitions, colors crossfade instead. */
+html[data-theme-fading] *,
+html[data-theme-fading] *::before,
+html[data-theme-fading] *::after {
+  transition-property: background-color, color, border-color, outline-color, fill, stroke, box-shadow !important;
+  transition-duration: var(--duration-micro) !important;
+  transition-timing-function: var(--ease-in-out) !important;
+}
+
+/* An open modal dialog keeps the page behind it still. */
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+/* ─── Utilities ───────────────────────────────────────────────────────────── */
+
+/* One gradient-filled word per section at most (§4.4). The second stop matches the
+   accent's luminance, so the gradient passes the same contrast test as the accent. */
+@utility text-gradient {
+  background-image: linear-gradient(var(--gradient-angle), var(--color-accent), var(--color-accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+
+  &::selection {
+    color: var(--color-fg);
+    -webkit-text-fill-color: var(--color-fg);
+  }
+
+  @media (forced-colors: active) {
+    background-image: none;
+    color: CanvasText;
+  }
+}
+
+/* Glass (§4.7): translucent, saturated and blurred, with a 1px specular rim and no heavy
+   shadow. It turns solid for reduced transparency, increased contrast and forced colors. */
+@utility material-glass {
+  background-color: var(--color-glass);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow:
+    inset 0 var(--hairline-width) 0 var(--color-glass-rim-top),
+    inset 0 calc(-1 * var(--hairline-width)) 0 var(--color-glass-rim-bottom);
+
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    background-color: var(--color-glass-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  @media (forced-colors: active) {
+    background-color: Canvas;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    border: var(--hairline-width) solid CanvasText;
+  }
+}
+
+/* §6.5: pressing scales to .97 on the snappy spring, which overshoots slightly on release. */
+@utility pressable {
+  transition:
+    transform var(--duration-spring-snappy) var(--ease-spring-snappy),
+    color var(--duration-micro) var(--ease-out),
+    background-color var(--duration-micro) var(--ease-out),
+    border-color var(--duration-micro) var(--ease-out),
+    box-shadow var(--duration-micro) var(--ease-out);
+
+  &:active:not(:disabled, [aria-disabled="true"]),
+  &[data-force~="pressed"] {
+    transform: scale(var(--motion-press-scale));
+  }
+}
+
+/* A hit area of at least 44×44 around a small target, such as a footnote superscript. */
+@utility hit-area {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, var(--target-min));
+    height: max(100%, var(--target-min));
+    translate: -50% -50%;
+  }
+}
+
+/* Durations and layers, named like their tokens: duration-ui uses --duration-ui. */
+@utility duration-micro-short {
+  transition-duration: var(--duration-micro-short);
+}
+@utility duration-micro {
+  transition-duration: var(--duration-micro);
+}
+@utility duration-ui {
+  transition-duration: var(--duration-ui);
+}
+@utility duration-ui-long {
+  transition-duration: var(--duration-ui-long);
+}
+@utility duration-reveal-short {
+  transition-duration: var(--duration-reveal-short);
+}
+@utility duration-reveal {
+  transition-duration: var(--duration-reveal);
+}
+@utility duration-reveal-long {
+  transition-duration: var(--duration-reveal-long);
+}
+
+@utility layer-backdrop {
+  z-index: var(--layer-backdrop);
+}
+@utility layer-stage {
+  z-index: var(--layer-stage);
+}
+@utility layer-content {
+  z-index: var(--layer-content);
+}
+@utility layer-sticky {
+  z-index: var(--layer-sticky);
+}
+@utility layer-island {
+  z-index: var(--layer-island);
+}
+@utility layer-overlay {
+  z-index: var(--layer-overlay);
+}
+@utility layer-cursor {
+  z-index: var(--layer-cursor);
 }

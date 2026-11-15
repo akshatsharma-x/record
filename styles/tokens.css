@@ -1,0 +1,474 @@
+/*
+ * CLASSYFOLIO tokens (DESIGN.md §4–§5). Every color, size, radius, shadow, layer, curve
+ * and duration on the site is defined here, once. Components only reference tokens:
+ * tests/unit/tokens-only.test.ts fails on raw values, tests/unit/contrast.test.ts proves
+ * every text pair passes WCAG AA, and tests/unit/motion.test.ts keeps the motion tokens
+ * in step with lib/motion.ts.
+ *
+ *   1. Palette: raw values, named by what they are
+ *   2. Finishes: the accent channels, set by data-finish on <html>
+ *   3. Tones: the semantic tokens components use (--color-fg, --color-accent …)
+ *   4. Themes and surfaces: which tone and background each context gets
+ *   5. Space, layout, layers and motion
+ *   6. Reduced motion and other preferences
+ *   7. Tailwind's @theme: the same tokens, under the names its utilities use
+ *
+ * Contexts: data-theme="light|dark" and data-finish on <html>; data-surface="light|
+ * light-alt|dark" on sections; data-tone="light|dark" for a local override; and, while the
+ * surface controller runs, data-surface-active on <html>, which sets the text tokens of
+ * every section at once (DESIGN.md §4.2).
+ */
+
+/* ─── 1. Palette ──────────────────────────────────────────────────────────── */
+
+:root {
+  /* Neutrals, light (§4.1). fg-3 is for large text (24px and up) and decoration only. */
+  --neutral-light-bg: #ffffff;
+  --neutral-light-bg-alt: #f5f5f7;
+  --neutral-light-fg: #1d1d1f;
+  --neutral-light-fg-2: #6e6e73;
+  --neutral-light-fg-3: #86868b;
+  --neutral-light-hairline: rgb(0 0 0 / 0.08);
+  --neutral-light-card: #ffffff;
+
+  /* Neutrals, dark (§4.1). */
+  --neutral-dark-bg: #000000;
+  --neutral-dark-bg-alt: #0e0e10;
+  --neutral-dark-fg: #f5f5f7;
+  --neutral-dark-fg-2: #a1a1a6;
+  --neutral-dark-fg-3: #86868b;
+  --neutral-dark-hairline: rgb(255 255 255 / 0.12);
+  --neutral-dark-card: #1c1c1e;
+
+  /* Finishes (§4.3): accent on light and on dark, plus each gradient's second stop, which
+     matches its accent's luminance so the gradient keeps the accent's contrast. */
+  --finish-contrail-on-light: #0066cc;
+  --finish-contrail-on-dark: #2997ff;
+  --finish-contrail-2-on-light: #7153ca;
+  --finish-contrail-2-on-dark: #9483ff;
+  --finish-pink-city-on-light: #c2416b;
+  --finish-pink-city-on-dark: #ff7aa2;
+  --finish-pink-city-2-on-light: #c34817;
+  --finish-pink-city-2-on-dark: #ff825b;
+  --finish-saffron-on-light: #ab5a00;
+  --finish-saffron-on-dark: #ffb340;
+  --finish-saffron-2-on-light: #b54f4f;
+  --finish-saffron-2-on-dark: #feaf96;
+  --finish-monsoon-on-light: #00796b;
+  --finish-monsoon-on-dark: #4fd1c5;
+  --finish-monsoon-2-on-light: #06768a;
+  --finish-monsoon-2-on-dark: #59cbef;
+
+  /* Labels on accent fills. Fills always use the on-light accent, which carries white text. */
+  --on-accent: #ffffff;
+
+  /* Segmented-control tracks and thumbs. Labels sit on both, in fg. */
+  --control-light-track: rgb(0 0 0 / 0.06);
+  --control-light-thumb: #ffffff;
+  --control-dark-track: rgb(255 255 255 / 0.1);
+  --control-dark-thumb: rgb(255 255 255 / 0.22);
+
+  /* Materials (§4.7). */
+  --glass-light: rgb(255 255 255 / 0.72);
+  --glass-light-rim-top: rgb(255 255 255 / 0.7);
+  --glass-light-rim-bottom: rgb(0 0 0 / 0.05);
+  --glass-dark: rgb(28 28 30 / 0.72);
+  --glass-dark-rim-top: rgb(255 255 255 / 0.14);
+  --glass-dark-rim-bottom: rgb(0 0 0 / 0.32);
+  --glass-filter: saturate(180%) blur(20px);
+
+  /* A photographic shadow color for elevation (§4.8). */
+  --shadow-ink: rgb(0 0 0 / 0.04);
+  --shadow-ink-deep: rgb(0 0 0 / 0.08);
+}
+
+/* ─── 2. Finishes ─────────────────────────────────────────────────────────── */
+
+:root,
+[data-finish="contrail"] {
+  --accent-on-light: var(--finish-contrail-on-light);
+  --accent-on-dark: var(--finish-contrail-on-dark);
+  --accent-2-on-light: var(--finish-contrail-2-on-light);
+  --accent-2-on-dark: var(--finish-contrail-2-on-dark);
+}
+
+[data-finish="pink-city"] {
+  --accent-on-light: var(--finish-pink-city-on-light);
+  --accent-on-dark: var(--finish-pink-city-on-dark);
+  --accent-2-on-light: var(--finish-pink-city-2-on-light);
+  --accent-2-on-dark: var(--finish-pink-city-2-on-dark);
+}
+
+[data-finish="saffron"] {
+  --accent-on-light: var(--finish-saffron-on-light);
+  --accent-on-dark: var(--finish-saffron-on-dark);
+  --accent-2-on-light: var(--finish-saffron-2-on-light);
+  --accent-2-on-dark: var(--finish-saffron-2-on-dark);
+}
+
+[data-finish="monsoon"] {
+  --accent-on-light: var(--finish-monsoon-on-light);
+  --accent-on-dark: var(--finish-monsoon-on-dark);
+  --accent-2-on-light: var(--finish-monsoon-2-on-light);
+  --accent-2-on-dark: var(--finish-monsoon-2-on-dark);
+}
+
+/* ─── 3 and 4. Tones, themes and surfaces ─────────────────────────────────── */
+
+@layer base {
+  /* The light tone: dark text on light surfaces. */
+  :root,
+  [data-tone="light"],
+  [data-theme="light"] [data-surface="light"],
+  [data-theme="light"] [data-surface="light-alt"],
+  [data-theme="light"][data-surface-active="light"] [data-section],
+  [data-theme="light"][data-surface-active="light-alt"] [data-section] {
+    --tone-dark: 0;
+    --color-bg: var(--neutral-light-bg);
+    --color-bg-alt: var(--neutral-light-bg-alt);
+    --color-fg: var(--neutral-light-fg);
+    --color-fg-2: var(--neutral-light-fg-2);
+    --color-fg-3: var(--neutral-light-fg-3);
+    --color-hairline: var(--neutral-light-hairline);
+    --color-glass: var(--glass-light);
+    --color-glass-rim-top: var(--glass-light-rim-top);
+    --color-glass-rim-bottom: var(--glass-light-rim-bottom);
+    --color-glass-solid: var(--neutral-light-card);
+    --color-control-track: var(--control-light-track);
+    --color-control-thumb: var(--control-light-thumb);
+    color-scheme: light;
+  }
+
+  /* The dark tone: light text on dark surfaces. In the dark theme everything is dark tone. */
+  [data-theme="dark"],
+  [data-tone="dark"],
+  [data-theme="dark"] [data-surface],
+  [data-theme="light"] [data-surface="dark"],
+  [data-theme="light"][data-surface-active="dark"] [data-section] {
+    --tone-dark: 1;
+    --color-bg: var(--neutral-dark-bg);
+    --color-bg-alt: var(--neutral-dark-bg-alt);
+    --color-fg: var(--neutral-dark-fg);
+    --color-fg-2: var(--neutral-dark-fg-2);
+    --color-fg-3: var(--neutral-dark-fg-3);
+    --color-hairline: var(--neutral-dark-hairline);
+    --color-glass: var(--glass-dark);
+    --color-glass-rim-top: var(--glass-dark-rim-top);
+    --color-glass-rim-bottom: var(--glass-dark-rim-bottom);
+    --color-glass-solid: var(--neutral-dark-card);
+    --color-control-track: var(--control-dark-track);
+    --color-control-thumb: var(--control-dark-thumb);
+    color-scheme: dark;
+  }
+
+  /* The accent follows both the finish and the tone. It's recomputed on every element that
+     sets either, so a finish scoped to one panel recolors that panel in its own tone.
+     color-mix at 0% or 100% returns one endpoint exactly. Fills always use the on-light
+     accent, which carries a white label in both tones. */
+  :root,
+  [data-tone],
+  [data-finish],
+  [data-surface],
+  [data-section] {
+    --color-accent: color-mix(in srgb, var(--accent-on-dark) calc(var(--tone-dark) * 100%), var(--accent-on-light));
+    --color-accent-2: color-mix(in srgb, var(--accent-2-on-dark) calc(var(--tone-dark) * 100%), var(--accent-2-on-light));
+    --color-accent-fill: var(--accent-on-light);
+    --color-accent-fill-hover: color-mix(in srgb, var(--accent-on-light) 88%, var(--neutral-dark-bg));
+    --color-on-accent: var(--on-accent);
+    --color-focus: var(--color-accent);
+    --color-selection: color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
+
+  /* Surface backgrounds and cards (§4.2). In the light theme cards invert against their
+     surface: white on light-alt, bg-alt on light. In the dark theme both light surfaces
+     become bg-alt, so the rhythm between light and dark survives. */
+  :root,
+  [data-theme="light"] [data-surface="light"],
+  [data-theme="light"][data-surface-active="light"] [data-section] {
+    --color-surface: var(--neutral-light-bg);
+    --color-card: var(--neutral-light-bg-alt);
+  }
+
+  [data-theme="light"] [data-surface="light-alt"],
+  [data-theme="light"][data-surface-active="light-alt"] [data-section] {
+    --color-surface: var(--neutral-light-bg-alt);
+    --color-card: var(--neutral-light-card);
+  }
+
+  [data-theme="dark"],
+  [data-theme="dark"] [data-surface="dark"],
+  [data-theme="light"] [data-surface="dark"],
+  [data-theme="dark"][data-surface-active="dark"] [data-section],
+  [data-theme="light"][data-surface-active="dark"] [data-section] {
+    --color-surface: var(--neutral-dark-bg);
+    --color-card: var(--neutral-dark-card);
+  }
+
+  [data-theme="dark"] [data-surface="light"],
+  [data-theme="dark"] [data-surface="light-alt"],
+  [data-theme="dark"][data-surface-active="light"] [data-section],
+  [data-theme="dark"][data-surface-active="light-alt"] [data-section] {
+    --color-surface: var(--neutral-dark-bg-alt);
+    --color-card: var(--neutral-dark-card);
+  }
+
+  /* What each surface looks like in the current theme, for the controller's backdrop. */
+  :root,
+  [data-theme="light"] {
+    --surface-light: var(--neutral-light-bg);
+    --surface-light-alt: var(--neutral-light-bg-alt);
+    --surface-dark: var(--neutral-dark-bg);
+  }
+
+  [data-theme="dark"] {
+    --surface-light: var(--neutral-dark-bg-alt);
+    --surface-light-alt: var(--neutral-dark-bg-alt);
+    --surface-dark: var(--neutral-dark-bg);
+  }
+}
+
+/* ─── 5. Space, layout, layers and motion ─────────────────────────────────── */
+
+:root {
+  /* The page grid (§4.5): 4/16px on phones, 8/20px from 735px, 12/24px from 1069px. */
+  --grid-columns: 4;
+  --grid-gutter: 16px;
+
+  /* Focus (§6.4), pressed state (§6.5), depth on hover (§6.6) and targets (§2 rule 7). */
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
+  --hairline-width: 1px;
+  --target-min: 44px;
+  --icon-stroke: 1.5;
+  --icon-size: 1.25em;
+  --swatch-size: 28px;
+  --underline-offset: 0.2em;
+  --motion-press-scale: 0.97;
+  --motion-tilt: 6deg;
+  --tilt-perspective: 900px;
+  --specular: rgb(255 255 255 / 0.22);
+  --gradient-angle: 100deg;
+
+  /* The Sheet (overlays): how far a bottom sheet travels and how far a card scales in. */
+  --sheet-offset: 100%;
+  --sheet-scale: 0.96;
+  --backdrop-dim: rgb(0 0 0 / 0.4);
+
+  /* Revealed content is hidden only while JavaScript can reveal it. If the reveal never
+     runs, it shows anyway after this delay. */
+  --reveal-failsafe: 3s;
+  --duration-instant: 0s;
+
+  /* The Resolve (§5.4). */
+  --motion-resolve-blur: 12px;
+  --motion-resolve-y: 16px;
+  --motion-resolve-scale: 0.98;
+  --motion-resolve-duration: var(--duration-reveal);
+  --motion-resolve-stagger: var(--stagger-lines);
+
+  /* Durations (§5.3). Each DESIGN.md range has a short, default and long step. */
+  --duration-micro-short: 150ms;
+  --duration-micro: 200ms;
+  --duration-ui: 300ms;
+  --duration-ui-long: 400ms;
+  --duration-reveal-short: 600ms;
+  --duration-reveal: 700ms;
+  --duration-reveal-long: 900ms;
+  --duration-count: 1200ms;
+  --stagger-lines: 60ms;
+  --scrub: 0.6s;
+
+  /* How long each spring's linear() easing runs before it has settled. */
+  --duration-spring-smooth: 810ms;
+  --duration-spring-snappy: 540ms;
+  --duration-spring-bouncy: 880ms;
+  --duration-spring-island: 670ms;
+
+  /* Layers, bottom to top (§4.9). Overlays and the cursor also use the browser's top layer. */
+  --layer-backdrop: 0;
+  --layer-stage: 1;
+  --layer-content: 2;
+  --layer-sticky: 3;
+  --layer-island: 4;
+  --layer-overlay: 5;
+  --layer-cursor: 6;
+}
+
+@media (width >= 735px) {
+  :root {
+    --grid-columns: 8;
+    --grid-gutter: 20px;
+  }
+}
+
+@media (width >= 1069px) {
+  :root {
+    --grid-columns: 12;
+    --grid-gutter: 24px;
+  }
+}
+
+/* Continuous corners (§4.6). A squircle looks smaller than a circular arc of the same
+   radius; at 1.84× it cuts the corner by the same amount, so both look the same. */
+@supports (corner-shape: squircle) {
+  :root {
+    --radius-chip: 14.75px;
+    --radius-control: 22px;
+    --radius-card-s: 33px;
+    --radius-card-l: 51.5px;
+  }
+}
+
+/* ─── 6. Reduced motion (§5.7) ────────────────────────────────────────────── */
+
+/* Nothing moves: reveals become 200ms fades, presses don't scale and cards don't tilt.
+   data-motion="reduce" forces it (the kitchen toggle); data-motion="full" opts back in. */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) {
+    --motion-press-scale: 1;
+    --motion-tilt: 0deg;
+    --motion-resolve-blur: 0px;
+    --motion-resolve-y: 0px;
+    --motion-resolve-scale: 1;
+    --motion-resolve-duration: var(--duration-micro);
+    --motion-resolve-stagger: 0ms;
+    --sheet-offset: 0%;
+    --sheet-scale: 1;
+  }
+}
+
+:root[data-motion="reduce"] {
+  --motion-press-scale: 1;
+  --motion-tilt: 0deg;
+  --motion-resolve-blur: 0px;
+  --motion-resolve-y: 0px;
+  --motion-resolve-scale: 1;
+  --motion-resolve-duration: var(--duration-micro);
+  --motion-resolve-stagger: 0ms;
+  --sheet-offset: 0%;
+  --sheet-scale: 1;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* ─── 7. Tailwind's theme ─────────────────────────────────────────────────── */
+
+/* Tailwind's own defaults are cleared, so only these tokens exist as utilities: a
+   `text-xl` or `bg-blue-500` generates nothing (and the tokens-only test flags it). */
+@theme static {
+  --*: initial;
+
+  /* Breakpoints (§4.5): small is the default; md, lg and xl start at 735, 1069 and 1441. */
+  --breakpoint-md: 735px;
+  --breakpoint-lg: 1069px;
+  --breakpoint-xl: 1441px;
+
+  /* Colors: the semantic tokens. Their values here are the light-tone defaults; the tone
+     and surface rules above set the real ones per context. */
+  --color-surface: var(--neutral-light-bg);
+  --color-bg: var(--neutral-light-bg);
+  --color-bg-alt: var(--neutral-light-bg-alt);
+  --color-card: var(--neutral-light-bg-alt);
+  --color-fg: var(--neutral-light-fg);
+  --color-fg-2: var(--neutral-light-fg-2);
+  --color-fg-3: var(--neutral-light-fg-3);
+  --color-hairline: var(--neutral-light-hairline);
+  --color-accent: var(--accent-on-light);
+  --color-accent-2: var(--accent-2-on-light);
+  --color-accent-fill: var(--accent-on-light);
+  --color-on-accent: var(--on-accent);
+  --color-focus: var(--accent-on-light);
+  --color-selection: color-mix(in srgb, var(--accent-on-light) 25%, transparent);
+  --color-glass: var(--glass-light);
+  --color-glass-rim-top: var(--glass-light-rim-top);
+  --color-glass-rim-bottom: var(--glass-light-rim-bottom);
+  --color-glass-solid: var(--neutral-light-card);
+  --color-control-track: var(--control-light-track);
+  --color-control-thumb: var(--control-light-thumb);
+  --color-accent-fill-hover: color-mix(in srgb, var(--accent-on-light) 88%, var(--neutral-dark-bg));
+
+  /* Type (§4.4): SF Pro, New York and SF Mono on Apple devices; Inter, Newsreader and
+     JetBrains Mono elsewhere (next/font sets the --font-* variables, preload: false). */
+  --font-sans: -apple-system, BlinkMacSystemFont, var(--font-inter), system-ui, sans-serif;
+  --font-serif: ui-serif, var(--font-newsreader), serif;
+  --font-mono: ui-monospace, var(--font-jetbrains-mono), monospace;
+  --default-font-family: var(--font-sans);
+  --default-mono-font-family: var(--font-mono);
+
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* The scale clamps from phone (390px) to desktop (1440px), in rem so zoom still scales it. */
+  --text-hero: clamp(3.5rem, 0.9rem + 10.6667vw, 10.5rem);
+  --text-hero--line-height: 0.95;
+  --text-hero--letter-spacing: -0.035em;
+  --text-hero--font-weight: 700;
+  --text-display: clamp(2.5rem, 1.5714rem + 3.8095vw, 5rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.025em;
+  --text-display--font-weight: 600;
+  --text-title: clamp(1.75rem, 1.2857rem + 1.9048vw, 3rem);
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.02em;
+  --text-title--font-weight: 600;
+  --text-eyebrow: clamp(1.0625rem, 0.9696rem + 0.381vw, 1.3125rem);
+  --text-eyebrow--line-height: 1.2;
+  --text-eyebrow--letter-spacing: -0.01em;
+  --text-eyebrow--font-weight: 600;
+  --text-lead: clamp(1.1875rem, 1.0714rem + 0.4762vw, 1.5rem);
+  --text-lead--line-height: 1.4;
+  --text-lead--letter-spacing: -0.01em;
+  --text-lead--font-weight: 400;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.47;
+  --text-body--letter-spacing: -0.022em;
+  --text-body--font-weight: 400;
+  --text-caption: clamp(0.75rem, 0.7036rem + 0.1905vw, 0.875rem);
+  --text-caption--line-height: 1.33;
+  --text-footnote: 0.75rem;
+  --text-footnote--line-height: 1.33;
+
+  /* Space (§4.5): an 8pt grid with 4pt half-steps, so p-1 is 4px and p-2 is 8px. */
+  --spacing: 4px;
+  --spacing-gutter: var(--grid-gutter);
+  --spacing-section: clamp(96px, 12vw, 180px);
+  --spacing-target: var(--target-min);
+
+  /* Widths (§4.5). */
+  --container-measure: 680px;
+  --container-content: 1024px;
+  --container-wide: 1440px;
+
+  /* Radii (§4.6). */
+  --radius-chip: 8px;
+  --radius-control: 12px;
+  --radius-card-s: 18px;
+  --radius-card-l: 28px;
+  --radius-pill: 999px;
+
+  /* Elevation (§4.8): soft and rare. */
+  --shadow-soft: 0 2px 8px var(--shadow-ink), 0 12px 40px var(--shadow-ink-deep);
+
+  /* Bento tile shapes (§4.5). */
+  --aspect-square: 1 / 1;
+  --aspect-landscape: 4 / 3;
+  --aspect-wide: 16 / 10;
+  --aspect-portrait: 4 / 5;
+
+  /* Curves (§5.1) and springs (§5.2), generated from lib/motion.ts by springLinear(). */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-spring-smooth: linear(0, 0.0124, 0.0445, 0.0899, 0.1438, 0.2026, 0.2635, 0.3244, 0.384, 0.4411, 0.4952, 0.5459, 0.5929, 0.6361, 0.6757, 0.7116, 0.7442, 0.7736, 0.7999, 0.8235, 0.8446, 0.8633, 0.88, 0.8948, 0.9078, 0.9193, 0.9295, 0.9384, 0.9463, 0.9532, 0.9592, 0.9645, 0.9691, 0.9732, 0.9767, 0.9798, 0.9825, 0.9848, 0.9868, 0.9886, 0.9901, 0.9915, 0.9926, 0.9936, 0.9945, 0.9952, 0.9959, 0.9964, 0.9969, 0.9974, 0.9977, 1);
+  --ease-spring-snappy: linear(0, 0.0247, 0.0862, 0.1696, 0.2636, 0.3604, 0.4546, 0.5428, 0.6227, 0.6936, 0.755, 0.8074, 0.8513, 0.8874, 0.9168, 0.9402, 0.9586, 0.9729, 0.9836, 0.9915, 0.9972, 1.0011, 1.0037, 1.0053, 1.006, 1.0063, 1.0062, 1.0058, 1.0053, 1.0047, 1.0041, 1.0035, 1.0029, 1.0024, 1);
+  --ease-spring-bouncy: linear(0, 0.013, 0.0479, 0.0992, 0.1624, 0.2332, 0.3084, 0.3851, 0.4611, 0.5347, 0.6045, 0.6696, 0.7293, 0.7833, 0.8314, 0.8737, 0.9103, 0.9415, 0.9676, 0.989, 1.0063, 1.0198, 1.0299, 1.0372, 1.0421, 1.0449, 1.0459, 1.0457, 1.0443, 1.0421, 1.0393, 1.0361, 1.0327, 1.0292, 1.0257, 1.0222, 1.019, 1.0159, 1.0131, 1.0106, 1.0083, 1.0063, 1.0045, 1.003, 1.0018, 1.0007, 0.9999, 0.9992, 0.9987, 0.9984, 0.9981, 0.998, 0.9979, 0.9979, 0.9979, 1);
+  --ease-spring-island: linear(0, 0.0157, 0.0571, 0.1167, 0.1883, 0.2668, 0.3483, 0.4295, 0.508, 0.5823, 0.651, 0.7135, 0.7694, 0.8186, 0.8613, 0.8978, 0.9284, 0.9538, 0.9744, 0.9908, 1.0034, 1.0129, 1.0197, 1.0242, 1.0269, 1.0282, 1.0283, 1.0275, 1.0261, 1.0243, 1.0221, 1.0199, 1.0175, 1.0153, 1.0131, 1.011, 1.0092, 1.0075, 1.0059, 1.0046, 1.0035, 1.0025, 1);
+  --animate-spin: spin var(--duration-reveal-long) linear infinite;
+  --default-transition-duration: var(--duration-micro);
+  --default-transition-timing-function: var(--ease-out);
+}

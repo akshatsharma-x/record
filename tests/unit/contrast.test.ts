@@ -1,0 +1,151 @@
+/**
+ * Contrast (DESIGN.md §4.1, §4.3, §10): every text pair passes WCAG 2.2 AA in both themes,
+ * on every surface and in every finish. Colors are read from styles/tokens.css itself, so
+ * changing a hex there changes what's tested. If a hex fails, adjust the hex, never the
+ * rule (§4.3).
+ */
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { describe, expect, it } from "vitest";
+import { parseCss, rootTokens } from "@/lib/css-tokens";
+import { FINISHES } from "@/lib/preferences";
+
+const tokens = rootTokens(parseCss(readFileSync(path.join(process.cwd(), "styles", "tokens.css"), "utf8")));
+
+// ─── Color math ──────────────────────────────────────────────────────────────
+
+type RGBA = [r: number, g: number, b: number, a: number];
+
+function color(name: string): RGBA {
+  const value = tokens.get(name);
+  if (!value) throw new Error(`${name} isn't in tokens.css`);
+  const hex = /^#([0-9a-f]{6})$/i.exec(value);
+  if (hex) {
+    const n = parseInt(hex[1], 16);
+    return [n >> 16, (n >> 8) & 255, n & 255, 1];
+  }
+  const rgb = /^rgb\((\d+) (\d+) (\d+)(?: \/ ([\d.]+))?\)$/.exec(value);
+  if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3]), rgb[4] === undefined ? 1 : Number(rgb[4])];
+  throw new Error(`${name}: can't read ${value}`);
+}
+
+/** `top` painted over an opaque `bottom`. */
+function over(top: RGBA, bottom: RGBA): RGBA {
+  const a = top[3];
+  return [top[0] * a + bottom[0] * (1 - a), top[1] * a + bottom[1] * (1 - a), top[2] * a + bottom[2] * (1 - a), 1];
+}
+
+/** color-mix(in srgb, a p, b). */
+function mix(a: RGBA, b: RGBA, p: number): RGBA {
+  return [a[0] * p + b[0] * (1 - p), a[1] * p + b[1] * (1 - p), a[2] * p + b[2] * (1 - p), 1];
+}
+
+function luminance([r, g, b]: RGBA): number {
+  const channel = (c: number) => {
+    const v = c / 255;
+    return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+}
+
+function ratio(a: RGBA, b: RGBA): number {
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+// ─── The contexts (lib: styles/tokens.css §3–4) ──────────────────────────────
+
+type Tone = "light" | "dark";
+
+interface Context {
+  name: string;
+  tone: Tone;
+  surface: RGBA;
+  card: RGBA;
+}
+
+const CONTEXTS: Context[] = [
+  { name: "light theme · light", tone: "light", surface: color("--neutral-light-bg"), card: color("--neutral-light-bg-alt") },
+  { name: "light theme · light-alt", tone: "light", surface: color("--neutral-light-bg-alt"), card: color("--neutral-light-card") },
+  { name: "light theme · dark", tone: "dark", surface: color("--neutral-dark-bg"), card: color("--neutral-dark-card") },
+  { name: "dark theme · light and light-alt", tone: "dark", surface: color("--neutral-dark-bg-alt"), card: color("--neutral-dark-card") },
+  { name: "dark theme · dark", tone: "dark", surface: color("--neutral-dark-bg"), card: color("--neutral-dark-card") },
+];
+
+const AA = 4.5;
+const AA_LARGE = 3;
+const NON_TEXT = 3;
+
+/** Where body text sits: fg and fg-2 must pass on all of these. */
+function textBackgroundsOf(context: Context) {
+  const glass = color(context.tone === "light" ? "--glass-light" : "--glass-dark");
+  return { surface: context.surface, card: context.card, "glass over the surface": over(glass, context.surface) };
+}
+
+/** Segmented-control labels are fg, never fg-2, so only fg is tested on controls. */
+function controlBackgroundsOf(context: Context) {
+  const track = over(color(`--control-${context.tone}-track`), context.surface);
+  return { "control track": track, "control thumb": over(color(`--control-${context.tone}-thumb`), track) };
+}
+
+// ─── Tests ───────────────────────────────────────────────────────────────────
+
+describe.each(CONTEXTS)("$name", (context) => {
+  const tone = context.tone;
+
+  it.each(Object.entries(textBackgroundsOf(context)))("fg and fg-2 pass AA on the %s", (_, background) => {
+    expect(ratio(color(`--neutral-${tone}-fg`), background)).toBeGreaterThanOrEqual(AA);
+    expect(ratio(color(`--neutral-${tone}-fg-2`), background)).toBeGreaterThanOrEqual(AA);
+  });
+
+  it.each(Object.entries(controlBackgroundsOf(context)))("control labels (fg) pass AA on the %s", (_, background) => {
+    expect(ratio(color(`--neutral-${tone}-fg`), background)).toBeGreaterThanOrEqual(AA);
+  });
+
+  it("fg-3 passes AA for large text on light surfaces and AA outright on dark ones", () => {
+    const needed = tone === "light" ? AA_LARGE : AA;
+    expect(ratio(color(`--neutral-${tone}-fg-3`), context.surface)).toBeGreaterThanOrEqual(needed);
+    expect(ratio(color(`--neutral-${tone}-fg-3`), context.card)).toBeGreaterThanOrEqual(needed);
+  });
+
+  describe.each(FINISHES)("$name", ({ id }) => {
+    const accent = color(`--finish-${id}-on-${tone}`);
+    const second = color(`--finish-${id}-2-on-${tone}`);
+    const fill = color(`--finish-${id}-on-light`);
+    const label = color("--on-accent");
+
+    it("accent text and its gradient stop pass AA on the surface and on cards", () => {
+      for (const background of [context.surface, context.card]) {
+        expect(ratio(accent, background)).toBeGreaterThanOrEqual(AA);
+        expect(ratio(second, background)).toBeGreaterThanOrEqual(AA);
+      }
+    });
+
+    it("button labels pass AA on the fill and on its hover", () => {
+      expect(ratio(label, fill)).toBeGreaterThanOrEqual(AA);
+      expect(ratio(label, mix(fill, color("--neutral-dark-bg"), 0.88))).toBeGreaterThanOrEqual(AA);
+    });
+
+    it("selected text stays readable on the selection color (the accent at 25%)", () => {
+      const selection = over([...accent.slice(0, 3), 0.25] as RGBA, context.surface);
+      expect(ratio(color(`--neutral-${tone}-fg`), selection)).toBeGreaterThanOrEqual(AA);
+    });
+
+    it("the focus ring and the fill stand out from the surface (non-text, 3:1)", () => {
+      expect(ratio(accent, context.surface)).toBeGreaterThanOrEqual(NON_TEXT);
+      expect(ratio(fill, context.surface)).toBeGreaterThanOrEqual(NON_TEXT);
+    });
+  });
+});
+
+describe("the tests themselves", () => {
+  it("compute WCAG ratios correctly", () => {
+    expect(ratio([0, 0, 0, 1], [255, 255, 255, 1])).toBeCloseTo(21, 5);
+    expect(ratio(color("--neutral-light-fg-3"), color("--neutral-light-bg"))).toBeCloseTo(3.62, 2);
+  });
+
+  it("read the adjusted Saffron (§4.3: the hex changed, the rule didn't)", () => {
+    expect(tokens.get("--finish-saffron-on-light")).toBe("#ab5a00");
+    expect(ratio(color("--finish-saffron-on-light"), color("--neutral-light-bg-alt"))).toBeGreaterThanOrEqual(AA);
+  });
+});
