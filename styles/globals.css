@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+/*
+ * Part 1 baseline. Part 2 replaces it with the tokens in DESIGN.md §4.
+ * Until then the page uses the system font stack from §4.4 (Inter joins in Part 2) and
+ * the browser's own light and dark colors, so nothing here is a magic number.
+ */
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: light dark;
+}

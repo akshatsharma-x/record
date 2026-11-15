@@ -389,6 +389,7 @@ Catalog in Part 13.
 ## 11. Stack
 
 - Next.js (latest, App Router, Turbopack), React 19 and TypeScript in strict mode.
+- Cache Components and Partial Prefetching are on. The static shell prerenders; anything that reads the current time renders after `io()` inside a Suspense boundary.
 - Tailwind CSS v4 on CSS variables.
 - GSAP 3 with ScrollTrigger and SplitText (all free now), through @gsap/react.
 - Motion (motion/react) for layout, shared-element and spring UI.
@@ -411,6 +412,7 @@ Append as you go, each with its reason.
 - **The phone number is never published, and there's no résumé download until a phone-free PDF exists.** See §2 rule 2.
 - **The certificates heading derives from data and never shows "0".**
 - **A project's year and role stay hidden until Akshat confirms them.**
+- **Cache Components and Partial Prefetching stay on** (Part 1). create-next-app 16.4 turns both on, and Next.js makes them the default everywhere in its next major. Pages get an instant static shell, and values that depend on today, such as role durations, graduation progress and live clocks, stream in after `io()`.
 
 ---
 
