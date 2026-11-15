@@ -6,6 +6,7 @@ import { cssCurve, durations } from "./motion.ts";
 import type { Finish, Theme, ThemeChoice } from "./preferences.ts";
 import { DEFAULT_FINISH, FINISH_STORAGE_KEY, isFinish, isThemeChoice, THEME_STORAGE_KEY } from "./preferences.ts";
 import { prefersReducedMotion } from "./reduced-motion.ts";
+import { startViewTransition, supportsViewTransitions } from "./view-transition.ts";
 
 export function systemTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -59,10 +60,10 @@ export function applyThemeChoice(choice: ThemeChoice, origin?: Origin): Promise<
     return Promise.resolve();
   }
 
-  if (typeof document.startViewTransition === "function") {
+  if (supportsViewTransitions()) {
     const center = origin ?? { x: window.innerWidth / 2, y: window.innerHeight / 2 };
     root.setAttribute("data-theme-switching", "");
-    const transition = document.startViewTransition(apply);
+    const transition = startViewTransition(apply)!;
     transition.ready
       .then(() => {
         const radius = Math.hypot(

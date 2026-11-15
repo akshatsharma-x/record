@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/type";
 import { FINISHES } from "@/lib/preferences";
 import { type Tier, TIER_OVERRIDE_KEY, TIER_SESSION_KEY, TIERS } from "@/lib/tier";
+import { CursorLab } from "./cursor-lab";
 import "./kitchen.css";
 
 export interface TokenGroups {
@@ -62,6 +63,7 @@ export function Kitchen({ tokens }: { tokens: TokenGroups }) {
           <Motion tokens={tokens} />
           <Controls />
           <Overlays />
+          <Cursor />
           <NumbersAndFootnotes />
           <Reveal />
           <Depth />
@@ -672,6 +674,18 @@ function Overlays() {
           <Button onClick={() => setOpen(false)}>Done</Button>
         </div>
       </Sheet>
+    </Block>
+  );
+}
+
+function Cursor() {
+  return (
+    <Block
+      id="cursor"
+      title="Cursor"
+      note="The dot is the hotspot: it never trails the pointer and shows on anything. Shake the pointer to find it; rest it for three seconds and a ring pulses once."
+    >
+      <CursorLab />
     </Block>
   );
 }

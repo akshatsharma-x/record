@@ -370,6 +370,415 @@
     transform: translateX(var(--spacing));
   }
 
+  /* ─── Cursor (§6.1) ───────────────────────────────────────────────────────── */
+
+  /* The native cursor hides only while the custom one is live (html.cursor-custom, set in
+     the frame the dot first appears) and never in native zones: typing, menus, embedded
+     pages and video controls keep the system cursor. lib/cursor/resolve.ts lists the same
+     zones (iframe, select, textarea, video[controls], audio[controls], [contenteditable]:not([contenteditable='false']), [data-cursor='native'], input:not([type='checkbox'], [type='radio'], [type='submit'], [type='button'], [type='reset'], [type='range'], [type='color'], [type='file'], [type='image'], [type='hidden'])_SELECTORS); tests/unit/cursor.test.ts keeps the lists equal. */
+  @media (hover: hover) and (pointer: fine) and (forced-colors: none) {
+    html.cursor-custom,
+    html.cursor-custom body :not(:is(iframe, select, textarea, video[controls], audio[controls], [contenteditable]:not([contenteditable='false']), [data-cursor='native'], input:not([type='checkbox'], [type='radio'], [type='submit'], [type='button'], [type='reset'], [type='range'], [type='color'], [type='file'], [type='image'], [type='hidden'])), :is(iframe, select, textarea, video[controls], audio[controls], [contenteditable]:not([contenteditable='false']), [data-cursor='native'], input:not([type='checkbox'], [type='radio'], [type='submit'], [type='button'], [type='reset'], [type='range'], [type='color'], [type='file'], [type='image'], [type='hidden'])) *),
+    html.cursor-custom ::backdrop {
+      cursor: none !important;
+    }
+
+    :where(html.cursor-custom) :where(:is(iframe, select, textarea, video[controls], audio[controls], [contenteditable]:not([contenteditable='false']), [data-cursor='native'], input:not([type='checkbox'], [type='radio'], [type='submit'], [type='button'], [type='reset'], [type='range'], [type='color'], [type='file'], [type='image'], [type='hidden'])), :is(iframe, select, textarea, video[controls], audio[controls], [contenteditable]:not([contenteditable='false']), [data-cursor='native'], input:not([type='checkbox'], [type='radio'], [type='submit'], [type='button'], [type='reset'], [type='range'], [type='color'], [type='file'], [type='image'], [type='hidden'])) *) {
+      cursor: auto;
+    }
+  }
+
+  /* The root: a full-viewport, click-through layer in the top layer (popover="manual"). */
+  .cursor {
+    --cursor-scale: 1;
+    --cursor-size: var(--cursor-dot);
+    --cursor-fill: var(--cursor-ink-dark);
+    --cursor-edge: var(--cursor-outline-light);
+    --cursor-press: 1;
+    --cursor-grow: 1;
+
+    position: fixed;
+    inset: 0;
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: visible;
+    background: none;
+    color: var(--color-fg);
+    pointer-events: none;
+    user-select: none;
+    contain: strict;
+  }
+
+  .cursor::backdrop {
+    display: none;
+  }
+
+  /* If the browser won't re-stack the popover, the cursor rides inside the topmost dialog. */
+  .cursor[data-reparented] {
+    display: block;
+    z-index: var(--layer-cursor);
+    contain: none;
+  }
+
+  /* While a View Transition runs, the cursor is its own live layer above the snapshots:
+     its old image is hidden and its group doesn't animate. */
+  html:is([data-view-transition], :active-view-transition) .cursor {
+    view-transition-name: cursor;
+  }
+
+  ::view-transition-group(cursor),
+  ::view-transition-new(cursor) {
+    animation: none;
+  }
+
+  ::view-transition-old(cursor) {
+    display: none;
+  }
+
+  .cursor[data-ink="light"] {
+    --cursor-fill: var(--cursor-ink-light);
+    --cursor-edge: var(--cursor-outline-dark);
+  }
+
+  .cursor[data-large] {
+    --cursor-scale: var(--cursor-large);
+  }
+
+  .cursor:is([data-state="magnetic"], [data-state="media"], [data-state="drag"]) {
+    --cursor-size: var(--cursor-dot-small);
+  }
+
+  .cursor[data-pressed] {
+    --cursor-press: var(--cursor-press-dot);
+  }
+
+  .cursor[data-shaking] {
+    --cursor-grow: var(--cursor-shake);
+  }
+
+  /* Appearing is instant; only leaving the window fades. */
+  .cursor:is([data-hidden], [data-native]) {
+    opacity: 0;
+  }
+
+  .cursor[data-hidden][data-fade] {
+    transition: opacity var(--duration-micro-short) var(--ease-out);
+  }
+
+  /* The hotspot is a point: its transform is written in the pointermove handler. */
+  .cursor-hotspot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform;
+  }
+
+  .cursor-dot,
+  .cursor-pulse {
+    position: absolute;
+    top: 0;
+    left: 0;
+    translate: -50% -50%;
+    border-radius: var(--radius-pill);
+  }
+
+  /* The dot: ink, an outline in the other ink, and a faint shadow. Visible on anything. */
+  .cursor-dot {
+    width: calc(var(--cursor-size) * var(--cursor-scale));
+    height: calc(var(--cursor-size) * var(--cursor-scale));
+    background-color: var(--cursor-fill);
+    box-shadow:
+      0 0 0 var(--cursor-outline) var(--cursor-edge),
+      var(--cursor-shadow);
+    scale: calc(var(--cursor-press) * var(--cursor-grow));
+    transition:
+      width var(--duration-micro-short) var(--ease-out),
+      height var(--duration-micro-short) var(--ease-out),
+      scale var(--duration-spring-snappy) var(--ease-spring-snappy);
+  }
+
+  /* Shake to locate: it grows quickly, then springs back. */
+  .cursor[data-shaking] .cursor-dot {
+    transition:
+      width var(--duration-micro-short) var(--ease-out),
+      height var(--duration-micro-short) var(--ease-out),
+      scale var(--duration-micro-short) var(--ease-out);
+  }
+
+  /* Over text, the dot becomes an I-beam as tall as the line. */
+  .cursor[data-state="text"] .cursor-dot {
+    width: calc(var(--cursor-ibeam) * var(--cursor-scale));
+    height: var(--cursor-beam);
+  }
+
+  /* The idle locator: one soft ring, once per rest. */
+  .cursor-pulse {
+    width: calc(var(--cursor-dot) * var(--cursor-scale));
+    height: calc(var(--cursor-dot) * var(--cursor-scale));
+    box-shadow:
+      0 0 0 var(--cursor-ring-stroke) var(--cursor-fill),
+      0 0 0 calc(var(--cursor-ring-stroke) + var(--cursor-outline)) var(--cursor-edge);
+    opacity: 0;
+  }
+
+  .cursor[data-idle] .cursor-pulse {
+    animation: cursor-pulse var(--duration-reveal) var(--ease-out);
+  }
+
+  @keyframes cursor-pulse {
+    from {
+      opacity: var(--cursor-pulse-opacity);
+      scale: 1;
+    }
+
+    to {
+      opacity: 0;
+      scale: var(--cursor-pulse-scale);
+    }
+  }
+
+  @keyframes cursor-pulse-still {
+    from,
+    to {
+      opacity: 0;
+      scale: var(--cursor-pulse-scale-still);
+    }
+
+    50% {
+      opacity: var(--cursor-pulse-opacity);
+      scale: var(--cursor-pulse-scale-still);
+    }
+  }
+
+  /* The shape: the morphing companion. JavaScript writes its box; CSS draws its look. */
+  .cursor-shape {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    place-items: center;
+    color: var(--color-fg);
+    opacity: 0;
+    scale: 1;
+    contain: layout style;
+    will-change: translate;
+    transition:
+      opacity var(--duration-micro-short) var(--ease-out),
+      scale var(--duration-spring-snappy) var(--ease-spring-snappy);
+  }
+
+  .cursor-shape[data-visible] {
+    opacity: 1;
+  }
+
+  .cursor[data-pressed] .cursor-shape {
+    scale: var(--cursor-press-shape);
+  }
+
+  .cursor-shape > * {
+    grid-area: 1 / 1;
+    opacity: 0;
+  }
+
+  /* Magnetic: the target's rounded rect plus padding, tinted with its accent. */
+  .cursor-shape[data-variant="magnetic"] {
+    background-color: color-mix(in srgb, var(--cursor-accent, var(--color-accent)) var(--cursor-tint), transparent);
+  }
+
+  /* Media and drag areas: a glass circle, beneath the label and the chevrons. */
+  .cursor-glass {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+  }
+
+  .cursor-shape[data-variant="glass"] {
+    box-shadow:
+      0 0 0 var(--hairline-width) var(--color-hairline),
+      var(--shadow-soft);
+  }
+
+  .cursor-shape[data-variant="glass"] .cursor-glass {
+    opacity: 1;
+  }
+
+  .cursor-label {
+    translate: 0 var(--cursor-label-offset);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .cursor[data-state="media"]:not([data-busy]) .cursor-label {
+    opacity: 1;
+  }
+
+  .cursor-arrows {
+    display: flex;
+    align-self: stretch;
+    justify-self: stretch;
+    align-items: center;
+    justify-content: space-between;
+    padding-inline: var(--cursor-arrow-inset);
+  }
+
+  .cursor-arrows > svg {
+    width: var(--cursor-arrow-size);
+    height: var(--cursor-arrow-size);
+    stroke-width: var(--cursor-arrow-stroke);
+  }
+
+  .cursor[data-state="drag"]:not([data-busy]) .cursor-arrows {
+    opacity: 1;
+  }
+
+  /* Disabled and navigating: a ring in the dot's inks. */
+  .cursor-shape:is([data-variant="ring"], [data-variant="spinner"]) {
+    border: var(--cursor-ring-stroke) solid var(--cursor-fill);
+    box-shadow:
+      0 0 0 var(--cursor-outline) var(--cursor-edge),
+      inset 0 0 0 var(--cursor-outline) var(--cursor-edge);
+  }
+
+  .cursor-slash {
+    width: 100%;
+    height: var(--cursor-ring-stroke);
+    background-color: var(--cursor-fill);
+    box-shadow: 0 0 0 var(--cursor-outline) var(--cursor-edge);
+    rotate: var(--cursor-slash-angle);
+  }
+
+  .cursor-shape[data-variant="ring"] .cursor-slash {
+    opacity: 1;
+  }
+
+  .cursor-shape[data-variant="spinner"] {
+    mask-image: conic-gradient(currentColor var(--cursor-spinner-arc), transparent 0%);
+    animation: spin var(--cursor-spin) linear infinite;
+  }
+
+  /* The target of a magnetic shape drifts toward the pointer, and its label half as far.
+     Leaving springs them back in CSS, so the engine can forget them. */
+  [data-cursor-magnet="active"] {
+    translate: var(--cursor-drift-x) var(--cursor-drift-y);
+  }
+
+  [data-cursor-magnet="active"] > * {
+    translate: var(--cursor-label-x) var(--cursor-label-y);
+  }
+
+  [data-cursor-magnet="release"],
+  [data-cursor-magnet="release"] > * {
+    translate: none;
+    transition: translate var(--duration-spring-snappy) var(--ease-spring-snappy);
+  }
+
+  /* Increased contrast: no translucency. The magnetic tint becomes a solid ring. */
+  @media (prefers-contrast: more) {
+    .cursor-shape[data-variant="magnetic"] {
+      background-color: transparent;
+      box-shadow: inset 0 0 0 var(--cursor-ring-stroke) var(--cursor-accent, var(--color-accent));
+    }
+  }
+
+  /* Forced colors: the system cursor, always. */
+  @media (forced-colors: active) {
+    .cursor,
+    .cursor[data-reparented] {
+      display: none;
+    }
+  }
+
+  /* Reduced motion: shape changes are instant and the idle ring fades in place. Shake to
+     locate still works: it changes size, not position. */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) :is(.cursor-dot, .cursor-shape, [data-cursor-magnet], [data-cursor-magnet] > *) {
+      transition: none;
+    }
+
+    :root:not([data-motion="full"]) .cursor[data-idle] .cursor-pulse {
+      animation-name: cursor-pulse-still;
+    }
+  }
+
+  :root[data-motion="reduce"] :is(.cursor-dot, .cursor-shape, [data-cursor-magnet], [data-cursor-magnet] > *) {
+    transition: none;
+  }
+
+  :root[data-motion="reduce"] .cursor[data-idle] .cursor-pulse {
+    animation-name: cursor-pulse-still;
+  }
+
+  /* ─── Switch ──────────────────────────────────────────────────────────────── */
+
+  /* An iOS-style switch around a real checkbox (role="switch"): label first, track last. */
+  .switch {
+    display: flex;
+    min-height: var(--target-min);
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 4);
+  }
+
+  .switch-track {
+    position: relative;
+    flex-shrink: 0;
+    width: var(--switch-width);
+    height: var(--switch-height);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-control-track);
+    box-shadow: inset 0 0 0 var(--hairline-width) var(--color-fg-3);
+    transition:
+      background-color var(--duration-micro) var(--ease-out),
+      box-shadow var(--duration-micro) var(--ease-out);
+  }
+
+  .switch-thumb {
+    position: absolute;
+    top: var(--switch-inset);
+    left: var(--switch-inset);
+    width: var(--switch-thumb-size);
+    height: var(--switch-thumb-size);
+    border-radius: var(--radius-pill);
+    background-color: var(--switch-thumb);
+    box-shadow: var(--shadow-soft);
+    transition: translate var(--duration-spring-snappy) var(--ease-spring-snappy);
+  }
+
+  .switch-input:checked + .switch-track {
+    background-color: var(--color-accent-fill);
+    box-shadow: inset 0 0 0 var(--hairline-width) var(--color-accent-fill);
+  }
+
+  .switch-input:checked + .switch-track > .switch-thumb {
+    translate: calc(var(--switch-width) - var(--switch-thumb-size) - 2 * var(--switch-inset)) 0;
+  }
+
+  .switch-input:focus-visible + .switch-track {
+    outline: var(--focus-ring-width) solid var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .switch:has(> .switch-input:disabled) {
+    opacity: var(--opacity-disabled);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .switch-thumb {
+      transition: none;
+    }
+  }
+
+  :root[data-motion="reduce"] .switch-thumb {
+    transition: none;
+  }
+
   /* ─── Reduced motion (§5.7) ──────────────────────────────────────────────── */
 
   /* Controls change state without travelling: the thumb jumps, the › stays put. */

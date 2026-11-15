@@ -26,3 +26,22 @@ test("dev-only routes return 404 in production", async ({ request }) => {
     expect(response.status(), route).toBe(404);
   }
 });
+
+test("the custom cursor takes over at the first pointer move, but never for touch", async ({ page, isMobile }) => {
+  await page.goto("/");
+  if (isMobile) {
+    await page.waitForLoadState("networkidle");
+    await page.touchscreen.tap(120, 200);
+    await page.waitForTimeout(300);
+    await expect(page.locator("html")).not.toHaveClass(/cursor-custom/);
+    await expect(page.locator("[data-cursor-root]:not([data-hidden])")).toHaveCount(0);
+    return;
+  }
+  await page.locator("[data-cursor-root]").waitFor({ state: "attached" });
+  await expect(page.locator("html")).not.toHaveClass(/cursor-custom/);
+  await page.mouse.move(320, 240);
+  await expect(page.locator("html")).toHaveClass(/cursor-custom/);
+  const dot = (await page.locator(".cursor-dot").boundingBox())!;
+  expect(dot.x + dot.width / 2).toBeCloseTo(320, 0);
+  expect(dot.y + dot.height / 2).toBeCloseTo(240, 0);
+});

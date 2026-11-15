@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Cursor } from "@/components/cursor/cursor";
 import { SurfaceController } from "@/components/surface/surface-controller";
 import { PreferencesSync } from "@/components/theme/preferences-sync";
 import { StageProvider } from "@/components/three/stage";
@@ -15,7 +16,8 @@ export const metadata: Metadata = {
  * The document. The head script applies the saved theme and finish before the first
  * paint (lib/preferences.ts), so <html> carries attributes React didn't render:
  * suppressHydrationWarning accepts them. Layers, bottom to top (§4.9): the surface
- * backdrop, the shared 3D stage, then the content.
+ * backdrop, the shared 3D stage, then the content. The cursor (§6.1) builds its own root
+ * in the top layer, above everything.
  */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -36,6 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <StageProvider>
           <div className="content-layer">{children}</div>
         </StageProvider>
+        <Cursor />
       </body>
     </html>
   );
