@@ -79,6 +79,11 @@ interface StageViewProps {
   /** What the scene shows, for screen readers. */
   label: string;
   className?: string;
+  /**
+   * The cursor's ink over this scene. WebGL pixels can't be read back, so a scene declares
+   * whether it's mostly light ("dark" ink) or mostly dark ("light" ink). Default: the tone.
+   */
+  ink?: "light" | "dark";
 }
 
 /**
@@ -86,11 +91,11 @@ interface StageViewProps {
  * The stage sits beneath the content (§4.9), so keep the view itself transparent: an
  * opaque background on it, or on anything above it, hides the scene.
  */
-export function StageView({ scene, poster, label, className }: StageViewProps) {
+export function StageView({ scene, poster, label, className, ink }: StageViewProps) {
   const { active, register } = useStage();
   useEffect(() => register(), [register]);
   return (
-    <div role="img" aria-label={label} className={cx("relative", className)}>
+    <div role="img" aria-label={label} data-cursor-ink={ink} className={cx("relative", className)}>
       {active ? <StageViewport scene={scene} /> : <div className="absolute inset-0">{poster}</div>}
     </div>
   );

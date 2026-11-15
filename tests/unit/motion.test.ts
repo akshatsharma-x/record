@@ -12,10 +12,12 @@ import {
   scrub,
   scrubStep,
   springAt,
+  springAtRest,
   springLinear,
   springs,
   springSettle,
   stagger,
+  stepSpring,
 } from "@/lib/motion";
 
 const tokens = rootTokens(parseCss(readFileSync(path.join(process.cwd(), "styles", "tokens.css"), "utf8")));
@@ -115,5 +117,42 @@ describe("scroll smoothing", () => {
 
   it("catches up within 5% after the scrub time (§5.5)", () => {
     expect(scrubStep(scrub)).toBeGreaterThanOrEqual(0.95);
+  });
+});
+
+describe("retargetable springs (the cursor's shape)", () => {
+  const run = (config: (typeof springs)[keyof typeof springs], seconds: number, step: number) => {
+    let state = { value: 0, velocity: 0 };
+    for (let t = 0; t < seconds - 1e-9; t += step) state = stepSpring(state, 1, Math.min(step, seconds - t), config);
+    return state;
+  };
+
+  it.each(Object.entries(springs))("%s follows the same curve as springAt from rest", (_, config) => {
+    for (const t of [0.05, 0.1, 0.2, 0.35, 0.6]) expect(run(config, t, t).value).toBeCloseTo(springAt(config, t), 9);
+  });
+
+  it.each(Object.entries(springs))("%s is frame-rate independent: 60 Hz, 120 Hz and one step agree", (_, config) => {
+    const once = run(config, 0.25, 0.25);
+    for (const hz of [60, 120, 144]) {
+      const stepped = run(config, 0.25, 1 / hz);
+      expect(stepped.value).toBeCloseTo(once.value, 9);
+      expect(stepped.velocity).toBeCloseTo(once.velocity, 6);
+    }
+  });
+
+  it("keeps its velocity when the target moves, so retargeting never jerks", () => {
+    const config = springs.snappy;
+    const moving = stepSpring({ value: 0, velocity: 0 }, 100, 0.05, config);
+    const retargeted = stepSpring(moving, 40, 1e-6, config);
+    expect(retargeted.value).toBeCloseTo(moving.value, 2);
+    expect(retargeted.velocity).toBeCloseTo(moving.velocity, 0);
+  });
+
+  it("comes to rest at its target", () => {
+    const config = springs.snappy;
+    const settled = run(config, springSettle(config) * 2, 1 / 60);
+    expect(springAtRest(settled, 1)).toBe(true);
+    expect(springAtRest({ value: 0.5, velocity: 0 }, 1)).toBe(false);
+    expect(stepSpring(settled, 1, 0, config)).toBe(settled);
   });
 });

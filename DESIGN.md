@@ -236,7 +236,7 @@ Bottom to top:
 4. Sticky elements
 5. The Island
 6. Overlays (`<dialog>` in the top layer)
-7. The cursor (re-stacked into the top layer; Part 3)
+7. The cursor: a popover in the top layer that re-stacks itself above dialogs and other popovers (§6.1)
 
 Anything above the canvas is transparent where a scene shows through it.
 
@@ -307,11 +307,47 @@ A tile animates on hover or focus, or once on its first reveal, and then rests.
 
 ### 6.1 The cursor
 
-- The hotspot has zero lag and is visible on any background.
-- It morphs with context (iPadOS-style magnetism, an I-beam, a labeled media circle) but never disappears.
-- It supports shake-to-locate.
-- It falls back to the native cursor wherever it can't be guaranteed.
-- Full spec in Part 3. See also §2 rule 3.
+Whatever the cursor is doing, the visitor can always find it (§2 rule 3). Built in Part 3: the engine is `lib/cursor/`, and `components/cursor/` mounts it.
+
+**Anatomy**
+
+- **The dot** is the hotspot: a 14px circle in an ink that suits what's under it (near-black over light, near-white over dark) at 90% opacity, with a 1.5px outline in the other ink and a faint shadow. One of the two inks always contrasts, so the dot shows on white, black, mid-gray, every accent, photos, video, WebGL and the Island. It never uses `mix-blend-mode: difference`, which vanishes on mid-gray.
+- **The shape** is the morphing companion. It's hidden until a magnetic target, media or a drag area calls for it.
+- **Zero lag.** The pointermove handler writes the dot's transform (`translate3d`, with `will-change: transform`), so one frame later the hotspot is within 0.5px of the pointer. Only the shape uses springs.
+
+**States** come from `data-cursor` attributes and element roles, recomputed on pointermove and on scroll, because scrolling changes what sits under a still pointer. Native zones win outright; otherwise the closest match up the tree wins, so a button inside a drag area is still a button.
+
+| State | When | What the visitor sees |
+|---|---|---|
+| Default | Anywhere else | The 14px dot |
+| Magnetic | Links, buttons, labelled controls and their roles; `data-cursor="magnetic"` | The target's rounded rect plus 8px, tinted with its accent at 12%, on the snappy spring. The target drifts up to 4px toward the pointer and its label up to 2px. The dot shrinks to 6px. Targets larger than 480×160 keep the plain dot |
+| Text | Over glyphs; `data-cursor="text"` | A 2px I-beam as tall as the line |
+| Media or card | `data-cursor="open"`, `"play"` or `"view"`; `data-cursor-label` replaces the word | A 72px glass circle carrying the label, with the 6px dot at its center |
+| Drag | `data-cursor="drag"` (the reel, the timeline, medals, 3D) and range inputs | A 64px glass circle with ‹ › and the 6px dot |
+| Disabled | `:disabled`, `aria-disabled="true"` | A ring with a 45° slash, and the 14px dot |
+| Navigating | A route change that takes longer than 120ms, or `html[data-cursor-busy]` while an overlay loads | The ring draws as a spinner arc |
+| Pressed | Pointer down | The shape scales to .9 and the dot to .8, then both spring back |
+| Native | Text inputs, textareas, selects, iframes, `video[controls]`, contenteditable, `data-cursor="native"` | The system cursor: the native I-beam for typing |
+
+**Ink.** The engine reads what's painted under the hotspot, top layer first: a `data-cursor-ink="light"` or `"dark"` declaration; the pixels of an image, a video or a 2D canvas; the nearest background color, faded by its opacity and blended over whatever is behind it; and finally the section's surface. Imagery whose pixels can't be read, such as WebGL or cross-origin images, declares its ink: `<StageView ink="light">` for a mostly dark scene.
+
+**Locatability**
+
+- **Shake to locate,** as on macOS: at least 4 fast horizontal direction reversals within 600ms grow the dot to 3× for 700ms, then it springs back.
+- **Idle locator:** after 3s of stillness with the pointer inside the window, one soft ring pulses from the dot, once per rest.
+- **Re-entry:** the cursor appears at once where the pointer enters, never flying in from 0,0. Leaving the window fades it out over 150ms.
+- **Settings:** "Larger cursor" (1.5×) and "Use system cursor", in Search and the footer, persisted in localStorage. `components/cursor/cursor-settings.tsx` is ready for both; the kitchen shows it until they exist.
+
+**Always on top.** The root is a `popover="manual"` element in the top layer. Whenever a modal `<dialog>`, another popover or fullscreen opens, it re-stacks itself with `hidePopover()` then `showPopover()`. If the browser refuses, it moves into the topmost open dialog. During a View Transition it takes the name `cursor`, with its old snapshot hidden and its group animation off, so it stays live above the snapshots. Start every View Transition with `startViewTransition()` from `lib/view-transition.ts`, which marks `html[data-view-transition]` for its length.
+
+**Guarantees.** The native cursor comes back by itself:
+
+- for touch and pen: the custom cursor runs only under `(hover: hover) and (pointer: fine)`, and a touch or pen event hands over at once;
+- until the first pointermove gives a real position; `html.cursor-custom` then hides the native cursor in the same frame the dot appears;
+- over native zones (CSS exempts them from `cursor: none`), in forced-colors mode and during native drag and drop;
+- through a watchdog: if the cursor loop throws, or goes 500ms without a frame while the pointer moves, `html.cursor-custom` comes off and the failure is logged once.
+
+**Preferences.** With reduced motion there are no springs and no drift, and shape changes are instant. Shake to locate still works, because it changes size, not position; the idle ring fades in place instead of growing. With `prefers-contrast: more`, the outline is 2px, the inks are opaque and the magnetic tint becomes a solid ring.
 
 ### 6.2 The Island
 
@@ -421,6 +457,12 @@ Append as you go, each with its reason.
 - **Gradient text ends on a luminance-matched second stop** (Part 2). Each finish's second stop is its accent rotated about 35° in OKLCH at the same WCAG luminance, so a gradient word passes exactly the accent's contrast.
 - **Cards invert against light surfaces** (Part 2). §4.1 sets white cards on bg-alt; on a white surface a white card would vanish, so there it's bg-alt.
 - **Capsules keep round ends** (Part 2). A squircle at full radius looks boxy, so pills opt out of corner-shape: squircle.
+- **The cursor's visibility test counts pixels over the dot's own footprint** (Part 3). As written, at least 20% of the pixels in a 40px box must contrast 3:1 with the local background. But a 14px dot with its outline covers about 14% of that box, so no correct dot could pass. The test keeps the 40px box for the background median, taken from its outer ring, and counts contrasting pixels in the dot's 20px box. The real dot scores 35–46% on every background in both engines. With the wrong ink, only the outline contrasts and it scores 17%, so the test still fails a cursor that loses its fill. To be confirmed with Akshat.
+- **The dot's ink follows what's painted under it, not just the section's tone** (Part 3). Going by tone alone, the dark fill sat on Contrail blue at 2.9:1, on disabled buttons faded to near-white, and on dark photos inside light sections, leaving only the 1.5px outline to contrast.
+- **The cursor takes a view-transition-name only during transitions** (Part 3). A permanent name makes it a backdrop root, so the media circle's glass couldn't blur the page beneath it. lib/view-transition.ts marks html[data-view-transition] for the length of every transition, and theme switching goes through it.
+- **No native-cursor fallback during View Transitions** (Part 3). The spec allowed one if Safari froze or ghosted the cursor mid-transition. The e2e test moves the pointer during a transition in WebKit and Chromium: the dot is live at the new position, with no ghost at the old one. If a future Safari regresses, drop html.cursor-custom while html[data-view-transition] is set.
+- **Drift is net movement: the target moves up to 4px, its label up to 2px** (Part 3). The label lags its platter, so the words stay steady and readable while the highlight glides under them. Inline links don't drift at all: transforms don't apply to inline boxes, and moving words inside a paragraph would collide with their neighbors. They still get the shape, around the line under the pointer.
+- **A Switch for on/off settings** (Part 3). The cursor settings are switches (components/ui/switch.tsx): real checkboxes with role="switch". The off track carries a fg-3 hairline, so the control's edge clears 3:1 on every surface, which iOS's gray track doesn't.
 
 ---
 

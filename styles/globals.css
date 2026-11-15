@@ -120,13 +120,21 @@
       corner-shape: squircle;
     }
 
-    /* Capsules keep round ends. */
+    /* Capsules keep round ends, and the cursor's dot, rings and circles stay circles. */
     .rounded-pill,
     .segmented,
     .segmented-thumb,
     .segmented > label,
-    .swatch {
+    .swatch,
+    .switch-track,
+    .switch-thumb,
+    .cursor * {
       corner-shape: round;
+    }
+
+    /* A magnetic shape follows its target's continuous corners, unless it's a capsule. */
+    .cursor .cursor-shape[data-variant="magnetic"]:not([data-capsule]) {
+      corner-shape: squircle;
     }
   }
 

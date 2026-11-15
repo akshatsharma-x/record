@@ -200,3 +200,47 @@ export function gsapSpring(name: SpringName): { duration: number; ease: (progres
 export function scrubStep(elapsedSeconds: number): number {
   return 1 - Math.exp((-3 * elapsedSeconds) / scrub);
 }
+
+// ─── Retargetable springs (the cursor's shape) ───────────────────────────────
+
+export interface SpringState {
+  value: number;
+  /** Units per second. */
+  velocity: number;
+}
+
+/**
+ * Advances a spring toward `target` by `elapsed` seconds, exactly: the closed-form
+ * solution of the damped oscillator, so one 1/60s step equals two 1/120s steps and the
+ * feel is identical at 60 Hz and 120 Hz (§2 rule 6). It carries velocity, so a target can
+ * change mid-flight without a jump.
+ */
+export function stepSpring(state: SpringState, target: number, elapsed: number, config: SpringConfig): SpringState {
+  if (elapsed <= 0) return state;
+  const { dampingRatio: zeta, angularFrequency: omega } = physics(config);
+  const offset = state.value - target;
+  const v0 = state.velocity;
+  if (zeta < 1) {
+    const damped = omega * Math.sqrt(1 - zeta * zeta);
+    const decay = zeta * omega;
+    const envelope = Math.exp(-decay * elapsed);
+    const cos = Math.cos(damped * elapsed);
+    const sin = Math.sin(damped * elapsed);
+    const b = (v0 + decay * offset) / damped;
+    return {
+      value: target + envelope * (offset * cos + b * sin),
+      velocity: envelope * ((-decay * offset + damped * b) * cos + (-decay * b - damped * offset) * sin),
+    };
+  }
+  const envelope = Math.exp(-omega * elapsed);
+  const c = v0 + omega * offset;
+  return {
+    value: target + envelope * (offset + c * elapsed),
+    velocity: envelope * (v0 - omega * c * elapsed),
+  };
+}
+
+/** True once a spring is close enough to its target, and slow enough, to stop animating. */
+export function springAtRest(state: SpringState, target: number, precision = 0.01): boolean {
+  return Math.abs(state.value - target) < precision && Math.abs(state.velocity) < precision * 10;
+}

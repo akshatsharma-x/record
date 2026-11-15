@@ -67,6 +67,8 @@
   --control-light-thumb: #ffffff;
   --control-dark-track: rgb(255 255 255 / 0.1);
   --control-dark-thumb: rgb(255 255 255 / 0.22);
+  /* The Switch's thumb is white in both tones, as on iOS. */
+  --switch-thumb: #ffffff;
 
   /* Materials (§4.7). */
   --glass-light: rgb(255 255 255 / 0.72);
@@ -266,6 +268,50 @@
   --motion-resolve-duration: var(--duration-reveal);
   --motion-resolve-stagger: var(--stagger-lines);
 
+  /* The cursor (§6.1, Part 3). The dot is the hotspot: an ink that suits the surface, a
+     1.5px outline in the opposite ink and a faint shadow, so it shows on anything. */
+  --cursor-dot: 14px;
+  --cursor-dot-small: 6px;
+  --cursor-ibeam: 2px;
+  --cursor-ring: 30px;
+  --cursor-media: 72px;
+  --cursor-drag: 64px;
+  --cursor-magnet-padding: 8px;
+  --cursor-drift: 4px;
+  --cursor-drift-label: 2px;
+  --cursor-outline: 1.5px;
+  --cursor-ink-dark: rgb(29 29 31 / 0.9);
+  --cursor-ink-light: rgb(245 245 247 / 0.9);
+  --cursor-outline-dark: #1d1d1f;
+  --cursor-outline-light: #f5f5f7;
+  --cursor-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  --cursor-tint: 12%;
+  --cursor-large: 1.5;
+  --cursor-press-shape: 0.9;
+  --cursor-press-dot: 0.8;
+  --cursor-shake: 3;
+  --cursor-ring-stroke: 2px;
+  --cursor-slash-angle: -45deg;
+  --cursor-spinner-arc: 0.3turn;
+  --cursor-spin: 900ms;
+  --cursor-pulse-scale: 3;
+  --cursor-pulse-scale-still: 2;
+  --cursor-pulse-opacity: 0.5;
+  --cursor-label-offset: 12px;
+  --cursor-arrow-inset: 8px;
+  --cursor-arrow-size: 16px;
+  --cursor-arrow-stroke: 2;
+
+  /* The Switch (§6.5): an iOS-style track, with a hairline edge that clears 3:1 when off. */
+  --switch-width: 51px;
+  --switch-height: 31px;
+  --switch-inset: 2px;
+  --switch-thumb-size: 27px;
+  --opacity-disabled: 0.4;
+
+  /* Kitchen test surfaces: mid-gray is where difference-blend cursors vanish. */
+  --kitchen-mid-gray: #808080;
+
   /* Durations (§5.3). Each DESIGN.md range has a short, default and long step. */
   --duration-micro-short: 150ms;
   --duration-micro: 200ms;
@@ -316,6 +362,15 @@
     --radius-control: 22px;
     --radius-card-s: 33px;
     --radius-card-l: 51.5px;
+  }
+}
+
+/* Increased contrast: a 2px outline and opaque inks for the cursor. */
+@media (prefers-contrast: more) {
+  :root {
+    --cursor-outline: 2px;
+    --cursor-ink-dark: #1d1d1f;
+    --cursor-ink-light: #f5f5f7;
   }
 }
 

@@ -138,6 +138,30 @@ describe.each(CONTEXTS)("$name", (context) => {
   });
 });
 
+describe("the cursor and the switch (non-text, 3:1)", () => {
+  const dark = color("--cursor-ink-dark");
+  const light = color("--cursor-ink-light");
+
+  it("draw the dot in two inks that contrast with each other", () => {
+    expect(ratio(over(dark, color("--cursor-outline-light")), color("--cursor-outline-light"))).toBeGreaterThanOrEqual(NON_TEXT);
+    expect(ratio(over(light, color("--cursor-outline-dark")), color("--cursor-outline-dark"))).toBeGreaterThanOrEqual(NON_TEXT);
+  });
+
+  it.each(CONTEXTS)("fill the dot in an ink that stands out from $name", (context) => {
+    const ink = context.tone === "light" ? dark : light;
+    for (const background of [context.surface, context.card]) {
+      expect(ratio(over(ink, background), background)).toBeGreaterThanOrEqual(NON_TEXT);
+    }
+  });
+
+  it.each(CONTEXTS)("edge the switch's off track so it stands out from $name", (context) => {
+    const edge = color(`--neutral-${context.tone}-fg-3`);
+    for (const background of [context.surface, context.card]) {
+      expect(ratio(edge, background)).toBeGreaterThanOrEqual(NON_TEXT);
+    }
+  });
+});
+
 describe("the tests themselves", () => {
   it("compute WCAG ratios correctly", () => {
     expect(ratio([0, 0, 0, 1], [255, 255, 255, 1])).toBeCloseTo(21, 5);
