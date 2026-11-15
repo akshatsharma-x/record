@@ -45,20 +45,20 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
   ];
 
   return (
-    <main className="mx-auto max-w-6xl space-y-16 px-6 py-12">
+    <main className="mx-auto max-w-wide space-y-16 px-6 py-12">
       <header className="space-y-4">
-        <p className="font-mono text-sm opacity-70">/dev/content · development only · 404 in production</p>
-        <h1 className="text-4xl font-bold tracking-tight">Content</h1>
-        <p className="max-w-prose opacity-80">
+        <p className="font-mono text-caption opacity-70">/dev/content · development only · 404 in production</p>
+        <h1 className="text-display">Content</h1>
+        <p className="max-w-measure opacity-80">
           Everything the site knows, as the site will use it. Proofread the entities, check the derived values, and
           fill the gaps in <Mono>content/data.ts</Mono>. Derived for {formatIsoDate(derived.today)} (
           {location.timeZoneLabel}).
         </p>
         <nav aria-label="On this page">
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-caption">
             {toc.map(([id, label]) => (
               <li key={id}>
-                <a className="underline decoration-current/30 underline-offset-4 hover:decoration-current" href={`#${id}`}>
+                <a className="underline decoration-hairline underline-offset-(--underline-offset) hover:decoration-current" href={`#${id}`}>
                   {label}
                 </a>
               </li>
@@ -68,7 +68,7 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
       </header>
 
       <Section id="summary" title="Summary">
-        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <dl className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
           {(
             [
               ["internships", counts.internships],
@@ -79,13 +79,13 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
               ["achievements", counts.achievements],
             ] as const
           ).map(([label, value]) => (
-            <div key={label} className="rounded-xl border border-current/15 p-4">
-              <dt className="text-sm opacity-70">{label}</dt>
-              <dd className="text-4xl font-semibold tabular-nums">{value}</dd>
+            <div key={label} className="rounded-card-s border border-hairline p-4">
+              <dt className="text-caption opacity-70">{label}</dt>
+              <dd className="text-display tabular-nums">{value}</dd>
             </div>
           ))}
         </dl>
-        <p className="text-sm opacity-80">
+        <p className="text-caption opacity-80">
           {derived.warnings.length} warnings · {derived.gaps.length} gaps · {todos.length} TODO(akshat) comments ·{" "}
           {draftPaths.length} drafts awaiting approval
         </p>
@@ -97,7 +97,7 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
         note="Gaps are null fields: production hides them and never shows a placeholder. Fill them in content/data.ts and they appear without code changes."
       >
         <SubHeading>Gaps ({derived.gaps.length} null fields)</SubHeading>
-        <ul className="columns-1 gap-8 text-sm sm:columns-2 lg:columns-3">
+        <ul className="columns-1 gap-8 text-caption md:columns-2 lg:columns-3">
           {derived.gaps.map((path) => (
             <li key={path} className="break-inside-avoid py-0.5">
               <Mono>{path}</Mono>
@@ -301,7 +301,7 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
               "bio",
               labeled(
                 "profile.bio",
-                <div className="max-w-prose space-y-3">
+                <div className="max-w-measure space-y-3">
                   {content.profile.bio.map((paragraph) => (
                     <p key={paragraph.text}>
                       <ClaimText {...paragraph} />
@@ -332,13 +332,13 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
               <div className="opacity-60">{durations.get(role.id)?.label}</div>
             </div>,
             <Value key="location" value={role.location} />,
-            <div key="text" className="max-w-prose space-y-2">
+            <div key="text" className="max-w-measure space-y-2">
               <p>
                 <ClaimText {...role.summary} />
               </p>
               <List items={role.bullets.map((bullet) => <ClaimText key={bullet.text} {...bullet} />)} />
               {role.confidential ? (
-                <p className="text-xs opacity-70">
+                <p className="text-footnote opacity-70">
                   {role.confidential.note} Shareable: <Value value={role.confidential.shareable} />
                 </p>
               ) : null}
@@ -389,12 +389,12 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
           caption="Publications"
           head={["Paper", "Status", "TL;DR", "Keywords", "Co-authors", "Abstract", "DOI", "PDF"]}
           rows={content.publications.map((paper) => [
-            <div key="title" className="max-w-sm">
+            <div key="title" className="max-w-measure">
               <div className="font-semibold">{paper.title}</div>
               <Mono>{paper.slug}</Mono> · {conferences.get(paper.presentedAt)?.name}
             </div>,
             statuses.get(paper.slug)?.label,
-            labeled(`publications[${paper.slug}].tldr`, <span className="block max-w-xs">{paper.tldr}</span>),
+            labeled(`publications[${paper.slug}].tldr`, <span className="block max-w-measure">{paper.tldr}</span>),
             <Value key="keywords" value={paper.keywords} />,
             <Value key="coAuthors" value={paper.coAuthors} />,
             <Value key="abstract" value={paper.abstract} />,
@@ -409,7 +409,7 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
           caption="Projects"
           head={["Project", "Summary", "Stack", "Year", "Role", "Links", "Screenshots"]}
           rows={content.projects.map((project) => [
-            <div key="name" className="max-w-xs space-y-1">
+            <div key="name" className="max-w-measure space-y-1">
               <div className="font-semibold">{project.name}</div>
               <div>
                 <ClaimText {...project.tagline} />
@@ -418,7 +418,7 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
                 {project.category} · <Mono>{project.slug}</Mono>
               </div>
             </div>,
-            <p key="summary" className="max-w-prose">
+            <p key="summary" className="max-w-measure">
               <ClaimText {...project.summary} />
             </p>,
             <Value key="stack" value={project.stack} />,

@@ -21,7 +21,7 @@ The portfolio of Akshat Sharma: AI & ML engineer, B.Tech CSE '27 at Manipal Univ
 11. [Stack](#11-stack)
 12. [Decision log](#12-decision-log)
 
-- [Open conflicts](#open-conflicts): [C1](#c1-hover-only-delights) · [C2](#c2-time-based-vs-scroll-scrubbed) · [C3](#c3-single-key-search-shortcut) · [C4](#c4-three-surfaces-two-values) · [C5](#c5-sentence-case) · [C6](#c6-the-8-pt-grid) · [C7](#c7-where-the-3d-canvas-sits)
+- [Open conflicts](#open-conflicts): [C1](#c1-hover-only-delights) · [C3](#c3-single-key-search-shortcut) · [C5](#c5-sentence-case). C2, C4, C6 and C7 were resolved in Part 2 (§12).
 
 ---
 
@@ -68,7 +68,7 @@ These apply to every part.
 3. **The cursor is always locatable** (§6.1, built in Part 3). No feature may hide, cover, lag or shrink the hotspot below its spec.
 4. **Motion has meaning.** Every animation explains a relationship, confirms an action or rewards intent. Loops run only inside media the visitor can pause, the periphery stays still, and everything has a reduced-motion edition (§5.7).
 5. **Respect the visitor.** Native scrolling, with no hijacking and no smooth-scroll library. No preloader or intro gate, no modal on load, no autoplaying sound, and no content that only hover reveals. *Open conflict: [C1](#c1-hover-only-delights).*
-6. **Performance is design** (§10). Animation is time-based only, so 60 Hz and 120 Hz ProMotion screens look identical. Animate transform and opacity; filter only sparingly. *Open conflict: [C2](#c2-time-based-vs-scroll-scrubbed).*
+6. **Performance is design** (§10). Animation is frame-rate independent: it's driven by time or by scroll position, never by frame count, so 60 Hz and 120 Hz ProMotion screens look identical. Animate transform and opacity; filter only sparingly.
 7. **Accessibility is design** (§10). WCAG 2.2 AA, targets of at least 44×44 pt, a full keyboard path and VoiceOver testing. *Open conflicts: [C1](#c1-hover-only-delights), [C3](#c3-single-key-search-shortcut).*
 8. **Safari first.** Test macOS Safari and iOS Safari, then Chrome, then Firefox.
 9. **Tokens only.** Components contain no magic numbers: color, type, spacing, radius, duration and spring all come from tokens.
@@ -98,7 +98,7 @@ One long story, in this order. Surfaces are given for the light theme.
 
 Credentials & honors holds education, certificates and achievements. It comes right after Skills and right before Contact.
 
-*Open conflicts: [C4](#c4-three-surfaces-two-values) (surfaces), [C5](#c5-sentence-case) (section name).*
+*Open conflict: [C5](#c5-sentence-case) (section name).*
 
 ### 3.2 Routes
 
@@ -139,11 +139,11 @@ Apple-calibrated, our own tokens.
 
 ### 4.2 Surfaces
 
-- Every section sets `data-surface="light|dark"`. Text tokens re-map per surface.
+- Every section sets `data-surface="light|light-alt|dark"`. Text tokens re-map per surface.
 - The page background crossfades between surfaces, scrubbed by scroll, so the lights go down and come up.
-- In the dark theme, light surfaces become bg-alt so the rhythm survives.
-
-*Open conflicts: [C2](#c2-time-based-vs-scroll-scrubbed), [C4](#c4-three-surfaces-two-values).*
+- The crossfade runs over the last 20% of each section, and text tokens switch at its midpoint.
+- In the dark theme, both light surfaces (light and light-alt) become bg-alt, so the rhythm between light and dark survives.
+- In the light theme, cards invert against their surface: #FFFFFF on light-alt (§4.1), bg-alt on light.
 
 ### 4.3 Finishes
 
@@ -151,13 +151,15 @@ Finishes are the accent a visitor can choose, like a product's colors.
 
 - Each finish has an accent-on-light and an accent-on-dark. Both must reach at least 4.5:1 for text, and a unit test checks this. If a hex fails, adjust the hex, never the rule.
 - The finish also tints 3D materials, gradients, focus rings, selection and the Island's activities.
+- Accent fills, such as primary buttons, use the on-light accent in both tones, so their labels are always white.
+- Gradients run from the accent to a second stop of the same luminance, so they pass the accent's contrast test.
 - The finish persists in localStorage.
 
 | Finish | On light | On dark | Note |
 |---|---|---|---|
 | Contrail (default) | #0066CC | #2997FF | A sky blue that nods to United |
 | Pink City | #C2416B | #FF7AA2 | Jaipur rose |
-| Saffron | #B25E00 | #FFB340 | |
+| Saffron | #AB5A00 | #FFB340 | |
 | Monsoon | #00796B | #4FD1C5 | Teal |
 
 ### 4.4 Type
@@ -191,7 +193,7 @@ Finishes are the accent a visitor can choose, like a product's colors.
 
 ### 4.5 Space and layout
 
-- **Grid:** 8 pt, with 4 pt for type and icons.
+- **Grid:** 8 pt, with 4 pt half-steps for type, icons and the layout values that need them (the 20px medium gutter and the 180px padding cap).
 - **Section block padding:** `clamp(96px, 12vw, 180px)`.
 - **Widths:** measure 680px · content 1024px · wide 1440px.
 - **Breakpoints** (Apple's own web breakpoints), with grid columns and gutter:
@@ -205,15 +207,13 @@ Finishes are the accent a visitor can choose, like a product's colors.
 
 - **Bento grids:** 12 columns, with tiles spanning 4, 6, 8 or 12 at fixed aspect ratios.
 
-*Open conflict: [C6](#c6-the-8-pt-grid).*
-
 ### 4.6 Radii
 
 | chip | control | card-s | card-l | pill |
 |---:|---:|---:|---:|---:|
 | 8 | 12 | 18 | 28 | 999 |
 
-Add `corner-shape: squircle` inside `@supports` for continuous corners, and re-tune those radii so the fallback looks the same.
+Add `corner-shape: squircle` inside `@supports` for continuous corners, and re-tune those radii so the fallback looks the same: 1.84× (chip 14.75 · control 22 · card-s 33 · card-l 51.5) cuts each corner by the same amount. Capsules (pill) keep round ends.
 
 ### 4.7 Materials
 
@@ -230,14 +230,15 @@ Soft and rare: `0 2px 8px rgb(0 0 0/.04), 0 12px 40px rgb(0 0 0/.08)`.
 
 Bottom to top:
 
-1. Content
-2. Sticky elements
-3. The shared 3D canvas (between section backgrounds and section text)
-4. The Island
-5. Overlays (`<dialog>` in the top layer)
-6. The cursor (re-stacked into the top layer; Part 3)
+1. The page background: the surface backdrop that crossfades between sections (§4.2)
+2. The shared 3D canvas
+3. Content, including section text
+4. Sticky elements
+5. The Island
+6. Overlays (`<dialog>` in the top layer)
+7. The cursor (re-stacked into the top layer; Part 3)
 
-*Open conflict: [C7](#c7-where-the-3d-canvas-sits).*
+Anything above the canvas is transparent where a scene shows through it.
 
 ### 4.10 Icons
 
@@ -288,8 +289,6 @@ The signature entrance.
 
 - GSAP ScrollTrigger: scrub ≈ .6 (it softens mouse wheels), `ignoreMobileResize` and svh units.
 - A pinned scene is at most 300vh and can be skipped with the keyboard and the Island.
-
-*Open conflict: [C2](#c2-time-based-vs-scroll-scrubbed).*
 
 ### 5.6 Motion on intent
 
@@ -413,12 +412,21 @@ Append as you go, each with its reason.
 - **The certificates heading derives from data and never shows "0".**
 - **A project's year and role stay hidden until Akshat confirms them.**
 - **Cache Components and Partial Prefetching stay on** (Part 1). create-next-app 16.4 turns both on, and Next.js makes them the default everywhere in its next major. Pages get an instant static shell, and values that depend on today, such as role durations, graduation progress and live clocks, stream in after `io()`.
+- **C2 resolved: animation is frame-rate independent** (Part 2). §2 rule 6 now says time or scroll position, never frame count. Its own reason was 60 Hz and 120 Hz parity, which scroll-driven animation already meets, and §4.2 and §5 require scrubbing.
+- **C4 resolved: three surface values** (Part 2). data-surface takes light, light-alt or dark. In the dark theme both light surfaces become bg-alt: the rhythm between light and dark (the lights going down and up) matters more than light against light-alt, and separating them would have needed an invented color.
+- **C6 resolved: 4 pt half-steps for layout too** (Part 2). The 20px medium gutter and the 180px padding cap are DESIGN.md's own numbers and Apple's measurements, so the grid rule makes room for them rather than changing them.
+- **C7 resolved: the canvas sits between the page background and the content** (Part 2). The parenthetical was the intent, and the order now matches it. Sections are transparent while the surface controller runs, so the backdrop is the only background beneath the canvas.
+- **Saffron on light is #AB5A00, not #B25E00** (Part 2). It measured 4.29:1 on bg-alt, and §4.3 says adjust the hex, never the rule. #AB5A00 is the smallest darkening that passes: 4.60:1 on bg-alt and 5.01:1 on white.
+- **Accent fills use the on-light accent in both tones** (Part 2). A white label on Contrail's on-dark #2997FF measures 3.0:1; on the on-light accent it's at least 4.93:1 in every finish.
+- **Gradient text ends on a luminance-matched second stop** (Part 2). Each finish's second stop is its accent rotated about 35° in OKLCH at the same WCAG luminance, so a gradient word passes exactly the accent's contrast.
+- **Cards invert against light surfaces** (Part 2). §4.1 sets white cards on bg-alt; on a white surface a white card would vanish, so there it's bg-alt.
+- **Capsules keep round ends** (Part 2). A squircle at full radius looks boxy, so pills opt out of corner-shape: squircle.
 
 ---
 
 ## Open conflicts
 
-Each entry is a pair of rules that can't both hold as written. They are deliberately left unresolved. An entry stays open until a decision changes the rules it names, and that decision and its reason go in §12.
+Each entry is a pair of rules that can't both hold as written. They are deliberately left unresolved. An entry stays open until a decision changes the rules it names, and that decision and its reason go in §12. C2, C4, C6 and C7 were resolved that way in Part 2.
 
 ### C1. Hover-only delights
 
@@ -426,23 +434,11 @@ Each entry is a pair of rules that can't both hold as written. They are delibera
 - **§8:** every section hides one delight "behind a click or a hover".
 - **Clash:** a delight behind a hover alone is content that only hover reveals. It would also be missing from the full keyboard path (§2 rule 7).
 
-### C2. Time-based vs. scroll-scrubbed
-
-- **§2 rule 6:** "Animation is time-based only, so 60 Hz and 120 Hz ProMotion screens look identical."
-- **§4.2, §5.3, §5.5:** the page-background crossfade and cinematic scenes are scrubbed by scroll (ScrollTrigger, scrub ≈ .6).
-- **Clash:** scroll-scrubbed animation is driven by scroll position, not by time, so as worded, §2 rule 6 forbids what §4.2 and §5 require.
-
 ### C3. Single-key Search shortcut
 
 - **§6.3:** Search opens with ⌘K or "/".
 - **§2 rule 7, §10:** WCAG 2.2 AA.
 - **Clash:** "/" is a single-character shortcut. WCAG success criterion 2.1.4 (Character Key Shortcuts, level A, so required for AA) requires such a shortcut to be possible to turn off or remap, or to be active only while its component has focus. The brief specifies no off switch or remapping, and a global "/" isn't scoped to focus.
-
-### C4. Three surfaces, two values
-
-- **§3.1:** sections use three surfaces: dark, light and light-alt (Highlights, Work, Footer).
-- **§4.2:** every section sets `data-surface="light|dark"`, and the dark-theme rule ("light surfaces become bg-alt") is silent on light-alt.
-- **Clash:** the attribute can't express light-alt, and what light-alt becomes in the dark theme is undefined.
 
 ### C5. Sentence case
 
@@ -450,14 +446,3 @@ Each entry is a pair of rules that can't both hold as written. They are delibera
 - **§3.1, §3.2:** the section "Research & Publications" and the "Tech Specs" page are in title case (compare "Credentials & honors").
 - **Clash:** as written, both names break the rule.
 
-### C6. The 8 pt grid
-
-- **§4.5:** an 8 pt grid, with 4 pt for type and icons.
-- **§4.5:** section block padding tops out at 180px, and the medium gutter is 20px.
-- **Clash:** 180 and 20 are multiples of 4 but not of 8, and they are neither type nor icons.
-
-### C7. Where the 3D canvas sits
-
-- **§4.9, order:** content → sticky elements → the shared 3D canvas → the Island → overlays → the cursor, bottom to top. This puts the canvas above all content and sticky elements.
-- **§4.9, parenthetical:** the canvas sits "between section backgrounds and section text", which puts it below section text.
-- **Clash:** section text is content, so the canvas can't be both above it and below it.
