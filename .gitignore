@@ -47,3 +47,6 @@ next-env.d.ts
 /playwright/.cache/
 
 /reports/
+
+# The stand-in portrait for the hero (scripts/portrait-fixture.mjs). Never committed or shipped.
+/public/_fixtures/

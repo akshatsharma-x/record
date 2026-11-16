@@ -191,6 +191,36 @@ describe("the Island and Search (Part 4)", () => {
   });
 });
 
+describe("the hero (Part 5)", () => {
+  const black = color("--neutral-dark-bg");
+  const fg = color("--neutral-dark-fg");
+  const paper: RGBA = [255, 255, 255, 1];
+  const alpha = Number(tokens.get("--hero-light-alpha"));
+  const lights = ["dawn", "noon", "dusk", "night"].map((light) => color(`--light-${light}`));
+  const disc = (hue: RGBA): RGBA => [hue[0], hue[1], hue[2], alpha];
+
+  it.each(FINISHES)("keeps white text readable where all three discs of light overlap at full strength ($name)", ({ id }) => {
+    const first = color(`--finish-${id}-on-dark`);
+    const second = color(`--finish-${id}-2-on-dark`);
+    for (const warmth of lights) {
+      const field = over(disc(warmth), over(disc(second), over(disc(first), black)));
+      expect(ratio(fg, field)).toBeGreaterThanOrEqual(AA);
+    }
+  });
+
+  it("keeps the portrait's date line and name readable over even a white wall", () => {
+    expect(ratio(fg, over(color("--portrait-scrim"), paper))).toBeGreaterThanOrEqual(AA);
+  });
+
+  it("keeps the details readable over even a white shirt, where the floor is full", () => {
+    expect(ratio(fg, over(color("--portrait-floor"), paper))).toBeGreaterThanOrEqual(AA);
+  });
+
+  it("draws the loupe's rim so it stands out from the dark hero (non-text, 3:1)", () => {
+    expect(ratio(over(color("--lens-rim"), black), black)).toBeGreaterThanOrEqual(NON_TEXT);
+  });
+});
+
 describe("the tests themselves", () => {
   it("compute WCAG ratios correctly", () => {
     expect(ratio([0, 0, 0, 1], [255, 255, 255, 1])).toBeCloseTo(21, 5);

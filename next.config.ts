@@ -12,6 +12,8 @@ export default function config(phase: string): NextConfig {
     cacheComponents: true,
     partialPrefetching: true,
     pageExtensions: devServer ? ["dev.tsx", "tsx", "ts"] : ["tsx", "ts"],
+    // The hero portrait's layers (Part 5) ship as AVIF where browsers accept it, else WebP.
+    images: { formats: ["image/avif", "image/webp"], qualities: [60, 75] },
     turbopack: {
       rules: {
         "*.css": {

@@ -7,11 +7,12 @@ import { MEDIA_LABELS, type MediaCursor } from "./config.ts";
  *
  *   data-cursor="open" | "play" | "view"   media or card: a glass circle with the label
  *   data-cursor="drag"                     drag area: a circle with ‹ ›
+ *   data-cursor="loupe"                    a 120px lens that magnifies the element 1.35×
  *   data-cursor="magnetic" | "text" | "default" | "native"
  *   data-cursor-label="…"                  replaces a media label
  *   data-cursor-ink="light" | "dark"       the dot's ink over imagery it can't sample (ink.ts)
  */
-export type CursorKind = "default" | "magnetic" | "text" | "media" | "drag" | "disabled" | "native";
+export type CursorKind = "default" | "magnetic" | "text" | "media" | "drag" | "disabled" | "native" | "loupe";
 
 export interface Resolution {
   kind: CursorKind;
@@ -82,7 +83,9 @@ export function resolveElement(start: Element | null): Resolution {
         const label = element.getAttribute("data-cursor-label") ?? MEDIA_LABELS[declared as MediaCursor];
         return { kind: "media", element, label };
       }
-      if (declared === "drag" || declared === "text" || declared === "default") return { kind: declared, element };
+      if (declared === "drag" || declared === "text" || declared === "default" || declared === "loupe") {
+        return { kind: declared, element };
+      }
       if (declared === "magnetic") return interactive(element);
     }
     if (element instanceof HTMLLabelElement) {

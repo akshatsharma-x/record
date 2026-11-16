@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/portrait-fixture.mjs && next dev",
+    "fixtures": "node scripts/portrait-fixture.mjs",
     "prebuild": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON content/check.ts",
     "build": "next build",
     "postbuild": "vitest run tests/unit/privacy.test.ts",

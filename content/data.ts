@@ -35,7 +35,13 @@ export const data = {
       orcid: null, // TODO(akshat)
     },
     resumePdf: null, // TODO(akshat): a résumé PDF without the phone number. Until then, no download.
-    photo: null, // TODO(akshat): a portrait. Part 5's portrait edition switches on when there is one.
+    // TODO(akshat): a portrait, at least 3000px tall, with soft side light and a plain
+    // background, framed head and shoulders with the top of the head about 15–20% from
+    // the top. Make two layers from it (DESIGN.md §7, Part 5): the subject cut out with
+    // alpha, and the background plate with Akshat removed. Put both in /public and
+    // describe them here, with headTop (where the top of the head sits, as a share of
+    // the height); the hero's portrait edition switches on by itself.
+    photo: null,
     // Résumé facts only.
     bio: [
       {

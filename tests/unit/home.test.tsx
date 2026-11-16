@@ -1,11 +1,28 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import Home from "@/app/page";
 import { content } from "@/content";
 import { SECTIONS } from "@/lib/sections";
 
-afterEach(cleanup);
+// jsdom has no matchMedia or IntersectionObserver; the hero's client parts use both.
+beforeEach(() => {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} })),
+  );
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+});
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 it("tells the story in order, one heading per section", () => {
   const { container } = render(<Home />);

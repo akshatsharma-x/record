@@ -45,6 +45,46 @@ const Claim = z.strictObject({
 
 const Image = z.strictObject({ src: z.string().min(1), alt: Text });
 
+/** A picture in /public, with its intrinsic size so layout never shifts. */
+const Picture = z.strictObject({
+  src: z.string().regex(/^\/.+\.(png|jpe?g|webp|avif)$/, "use a /public path to a .png, .jpg, .webp or .avif"),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+});
+
+/**
+ * The hero portrait (DESIGN.md §7, Part 5), as layers made from one photo: soft side
+ * light, a plain background, at least 3000px tall. The portrait edition of the hero
+ * switches on when this exists.
+ */
+const Portrait = z
+  .strictObject({
+    /** What the photo shows, for screen readers. */
+    alt: Text,
+    /** Akshat cut out, with alpha: Copy Subject on macOS, or a matting model. */
+    subject: Picture,
+    /** The background with Akshat removed: Photos' Clean Up, or generative fill. Same size. */
+    plate: Picture,
+    /** Optional: a depth map (Apple's Depth Pro) for a richer parallax. Same size. */
+    depth: Picture.optional(),
+    /**
+     * Where the top of the head sits, as a share of the photo's height (about 0.15–0.2).
+     * The hero sets the name against it, so the head covers only the foot of the letters.
+     */
+    headTop: z.number().min(0.05).max(0.4),
+  })
+  .superRefine((portrait, ctx) => {
+    if (portrait.subject.height < 3000) {
+      ctx.addIssue({ code: "custom", path: ["subject", "height"], message: "the portrait should be at least 3000px tall" });
+    }
+    for (const layer of ["plate", "depth"] as const) {
+      const picture = portrait[layer];
+      if (picture && (picture.width !== portrait.subject.width || picture.height !== portrait.subject.height)) {
+        ctx.addIssue({ code: "custom", path: [layer], message: "every layer must be the subject's size, so they line up" });
+      }
+    }
+  });
+
 // ─── Entities ────────────────────────────────────────────────────────────────
 
 const Profile = z.strictObject({
@@ -73,7 +113,7 @@ const Profile = z.strictObject({
   }),
   /** A phone-free résumé PDF in /public. null means there's no download (DESIGN.md §2 rule 2). */
   resumePdf: PublicPdf.nullable(),
-  photo: Image.nullable(),
+  photo: Portrait.nullable(),
   bio: z.array(Claim).min(1),
 });
 
@@ -272,6 +312,7 @@ export type Skill = z.output<typeof Skill>;
 export type Certificate = z.output<typeof Certificate>;
 export type Achievement = z.output<typeof Achievement>;
 export type Highlight = z.output<typeof Highlight>;
+export type Portrait = z.output<typeof Portrait>;
 
 // ─── Claims ──────────────────────────────────────────────────────────────────
 

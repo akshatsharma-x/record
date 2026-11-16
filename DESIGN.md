@@ -14,7 +14,7 @@ The portfolio of Akshat Sharma: AI & ML engineer, B.Tech CSE '27 at Manipal Univ
 4. [Tokens](#4-tokens): [Neutrals](#41-neutrals) · [Surfaces](#42-surfaces) · [Finishes](#43-finishes) · [Type](#44-type) · [Space and layout](#45-space-and-layout) · [Radii](#46-radii) · [Materials](#47-materials) · [Elevation](#48-elevation) · [Layers](#49-layers) · [Icons](#410-icons)
 5. [Motion](#5-motion): [Curves](#51-curves) · [Springs](#52-springs) · [Durations](#53-durations) · [The Resolve](#54-the-resolve) · [Scroll scenes](#55-scroll-scenes) · [Motion on intent](#56-motion-on-intent) · [Reduced motion edition](#57-reduced-motion-edition)
 6. [Interaction](#6-interaction): [The cursor](#61-the-cursor) · [The Island](#62-the-island) · [Search](#63-search) · [Focus ring](#64-focus-ring) · [Pressed state](#65-pressed-state) · [Depth on hover](#66-depth-on-hover)
-7. [Signature moments](#7-signature-moments)
+7. [Signature moments](#7-signature-moments): [The hero](#71-the-hero)
 8. [Surprises](#8-surprises)
 9. [Voice](#9-voice)
 10. [Budgets](#10-budgets)
@@ -326,6 +326,7 @@ Whatever the cursor is doing, the visitor can always find it (§2 rule 3). Built
 | Text | Over glyphs; `data-cursor="text"` | A 2px I-beam as tall as the line |
 | Media or card | `data-cursor="open"`, `"play"` or `"view"`; `data-cursor-label` replaces the word | A 72px glass circle carrying the label, with the 6px dot at its center |
 | Drag | `data-cursor="drag"` (the reel, the timeline, medals, 3D) and range inputs | A 64px glass circle with ‹ › and the 6px dot |
+| Loupe | `data-cursor="loupe"`: the typographic hero's name | A 120px liquid-glass lens that magnifies the letters under it 1.35×: a scaled copy of the target, clipped to the lens, with a specular rim and a faint chromatic edge. The 14px dot stays at its center with a 2px outline. The copy is `aria-hidden`, and nothing requires the lens |
 | Disabled | `:disabled`, `aria-disabled="true"` | A ring with a 45° slash, and the 14px dot |
 | Navigating | A route change that takes longer than 120ms, or `html[data-cursor-busy]` while an overlay loads | The ring draws as a spinner arc |
 | Pressed | Pointer down | The shape scales to .9 and the dot to .8, then both spring back |
@@ -407,6 +408,18 @@ One per section; details in their parts.
 | Credentials | The wallet and the medals | 11 |
 | Contact | The dock and the composer | 12 |
 
+### 7.1 The hero
+
+Built in Part 5 (`components/hero/`, logic in `lib/hero.ts`). Two editions, one content: the portrait edition switches on by itself when `profile.photo` exists; until then the typographic edition ships. Both read in full without JavaScript and with reduced motion.
+
+**Shared content.** A Lock Screen date line: the visitor's date in their locale, then Akshat's live time and place ("Monday, 16 November · 9:41 PM IST", "in Jaipur" once the city is confirmed). Then the name, the role, the headline, three derived chips (Now at United Airlines · B.Tech CSE ’27 · Manipal University Jaipur · SCI-2026 · Springer LNNS), the "See my work" pill (#work) and "Say hello ›" (#contact). Then the finish swatches, each named like a product color: choosing one wipes the new finish out from the swatch over 600ms and says so in the Island. A home-indicator bar breathes every 4s until the first scroll, then never again. A pause button stops the loops (WCAG 2.2.2).
+
+**Arrival.** CSS from the first paint, over within 1.2s, with no gate: the name comes into focus line by line (blur and rise, never transparent, so it's the LCP at once), the details fade after it and the UI last.
+
+**Typographic edition.** The name huge and centered on the dark surface, on two lines on phones, over a light field: three soft discs in the finish's two hues and the hour's warmth (dawn, noon, dusk, night), drifting on a 20s loop that rests off-screen, in a hidden tab and when paused. The loupe (§6.1) magnifies the name.
+
+**Portrait edition.** Layers, back to front: the background plate (blurred like bokeh, and past its 3:4 frame a heavier blur of itself), the name in white, Akshat cut out, then the UI. The arrival is a focus pull: pre-blurred copies of the plate (24px) and the subject (12px) fade off the settled ones (8px and sharp), so no blur animates on a full-screen layer (§5.4). The pointer moves the layers in depth on the smooth spring (plate ±8px, name ±4px, subject ±12px); on phones a tilt does, where it needs no permission. Scrolling away, the subject scales to .92 and rises slower than the name, which fades upward as the light dims. The ƒ button opens the aperture dial, ƒ1.4 to ƒ16 in full stops, which sets the plate's blur live (24px to 2px; ƒ4 is 8px) for the session. On phones the first screen is the Lock Screen (the date, the name behind the head, the role and headline); the chips, links and finishes follow on the dark floor. The photo's `headTop` places the name and the phone frame, so the head covers only the foot of the letters.
+
 ---
 
 ## 8. Surprises
@@ -431,7 +444,7 @@ Catalog in Part 13.
 
 ## 10. Budgets
 
-- **Web vitals:** LCP under 2.0s on a mid-range phone over 4G · INP under 150ms · CLS under 0.05.
+- **Web vitals:** LCP under 2.0s on a mid-range phone over 4G · INP under 150ms · CLS under 0.05. LCP is measured with Lighthouse's mobile profile under DevTools throttling (see §12, Part 5).
 - **JavaScript:** first-load JS of at most 170 KB gzip. 3D and Ask load as lazy chunks.
 - **Lighthouse:** performance at least 95; accessibility, best practices and SEO at 100.
 - **3D:** only on capable devices (tier HIGH or MID), with posters everywhere else. The whole site uses one WebGL context, and nothing renders off-screen.
@@ -493,6 +506,20 @@ Append as you go, each with its reason.
 - **The Island listens for hover natively** (Part 4). React derives pointer enter and leave from the element the pointer came from, and skips them while that part of the page is still hydrating: a hover in the first moments after load was lost.
 - **Search links to home sections until the pages exist** (Part 4). Its index points at /work/[slug] and /research/[slug], which Parts 9 and 8 build. Until then those entries link to #work and #research, so no result leads to a 404.
 - **Search's actions run inside the gesture** (Part 4). Safari lets the clipboard be written only during the click or key press itself. The dialog closes at once, so a theme reveal or a print still sees the page, and the action runs in the same handler.
+- **The portrait edition is built against a stand-in** (Part 5). Until Akshat's photo exists, scripts/portrait-fixture.mjs draws a studio bust as two layers (a subject cutout and a plate) into public/_fixtures (not committed). /dev/hero shows it, and builds with `CLASSYFOLIO_PORTRAIT_FIXTURE=1` use it for Lighthouse. Production ships the typographic edition until `profile.photo` is set. The optional Depth Pro map is skipped: three layers carry the parallax.
+- **The portrait says where the head sits** (Part 5). `photo.headTop`, as a share of the height, sets the name and, on phones, the frame, so the head covers only the foot of the letters whatever the framing. Without it, a two-line name on a phone sat almost wholly behind the head.
+- **On phones the portrait spans two screens** (Part 5). Fitting the details into one screen put them over the face. The first screen is the Lock Screen: the date, the name behind the head, the role and the headline. The chips, links and finishes follow on the dark floor.
+- **The date line renders in the browser** (Part 5). Only the browser knows the visitor's date and locale, so the server renders the place and zone ("India · IST", never a stale time) and the page stays static, with no `io()` in the shell. The live line arrives as a new element in a full-width box, so the swap shifts nothing.
+- **The arrival is CSS from the first paint, and the name is never transparent** (Part 5). It only blurs and rises into place, so it paints, and counts as LCP, at once. The fades fill backwards: once over they leave no effect behind, so nothing stays a backdrop root and the dial's glass blurs what's behind it.
+- **Hero text is white throughout** (Part 5). fg-2 and accent-colored text fail over the light field, so the role, the headline, the date line and "Say hello" are fg. The discs are radial gradients capped at 22%, which keeps fg at 4.5:1 or more where all three overlap, in every finish and at every hour (tests/unit/contrast.test.ts).
+- **The portrait's scrims assume a white wall** (Part 5). The real plate's color is unknown, so the top third, which holds the date line and the name, is dimmed evenly by .58, and the floor reaches .72 where the details begin. Both pass AA for white text over pure white.
+- **The aperture's stops** (Part 5). Full stops ƒ1.4, 2, 2.8, 4, 5.6, 8, 11, 16 give 24, 16, 12, 8, 6, 4, 3 and 2px of blur. ƒ4 is the 8px the focus pull settles on, and ƒ1.4 the 24px it starts from. The head script restores the session's stop before the first paint. The dial isn't a `<label>`, which would make its whole face a button to the cursor.
+- **The aperture's ƒ is drawn, not typed** (Part 5). Set in the serif italic, that one glyph made Chrome download two font files (237 KB) before the first paint.
+- **The plate loads at half resolution** (Part 5). It's always blurred, so it needs no more. It also stops the plate, which is the subject's size, from taking the LCP from the subject, which is preloaded with fetchpriority="high". Every hero image loads eagerly, since Next 16's Image defaults to lazy.
+- **The finish wipe** (Part 5). A View Transition whose new snapshot shows through a circle with a 72px soft edge, grown from the swatch on the in-out curve over 600ms (`--wipe-r` is registered so it animates). On ease-out the circle covered most of the screen within a quarter of the time. The swatch's own selection changes at once; the color follows.
+- **The scroll cue rests for good** (Part 5). The first scroll is remembered in localStorage, and the head script sets html[data-scrolled], so the cue never breathes on a return visit.
+- **Button is server-safe** (Part 5). An inert link renders with no href and no handler, and a live one passes onClick only when given: Server Components can't pass functions to next/link. The link style draws its own ›, so the hero trims the one in `copy.hero.ctaHello`.
+- **LCP is measured under DevTools throttling** (Part 5). On localhost, Lighthouse's simulated mode reports 2.7s for the typographic hero and 3.0s for the portrait, because it counts every request that finished before the first frame as a dependency of the paint: about 160 KB of async framework JavaScript, and the 129 KB serif face for the research titles below the fold. With the same mobile profile under real throttling (DevTools: 562ms request latency, 1.47 Mbps, 4× CPU), LCP equals FCP at 1.42s (typographic) and 1.49–1.58s (portrait, the subject), and CLS is 0. Performance scores 0.96 and 0.94 simulated, 1.0 with DevTools. Re-check with PageSpeed Insights once deployed. To be confirmed with Akshat. Follow-up: Chrome downloads the serif on every visit for the research titles; loading it as the section approaches would take it out of the first paint's window.
 
 ---
 

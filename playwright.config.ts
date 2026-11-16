@@ -5,11 +5,14 @@ const DEVELOPMENT = 3220;
 const production = `http://localhost:${PRODUCTION}`;
 const development = `http://localhost:${DEVELOPMENT}`;
 
+/** Specs that need dev-only routes: the kitchen, the cursor's playground, the portrait hero. */
+const DEV_ONLY = /(kitchen|cursor|portrait)\.spec/;
+
 /**
  * End-to-end tests, Safari first (DESIGN.md §2 rule 8). Site tests run against a
- * production build. The kitchen exists only under `next dev`, so its tests, and the
- * cursor's (which use its playground), get a dev server of their own. Servers are never
- * reused, so a test can't hit some other app on the same port.
+ * production build. The kitchen and /dev/hero exist only under `next dev`, so their tests,
+ * and the cursor's (which use the kitchen's playground), get a dev server of their own.
+ * Servers are never reused, so a test can't hit some other app on the same port.
  */
 export default defineConfig({
   testDir: "tests/e2e",
@@ -20,11 +23,11 @@ export default defineConfig({
   // A stuck action fails with its own name rather than running out the test's clock.
   use: { trace: "on-first-retry", actionTimeout: 10_000 },
   projects: [
-    { name: "webkit", testIgnore: /(kitchen|cursor)\.spec/, use: { ...devices["Desktop Safari"], baseURL: production } },
-    { name: "mobile-safari", testIgnore: /(kitchen|cursor)\.spec/, use: { ...devices["iPhone 15"], baseURL: production } },
-    { name: "chromium", testIgnore: /(kitchen|cursor)\.spec/, use: { ...devices["Desktop Chrome"], baseURL: production } },
-    { name: "kitchen-webkit", testMatch: /(kitchen|cursor)\.spec/, use: { ...devices["Desktop Safari"], baseURL: development } },
-    { name: "kitchen-chromium", testMatch: /(kitchen|cursor)\.spec/, use: { ...devices["Desktop Chrome"], baseURL: development } },
+    { name: "webkit", testIgnore: DEV_ONLY, use: { ...devices["Desktop Safari"], baseURL: production } },
+    { name: "mobile-safari", testIgnore: DEV_ONLY, use: { ...devices["iPhone 15"], baseURL: production } },
+    { name: "chromium", testIgnore: DEV_ONLY, use: { ...devices["Desktop Chrome"], baseURL: production } },
+    { name: "kitchen-webkit", testMatch: DEV_ONLY, use: { ...devices["Desktop Safari"], baseURL: development } },
+    { name: "kitchen-chromium", testMatch: DEV_ONLY, use: { ...devices["Desktop Chrome"], baseURL: development } },
   ],
   webServer: [
     {
@@ -34,7 +37,7 @@ export default defineConfig({
       timeout: 240_000,
     },
     {
-      command: `npx next dev --port ${DEVELOPMENT}`,
+      command: `node scripts/portrait-fixture.mjs && npx next dev --port ${DEVELOPMENT}`,
       url: `${development}/dev/kitchen`,
       reuseExistingServer: false,
       timeout: 240_000,

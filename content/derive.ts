@@ -392,6 +392,54 @@ export function compareTable(content: Content, now: Date) {
   };
 }
 
+// ─── The hero (Part 5) ───────────────────────────────────────────────────────
+
+/** "Computer Science and Engineering" → "CSE": the initials, without the small words. */
+export function initialism(field: string): string {
+  return field
+    .split(/\s+/)
+    .filter((word) => !/^(and|of|the|in|&)$/i.test(word))
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+export interface HeroChip {
+  label: string;
+  /** The home section that tells the rest. */
+  section: SectionId;
+}
+
+/**
+ * The hero's context chips (DESIGN.md §7): where Akshat works now, the degree, and the
+ * conference. Each is derived; a chip whose facts are missing is left out.
+ */
+export function heroChips(content: Content): HeroChip[] {
+  const chips: HeroChip[] = [];
+  const now = content.experience.find((role) => role.id === content.profile.now);
+  if (now) chips.push({ label: `Now at ${now.org}`, section: "experience" });
+  const degree = content.education.find((entry) => entry.kind === "degree");
+  if (degree?.kind === "degree") {
+    const year = degree.end.slice(2, 4);
+    chips.push({
+      label: `${degree.degree} ${initialism(degree.field)} \u2019${year} \u00b7 ${degree.institution}`,
+      section: "credentials",
+    });
+  }
+  const paper = content.publications[0];
+  const conference = paper && content.conferences.find((entry) => entry.id === paper.presentedAt);
+  if (conference) chips.push({ label: `${conference.name} \u00b7 ${conference.proceedings}`, section: "research" });
+  return chips;
+}
+
+/**
+ * How the date line names Akshat's clock: the city once it's confirmed ("in Jaipur"),
+ * the time zone until then ("IST").
+ */
+export function clockPlace(content: Content): { label: string; timeZone: string } {
+  const location = publicLocation(content);
+  return { label: location.city ? `in ${location.city}` : location.timeZoneLabel, timeZone: location.timeZone };
+}
+
 // ─── Search index (Part 4) ───────────────────────────────────────────────────
 
 export type SearchKind = "section" | "role" | "work" | "paper" | "skill" | "education" | "honor" | "certificate";

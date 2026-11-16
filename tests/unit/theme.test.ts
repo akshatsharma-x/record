@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FINISH_STORAGE_KEY, PREFERENCES_SCRIPT, THEME_STORAGE_KEY } from "@/lib/preferences";
+import { APERTURE } from "@/lib/hero";
+import { durations } from "@/lib/motion";
+import { FINISH_STORAGE_KEY, PREFERENCES_SCRIPT, SCROLLED_STORAGE_KEY, THEME_STORAGE_KEY } from "@/lib/preferences";
 import { applyFinish, applyThemeChoice } from "@/lib/theme";
 
 function prefersDark(dark: boolean, reducedMotion = false) {
@@ -22,7 +24,9 @@ const root = () => document.documentElement;
 
 beforeEach(() => {
   localStorage.clear();
-  for (const name of ["data-theme", "data-theme-choice", "data-finish", "data-motion"]) root().removeAttribute(name);
+  sessionStorage.clear();
+  for (const name of ["data-theme", "data-theme-choice", "data-finish", "data-motion", "data-scrolled"]) root().removeAttribute(name);
+  root().style.removeProperty("--aperture-blur");
 });
 
 afterEach(() => {
@@ -60,6 +64,29 @@ describe("the head script (before first paint)", () => {
     expect(root().getAttribute("data-theme-choice")).toBe("system");
   });
 
+  it("rests the scroll cue for good once the visitor has scrolled", () => {
+    prefersDark(false);
+    runHeadScript();
+    expect(root().hasAttribute("data-scrolled")).toBe(false);
+    localStorage.setItem(SCROLLED_STORAGE_KEY, "1");
+    runHeadScript();
+    expect(root().hasAttribute("data-scrolled")).toBe(true);
+  });
+
+  it("restores the aperture for the session, so the plate never flashes the default blur", () => {
+    prefersDark(false);
+    sessionStorage.setItem(APERTURE.storageKey, "0");
+    runHeadScript();
+    expect(root().style.getPropertyValue("--aperture-blur")).toBe(`${APERTURE.blur[0]}px`);
+
+    for (const unreadable of ["99", ""]) {
+      root().style.removeProperty("--aperture-blur");
+      sessionStorage.setItem(APERTURE.storageKey, unreadable);
+      runHeadScript();
+      expect(root().style.getPropertyValue("--aperture-blur")).toBe("");
+    }
+  });
+
   it("survives storage being unavailable", () => {
     prefersDark(false);
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
@@ -95,5 +122,53 @@ describe("switching at runtime", () => {
     applyFinish("monsoon");
     expect(root().getAttribute("data-finish")).toBe("monsoon");
     expect(localStorage.getItem(FINISH_STORAGE_KEY)).toBe("monsoon");
+  });
+
+  it("wipes a new finish out from the swatch in 600ms, then tidies up", async () => {
+    prefersDark(false, false);
+    root().setAttribute("data-finish", "contrail");
+    let finish!: () => void;
+    const finished = new Promise<void>((resolve) => (finish = resolve));
+    vi.stubGlobal("innerWidth", 1000);
+    vi.stubGlobal("innerHeight", 800);
+    const startViewTransition = vi.fn((update: () => void) => {
+      update();
+      return { ready: Promise.resolve(), finished, updateCallbackDone: Promise.resolve(), skipTransition() {} };
+    });
+    Object.assign(document, { startViewTransition });
+    const animate = vi.fn();
+    root().animate = animate;
+
+    const done = applyFinish("pink-city", { x: 100, y: 700 });
+    expect(root().getAttribute("data-finish")).toBe("pink-city");
+    expect(root().hasAttribute("data-finish-wiping")).toBe(true);
+    expect(root().style.getPropertyValue("--wipe-x")).toBe("100px");
+    expect(root().style.getPropertyValue("--wipe-y")).toBe("700px");
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(animate).toHaveBeenCalledTimes(1);
+    const [keyframes, options] = animate.mock.calls[0];
+    // From the swatch to the farthest corner, edge included.
+    expect(keyframes["--wipe-r"][0]).toBe("0px");
+    expect(parseFloat(keyframes["--wipe-r"][1])).toBeGreaterThanOrEqual(Math.hypot(900, 700));
+    expect(options).toMatchObject({ duration: durations.revealShort, pseudoElement: "::view-transition-new(root)" });
+    expect(durations.revealShort).toBe(600);
+
+    finish();
+    await done;
+    expect(root().hasAttribute("data-finish-wiping")).toBe(false);
+    expect(root().style.getPropertyValue("--wipe-x")).toBe("");
+    Reflect.deleteProperty(document, "startViewTransition");
+  });
+
+  it("changes the finish instantly with reduced motion, even from a swatch", async () => {
+    prefersDark(false, true);
+    root().setAttribute("data-finish", "contrail");
+    const startViewTransition = vi.fn();
+    Object.assign(document, { startViewTransition });
+    await applyFinish("saffron", { x: 1, y: 1 });
+    expect(root().getAttribute("data-finish")).toBe("saffron");
+    expect(startViewTransition).not.toHaveBeenCalled();
+    Reflect.deleteProperty(document, "startViewTransition");
   });
 });
