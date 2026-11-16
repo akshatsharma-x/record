@@ -1,12 +1,13 @@
 import { Fragment } from "react";
 import { About } from "@/components/about/about";
 import { Statement } from "@/components/about/statement";
+import { type EditMarks, Experience } from "@/components/experience/experience";
 import { Hero } from "@/components/hero/hero";
 import { Highlights } from "@/components/highlights/highlights";
 import { Container, Section, Stack } from "@/components/ui/layout";
 import { Body, Display, Eyebrow, Footnote, FootnoteBackLink, FootnoteRef, Lead } from "@/components/ui/type";
 import { content } from "@/content";
-import { allSkills, credentialsHeadline } from "@/content/derive";
+import { allSkills, credentialsHeadline, edit } from "@/content/derive";
 import type { Claim } from "@/content/schema";
 import { formatYearMonth } from "@/lib/dates";
 import { portraitFor } from "@/lib/portrait-fixture";
@@ -24,23 +25,37 @@ const dates = (start: string, end: string) =>
  * statement, About and the highlights Part 6's.
  */
 export default function Home() {
-  const { profile, copy, highlights, experience, publications, conferences, projects, education, achievements } = content;
+  const { profile, copy, highlights, publications, conferences, projects, education, achievements } = content;
   const venues = new Map(conferences.map((conference) => [conference.id, conference]));
   const skills = allSkills(content);
   const categories = [...new Set(skills.map((skill) => skill.category))];
 
   // Footnotes are numbered by content; each mention gets its own back-link (§9).
   const mentions = new Map<number, number>();
+  const marks = (footnotes: readonly number[]) =>
+    footnotes.map((n) => {
+      const occurrence = (mentions.get(n) ?? 0) + 1;
+      mentions.set(n, occurrence);
+      return <FootnoteRef key={n} n={n} occurrence={occurrence} />;
+    });
   const cite = (claim: { text: string; footnotes?: readonly number[] } | Claim) => (
     <>
       {claim.text}
-      {(claim.footnotes ?? []).map((n) => {
-        const occurrence = (mentions.get(n) ?? 0) + 1;
-        mentions.set(n, occurrence);
-        return <FootnoteRef key={n} n={n} occurrence={occurrence} />;
-      })}
+      {marks(claim.footnotes ?? [])}
     </>
   );
+  // The edit's panels cite each note once per panel, on the metrics it backs.
+  const editMarks = (): EditMarks =>
+    Object.fromEntries(
+      edit(content).panels.map((panel) => [
+        panel.id,
+        panel.kind === "role"
+          ? panel.groups.map((group) => <>{marks(group.footnotes)}</>)
+          : panel.kind === "honor" && panel.detail
+            ? [<>{marks(panel.detail.footnotes)}</>]
+            : [],
+      ]),
+    );
 
   const story = (
     <>
@@ -50,24 +65,7 @@ export default function Home() {
       <About bio={profile.bio.map((paragraph) => cite(paragraph))} />
       <Highlights texts={highlights.map((highlight) => cite(highlight))} />
 
-      <Section id="experience" name={nameOf("experience")} surface="light" aria-labelledby="experience-title">
-        <Container>
-          <Stack gap={6}>
-            <Display id="experience-title">{copy.experience.headline}</Display>
-            {copy.experience.sub ? <Lead tone="fg-2">{copy.experience.sub}</Lead> : null}
-            <ul className="flex flex-col gap-3">
-              {experience.map((role) => (
-                <li key={role.id}>
-                  <Body>
-                    <strong className="font-semibold">{role.org}</strong>, {role.role}
-                  </Body>
-                  <Body tone="fg-2">{dates(role.start, role.end)}</Body>
-                </li>
-              ))}
-            </ul>
-          </Stack>
-        </Container>
-      </Section>
+      <Experience marks={editMarks()} />
 
       <Section id="research" name={nameOf("research")} surface="dark" aria-labelledby="research-title">
         <Container>

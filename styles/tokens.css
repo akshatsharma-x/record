@@ -468,6 +468,24 @@
   --film-dot-field: 0.76;
   --film-paper: rgb(255 255 255 / 0.08);
 
+  /* The edit (Part 7): pinned for at most 300vh; lanes, labels and the playhead; the
+     viewer's type; and one step that times every role visual. */
+  --edit-pin: 280svh;
+  /* Lanes grow with the screen's height, so the timeline takes about 40% of the stage
+     and gives the viewer room on short screens. */
+  --edit-lane: clamp(28px, calc(10svh - 48px), 48px);
+  --edit-gap: clamp(8px, 1.4svh, 12px);
+  --edit-lane-strip: 8px;
+  --edit-label: 96px;
+  --edit-ruler: 26px;
+  --edit-clip-min: 6px;
+  --edit-playhead: 2px;
+  --edit-title: clamp(1.75rem, 2.6vw, 2.5rem);
+  --edit-metric: clamp(1.5rem, 2.2vw, 2rem);
+  --rv-step: 100ms;
+  /* Small caps-style labels, such as the edit's track names. */
+  --tracking-caps: 0.06em;
+
   /* Durations (§5.3). Each DESIGN.md range has a short, default and long step. */
   --duration-micro-short: 150ms;
   --duration-micro: 200ms;
@@ -610,6 +628,18 @@
   initial-value: 0;
 }
 
+/* Where the edit pins (Part 7): wide, tall screens, with JavaScript and motion. lib/edit.ts
+   holds the same query (EDIT.query), and tests/unit/edit.test.ts keeps them in step. */
+@custom-variant edit-pinned (@media (min-width: 1069px) and (min-height: 760px) and (scripting: enabled) and (prefers-reduced-motion: no-preference));
+
+/* When a figure in an edit visual starts counting, so it counts as the visual shows it
+   (components/experience/edit-controller.tsx reads it). */
+@property --count-delay {
+  syntax: "<time>";
+  inherits: true;
+  initial-value: 0s;
+}
+
 /* The finish wipe's radius (styles/globals.css), registered so it can animate. */
 @property --wipe-r {
   syntax: "<length>";
@@ -658,6 +688,8 @@
   --font-sans: -apple-system, BlinkMacSystemFont, var(--font-inter), system-ui, sans-serif;
   --font-serif: ui-serif, var(--font-newsreader), serif;
   --font-mono: ui-monospace, var(--font-jetbrains-mono), monospace;
+  /* Decorative code in drawings: never worth fetching a font for. */
+  --font-mono-system: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   --default-font-family: var(--font-sans);
   --default-mono-font-family: var(--font-mono);
 

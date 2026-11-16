@@ -1,6 +1,6 @@
 /**
  * The surface controller (DESIGN.md §4.2). One scroll-linked loop crossfades the page
- * background between adjacent sections over the last 20% of each, so the lights go down
+ * background between adjacent sections over the last 20% of each (at most half a viewport), so the lights go down
  * and come up. Text tokens switch at the crossfade's midpoint, when the background is
  * closer to the next surface than to the last.
  *
@@ -20,8 +20,10 @@ import type { SurfaceName, SurfaceState, Tone } from "../stores/surface.ts";
 
 /** Where in the viewport a section counts as current: its middle. */
 const PROBE = 0.5;
-/** The crossfade spans the last fifth of each section. */
+/** The crossfade spans the last fifth of each section, and at most half the viewport, so a
+    tall pinned scene finishes in its own light. */
 const ZONE = 0.2;
+const ZONE_MAX = 0.5;
 /** Close enough to the target to stop the loop. */
 const SETTLED = 0.001;
 
@@ -40,8 +42,8 @@ export interface Blend {
   progress: number;
 }
 
-/** The pure part: which sections the probe is between, and how far. */
-export function blendAt(sections: readonly { top: number; bottom: number }[], probe: number, zone = ZONE): Blend {
+/** The pure part: which sections the probe is between, and how far. `most` caps the zone's length. */
+export function blendAt(sections: readonly { top: number; bottom: number }[], probe: number, zone = ZONE, most = Infinity): Blend {
   if (sections.length === 0) return { from: -1, to: -1, progress: 0 };
   const last = sections.length - 1;
   if (probe < sections[0].top) return { from: 0, to: 0, progress: 0 };
@@ -49,7 +51,7 @@ export function blendAt(sections: readonly { top: number; bottom: number }[], pr
   if (index === -1) index = last;
   const section = sections[index];
   const height = section.bottom - section.top;
-  const zoneStart = section.bottom - height * zone;
+  const zoneStart = section.bottom - Math.min(height * zone, most);
   if (index === last || probe < zoneStart || height <= 0) return { from: index, to: index, progress: 0 };
   return { from: index, to: index + 1, progress: Math.min(1, (probe - zoneStart) / (section.bottom - zoneStart)) };
 }
@@ -146,7 +148,7 @@ export function createSurfaceController(options: {
   };
 
   const update = () => {
-    target = blendAt(sections, window.scrollY + window.innerHeight * PROBE);
+    target = blendAt(sections, window.scrollY + window.innerHeight * PROBE, ZONE, window.innerHeight * ZONE_MAX);
     if (!frame) frame = requestAnimationFrame(tick);
   };
 
@@ -156,7 +158,7 @@ export function createSurfaceController(options: {
     lastTime = 0;
     // Paint the surface in the same task that made the sections transparent, so nothing
     // (a frame, a screen reader, axe) ever sees a section without its background.
-    target = blendAt(sections, window.scrollY + window.innerHeight * PROBE);
+    target = blendAt(sections, window.scrollY + window.innerHeight * PROBE, ZONE, window.innerHeight * ZONE_MAX);
     shown = { ...target };
     render();
   };

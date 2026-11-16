@@ -38,6 +38,13 @@ const PublicPdf = z.string().regex(/^\/.+\.pdf$/, "use a /public path ending in 
 const FootnoteId = z.number().int().positive();
 const TimeZone = z.string().refine(isTimeZone, "isn't an IANA time zone");
 
+const Count = z.number().int().positive();
+const Share = z.number().gt(0).lte(100);
+/** Two ends, low first: $0.08–0.11 is [0.08, 0.11]. */
+const Range = z
+  .tuple([z.number().nonnegative(), z.number().nonnegative()])
+  .refine(([low, high]) => low <= high, "put the low end first");
+
 /** Text that may state a number. Every number gets a footnote (DESIGN.md §9). */
 const Claim = z.strictObject({
   text: Text,
@@ -129,9 +136,37 @@ const CurrentFocus = z.strictObject({
   reading: Text.nullable(),
 });
 
+/**
+ * A number a role states, as "the edit" shows it: a counter with its footnote (DESIGN.md
+ * §7.4). The role's text or the notes it cites must state it; a range gives both ends.
+ */
+const Metric = z.strictObject({
+  value: z.union([z.number().nonnegative(), Range]),
+  /** What it counts, as in "documentation artifacts". */
+  label: Text,
+  footnotes: z.array(FootnoteId).default([]),
+});
+
+/**
+ * The abstract visual beside a role in "the edit": drawn in SVG, never a screenshot. Each
+ * figure it draws must be stated by the role's text or the notes it cites.
+ */
+const RoleVisual = z.discriminatedUnion("kind", [
+  /** Code-like strokes untangle into a knowledge graph, pulses become documents, a cost counter settles. */
+  z.strictObject({ kind: z.literal("tangle-to-map"), calls: Count.max(4), documents: Count.max(12), cost: Range }),
+  /** A UI assembles from App Router route segments, a JWT reaches the client, rows land in PostgreSQL. */
+  z.strictObject({ kind: z.literal("route-segments") }),
+  /** Module blocks snap together, a coverage ring fills, a defect line drops. */
+  z.strictObject({ kind: z.literal("module-blocks"), modules: Count.max(24), coverage: Share, defects: Share }),
+  /** A dashboard builds itself, its daily-users line reaching the stated count. */
+  z.strictObject({ kind: z.literal("dashboard"), users: Count }),
+]);
+
 const Experience = z.strictObject({
   id: Id,
   org: Text,
+  /** The name where room is tight, like a clip in "the edit": part of `org`, as it's written there. */
+  short: Text.optional(),
   role: Text,
   kind: z.enum(["internship", "full-time"]),
   start: YearMonth,
@@ -139,6 +174,9 @@ const Experience = z.strictObject({
   location: Text.nullable(),
   summary: Claim,
   bullets: z.array(Claim).min(1),
+  /** Every number the summary and bullets state, as counters. */
+  metrics: z.array(Metric).default([]),
+  visual: RoleVisual.optional(),
   stack: z.array(Text).min(1),
   /** Internal work: what the site may show about it. */
   confidential: z.strictObject({ note: Text, shareable: Text.nullable() }).optional(),
@@ -239,13 +277,6 @@ const Achievement = z.strictObject({
   years: z.array(Year).min(1),
   detail: Claim.optional(),
 });
-
-const Count = z.number().int().positive();
-const Share = z.number().gt(0).lte(100);
-/** Two ends, low first: $0.08–0.11 is [0.08, 0.11]. */
-const Range = z
-  .tuple([z.number().nonnegative(), z.number().nonnegative()])
-  .refine(([low, high]) => low <= high, "put the low end first");
 
 /**
  * The micro-film a highlight plays in the reel (DESIGN.md §7, Part 6). Each figure it draws
@@ -357,6 +388,8 @@ export type Certificate = z.output<typeof Certificate>;
 export type Achievement = z.output<typeof Achievement>;
 export type Highlight = z.output<typeof Highlight>;
 export type Film = z.output<typeof Film>;
+export type Metric = z.output<typeof Metric>;
+export type RoleVisual = z.output<typeof RoleVisual>;
 export type Portrait = z.output<typeof Portrait>;
 
 // ─── Claims ──────────────────────────────────────────────────────────────────
@@ -427,6 +460,20 @@ export function filmFigures(film: z.output<typeof Film>): number[] {
     case "bars":
       return [film.value];
     case "papers":
+      return [];
+  }
+}
+
+/** Every figure a role's visual draws. */
+export function visualFigures(visual: z.output<typeof RoleVisual>): number[] {
+  switch (visual.kind) {
+    case "tangle-to-map":
+      return [visual.calls, visual.documents, ...visual.cost];
+    case "module-blocks":
+      return [visual.modules, visual.coverage, visual.defects];
+    case "dashboard":
+      return [visual.users];
+    case "route-segments":
       return [];
   }
 }
@@ -539,6 +586,41 @@ function checkReferences(content: z.output<typeof ContentShape>, ctx: z.Refineme
     const stated = valuesIn(cited);
     for (const figure of filmFigures(film)) {
       if (!stated.includes(figure)) problem(["highlights", i, "film"], `${figure} isn't stated by the notes this highlight cites`);
+    }
+  });
+
+  // A role's metrics and visual state only what its text and notes do, and every number its
+  // text states is a metric, so "the edit" can footnote each one once.
+  content.experience.forEach((role, i) => {
+    if (role.short && !role.org.includes(role.short)) problem(["experience", i, "short"], `"${role.short}" isn't part of "${role.org}"`);
+    const claims = [role.summary, ...role.bullets];
+    const cited = new Set([...claims.flatMap((claim) => claim.footnotes), ...role.metrics.flatMap((metric) => metric.footnotes)]);
+    role.metrics.forEach((metric, j) => {
+      metric.footnotes.forEach((id, k) => {
+        if (!notes.has(id)) problem(["experience", i, "metrics", j, "footnotes", k], `footnote ${id} doesn't exist`);
+      });
+    });
+    if ([...cited].some((id) => !notes.has(id))) return;
+    const stated = valuesIn(
+      [...claims.map((claim) => claim.text), ...[...cited].flatMap((id) => [notes.get(id)!.note, notes.get(id)!.source ?? ""])].join(" "),
+    );
+    const counted = role.metrics.flatMap((metric) => (Array.isArray(metric.value) ? metric.value : [metric.value]));
+    role.metrics.forEach((metric, j) => {
+      for (const value of Array.isArray(metric.value) ? metric.value : [metric.value]) {
+        if (!stated.includes(value)) problem(["experience", i, "metrics", j], `${value} isn't stated by this role or the notes it cites`);
+      }
+    });
+    if (role.visual) {
+      for (const figure of visualFigures(role.visual)) {
+        if (!stated.includes(figure)) problem(["experience", i, "visual"], `${figure} isn't stated by this role or the notes it cites`);
+      }
+    }
+    // Text with a phone-shaped number already fails, and its digits must never be repeated.
+    const text = claims.map((claim) => claim.text).join(" ");
+    if (findPhoneNumbers(text).length === 0) {
+      for (const value of valuesIn(text)) {
+        if (!counted.includes(value)) problem(["experience", i, "metrics"], `${value} is in this role's text but isn't one of its metrics`);
+      }
     }
   });
 

@@ -6,12 +6,14 @@
  * Runs under plain Node for the prebuild content check: relative imports with .ts
  * extensions, `import type` for types, no path aliases.
  */
-import type { Content, Degree, Education, Path, Publication } from "./schema.ts";
+import type { Content, Degree, Education, Path, Publication, RoleVisual } from "./schema.ts";
 import { claimsOf, formatPath, resolvePattern } from "./schema.ts";
 import type { CalendarDate } from "../lib/dates.ts";
 import {
   calendarDateIn,
   endOfMonthExclusive,
+  formatDayRange,
+  formatMonthRange,
   formatYearMonth,
   monthsInclusive,
   parseIsoDate,
@@ -312,6 +314,279 @@ function track(id: TrackId, label: string, clips: Omit<Clip, "lane">[]): Track {
   });
   return { id, label, lanes: laneEnds.length, clips: placed };
 }
+
+// ─── The edit (Part 7) ───────────────────────────────────────────────────────
+
+/** A metric's digits and the text around them, so a counter can count just the digits. */
+export type MetricPart = { kind: "text"; text: string } | { kind: "number"; value: number; decimals: number; group: boolean };
+
+export interface EditMetric {
+  /** The figure as the role's text or its note states it: "$0.08–0.11", "90%+". */
+  token: string;
+  label: string;
+  parts: MetricPart[];
+}
+
+/** Metrics that share their footnotes, so each note is cited once per panel. */
+export interface EditMetricGroup {
+  footnotes: number[];
+  metrics: EditMetric[];
+}
+
+/** A role's visual, with its figures labeled as the role's text or notes word them. */
+export type EditVisual =
+  | { kind: "tangle-to-map"; calls: number; documents: number; cents: [number, number]; costLabel: string }
+  | { kind: "route-segments" }
+  | { kind: "module-blocks"; modules: number; modulesLabel: string; coverage: number; coverageLabel: string; defects: number; defectsLabel: string }
+  | { kind: "dashboard"; users: number; usersLabel: string };
+
+function visualOf(visual: RoleVisual, stated: string): EditVisual {
+  switch (visual.kind) {
+    case "tangle-to-map":
+      return {
+        kind: visual.kind,
+        calls: visual.calls,
+        documents: visual.documents,
+        cents: [Math.round(visual.cost[0] * 100), Math.round(visual.cost[1] * 100)],
+        costLabel: statedAs(stated, visual.cost),
+      };
+    case "module-blocks":
+      return {
+        kind: visual.kind,
+        modules: visual.modules,
+        modulesLabel: statedAs(stated, [visual.modules]),
+        coverage: visual.coverage,
+        coverageLabel: statedAs(stated, [visual.coverage]),
+        defects: visual.defects,
+        defectsLabel: statedAs(stated, [visual.defects]),
+      };
+    case "dashboard":
+      return { kind: visual.kind, users: visual.users, usersLabel: statedAs(stated, [visual.users]) };
+    case "route-segments":
+      return { kind: visual.kind };
+  }
+}
+
+export type EditPanel =
+  | {
+      kind: "role";
+      id: string;
+      org: string;
+      role: string;
+      dates: string;
+      location: string | null;
+      summary: string;
+      /** Its first three bullets. Their numbers are all metrics, footnoted there. */
+      highlights: string[];
+      groups: EditMetricGroup[];
+      stack: string[];
+      visual: EditVisual | null;
+    }
+  | { kind: "research"; id: string; name: string; type: string; place: string; dates: string; proceedings: string; papers: { title: string; status: string }[] }
+  | { kind: "education"; id: string; institution: string; degree: string; dates: string; grade: string; coursework: string[] }
+  | { kind: "honor"; id: string; title: string; org: string | null; years: string; detail: { text: string; footnotes: number[] } | null };
+
+export interface EditClip {
+  id: string;
+  track: TrackId;
+  lane: number;
+  title: string;
+  /** The name on the clip itself: a role's short name, when it has one. */
+  label: string;
+  subtitle: string | null;
+  /** The clip's dates as a résumé writes them. */
+  dates: string;
+  /** Inclusive start, "YYYY-MM-DD". */
+  start: string;
+  /** Exclusive end, "YYYY-MM-DD"; null while it's ongoing, so the browser ends it at today. */
+  end: string | null;
+  precision: "day" | "month" | "year";
+  /** The viewer panel it shows: a honor's two years share one. */
+  panel: string;
+}
+
+export interface EditTrack {
+  id: TrackId;
+  label: string;
+  lanes: number;
+  clips: EditClip[];
+}
+
+/** A figure's digits and the text around them: "$0.08–0.11" is "$", 0.08, "–", 0.11. */
+export function partsOf(token: string): MetricPart[] {
+  const parts: MetricPart[] = [];
+  let last = 0;
+  for (const match of token.matchAll(/\d[\d,]*(?:\.\d+)?/g)) {
+    if (match.index > last) parts.push({ kind: "text", text: token.slice(last, match.index) });
+    const digits = match[0];
+    parts.push({ kind: "number", value: Number(digits.replace(/,/g, "")), decimals: digits.split(".")[1]?.length ?? 0, group: digits.includes(",") });
+    last = match.index + digits.length;
+  }
+  if (last < token.length) parts.push({ kind: "text", text: token.slice(last) });
+  return parts;
+}
+
+/** Puts each clip on the first free lane when it starts, longest first on ties; ongoing clips never end. */
+function lanes(id: TrackId, label: string, clips: Omit<EditClip, "lane" | "track">[]): EditTrack {
+  const endOf = (clip: { end: string | null }) => clip.end ?? "9999-12-31";
+  const sorted = [...clips].sort((a, b) => a.start.localeCompare(b.start) || endOf(b).localeCompare(endOf(a)));
+  const laneEnds: string[] = [];
+  const placed = sorted.map((clip) => {
+    let lane = laneEnds.findIndex((end) => end <= clip.start);
+    if (lane === -1) lane = laneEnds.length;
+    laneEnds[lane] = endOf(clip);
+    return { ...clip, track: id, lane };
+  });
+  // Tab order runs through a track in time, earliest end first where clips start together.
+  placed.sort((a, b) => a.start.localeCompare(b.start) || endOf(a).localeCompare(endOf(b)));
+  return { id, label, lanes: laneEnds.length, clips: placed };
+}
+
+/**
+ * "The edit" (DESIGN.md §7.4): the career as tracks of clips on a real time scale, and a
+ * viewer panel for each. Nothing here depends on today: an ongoing clip's end is null and
+ * the browser ends it at today (lib/edit.ts), so the page stays static.
+ */
+export function edit(content: Content) {
+  const notes = new Map(content.footnotes.map((footnote) => [footnote.id, footnote]));
+  const panels: EditPanel[] = [];
+
+  const work = content.experience.map((role) => {
+    const start = parseYearMonth(role.start);
+    const claims = [role.summary, ...role.bullets];
+    const cited = [...new Set([...claims.flatMap((claim) => claim.footnotes), ...role.metrics.flatMap((metric) => metric.footnotes)])];
+    const stated = [...claims.map((claim) => claim.text), ...cited.flatMap((id) => [notes.get(id)?.note ?? "", notes.get(id)?.source ?? ""])].join(" ");
+    const groups: EditMetricGroup[] = [];
+    for (const metric of role.metrics) {
+      const values = Array.isArray(metric.value) ? metric.value : [metric.value];
+      const token = statedAs(stated, values);
+      const entry = { token, label: metric.label, parts: partsOf(token) };
+      const previous = groups.at(-1);
+      if (previous && previous.footnotes.join() === metric.footnotes.join()) previous.metrics.push(entry);
+      else groups.push({ footnotes: metric.footnotes, metrics: [entry] });
+    }
+    panels.push({
+      kind: "role",
+      id: role.id,
+      org: role.org,
+      role: role.role,
+      dates: formatMonthRange(role.start, role.end),
+      location: role.location,
+      summary: role.summary.text,
+      highlights: role.bullets.slice(0, 3).map((bullet) => bullet.text),
+      groups,
+      stack: role.stack,
+      visual: role.visual ? visualOf(role.visual, stated) : null,
+    });
+    return {
+      id: role.id,
+      title: role.org,
+      label: role.short ?? role.org,
+      subtitle: role.role,
+      dates: formatMonthRange(role.start, role.end),
+      start: toIsoDate(utcDate(start.year, start.month)),
+      end: role.end === "present" ? null : toIsoDate(endOfMonthExclusive(parseYearMonth(role.end))),
+      precision: "month" as const,
+      panel: role.id,
+    };
+  });
+
+  const research = content.conferences.map((conference) => {
+    const papers = content.publications.filter((paper) => paper.presentedAt === conference.id);
+    const last = parseIsoDate(conference.end);
+    const dates = formatDayRange(conference.start, conference.end);
+    panels.push({
+      kind: "research",
+      id: conference.id,
+      name: conference.name,
+      type: conference.kind,
+      place: `${conference.host}, ${conference.city}`,
+      dates,
+      proceedings: conference.proceedings,
+      papers: papers.map((paper) => ({ title: paper.title, status: publicationStatus(paper).label })),
+    });
+    return {
+      id: conference.id,
+      title: conference.name,
+      label: conference.name,
+      subtitle: `${papers.length} ${papers.length === 1 ? "paper" : "papers"}`,
+      dates,
+      start: conference.start,
+      end: toIsoDate(utcDate(last.year, last.month, last.day + 1)),
+      precision: "day" as const,
+      panel: conference.id,
+    };
+  });
+
+  const education = content.education.filter(isDegree).map((degree) => {
+    const start = parseYearMonth(degree.start);
+    const dates = formatMonthRange(degree.start, degree.end);
+    panels.push({
+      kind: "education",
+      id: degree.id,
+      institution: degree.institution,
+      degree: `${degree.degree}, ${degree.field}`,
+      dates,
+      grade: degree.grade.text,
+      coursework: degree.coursework,
+    });
+    return {
+      id: degree.id,
+      title: degree.institution,
+      label: degree.institution,
+      subtitle: `${degree.degree} ${initialism(degree.field)}`,
+      dates,
+      start: toIsoDate(utcDate(start.year, start.month)),
+      end: toIsoDate(endOfMonthExclusive(parseYearMonth(degree.end))),
+      precision: "month" as const,
+      panel: degree.id,
+    };
+  });
+
+  const honors = content.achievements.flatMap((achievement) => {
+    panels.push({
+      kind: "honor",
+      id: achievement.id,
+      title: achievement.title,
+      org: achievement.org ?? null,
+      years: achievement.years.join(" and "),
+      detail: achievement.detail ? { text: achievement.detail.text, footnotes: achievement.detail.footnotes } : null,
+    });
+    // Content knows the year, not the month: each is a year bracket, never an invented date.
+    return achievement.years.map((year) => ({
+      id: achievement.years.length > 1 ? `${achievement.id}-${year}` : achievement.id,
+      title: achievement.title,
+      label: achievement.title,
+      subtitle: achievement.org ?? null,
+      dates: String(year),
+      start: `${year}-01-01`,
+      end: `${year + 1}-01-01`,
+      precision: "year" as const,
+      panel: achievement.id,
+    }));
+  });
+
+  const tracks = [
+    lanes("work", "Work", work),
+    lanes("research", "Research", research),
+    lanes("education", "Education", education),
+    lanes("honors", "Honors", honors),
+  ];
+  const clips = tracks.flatMap((track) => track.clips);
+  // The latest date content knows has passed: where the scale ends until the browser knows today.
+  const known = [...work.flatMap((clip) => [clip.start, clip.end]), ...research.map((clip) => clip.end)]
+    .filter((date): date is string => date !== null)
+    .sort()
+    .at(-1)!;
+  return {
+    start: clips.map((clip) => clip.start).sort()[0],
+    known,
+    tracks,
+    panels,
+  };
+}
+
+export type Edit = ReturnType<typeof edit>;
 
 // ─── /compare (Part 13) ──────────────────────────────────────────────────────
 

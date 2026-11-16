@@ -3108,6 +3108,903 @@
     animation: none !important;
   }
 
+  /* ─── The edit (§7.4, Part 7) ────────────────────────────────────────────── */
+
+  /* By default, and on phones, with reduced motion and without JavaScript: a read-only
+     strip over a stack of role cards. The pinned edit (below) takes over on wide, tall
+     screens with motion. --span is the scale's length in months, --from and --to a clip's
+     place on it, and --playhead the playhead's. */
+  .experience {
+    padding-block: var(--spacing-section);
+  }
+
+  .experience-head {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 3);
+    margin-block-end: calc(var(--spacing) * 10);
+  }
+
+  .edit {
+    --lane-height: var(--edit-lane-strip);
+    position: relative;
+  }
+
+  .edit-frame {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 10);
+  }
+
+  .edit-timeline {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--edit-label) minmax(0, 1fr);
+    align-items: center;
+    gap: calc(var(--spacing) * 2) var(--grid-gutter);
+  }
+
+  .edit-hint,
+  .edit-overlay,
+  .edit-clip-title {
+    display: none;
+  }
+
+  .edit-ruler-label {
+    grid-column: 1;
+  }
+
+  /* The ruler: a tick a month, a label each January, and today at the end. */
+  .edit-ruler {
+    position: relative;
+    height: var(--edit-ruler);
+  }
+
+  .edit-scale {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background-image: repeating-linear-gradient(
+      90deg,
+      var(--color-hairline) 0 var(--hairline-width),
+      transparent var(--hairline-width) calc(100% / var(--span))
+    );
+    background-position: left bottom;
+    background-repeat: repeat-x;
+    background-size: 100% 30%;
+  }
+
+  .edit-year {
+    position: absolute;
+    top: 0;
+    left: calc(var(--at) / var(--span) * 100%);
+    padding-inline-start: var(--spacing);
+    border-inline-start: var(--hairline-width) solid var(--color-fg-3);
+    color: var(--color-fg-2);
+    font-size: var(--text-footnote);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--text-footnote--line-height);
+  }
+
+  /* On the strip, "Now" stands above the ruler, clear of the last year; its line runs down
+     through the ticks. */
+  .edit-now {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: none;
+    padding-block-end: var(--edit-ruler);
+    padding-inline-end: var(--spacing);
+    border-inline-end: var(--edit-playhead) solid var(--color-accent);
+    color: var(--color-accent);
+    font-size: var(--text-footnote);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-footnote--line-height);
+  }
+
+  .edit[data-today] .edit-now {
+    display: block;
+  }
+
+  .edit-track {
+    display: contents;
+  }
+
+  .edit-track-label {
+    color: var(--color-fg-2);
+    font-size: var(--text-footnote);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+  }
+
+  .edit-lanes {
+    position: relative;
+    height: calc(var(--lanes) * var(--lane-height));
+    border-radius: var(--radius-chip);
+    background-color: color-mix(in srgb, var(--color-fg-3) 8%, transparent);
+  }
+
+  /* A clip sits on the real time scale; lane 0 is the bottom, as in an editor. Ongoing
+     clips, and the part of a clip still to come, end at today. */
+  .edit-clip {
+    position: absolute;
+    top: calc((var(--lanes) - 1 - var(--lane)) * var(--lane-height));
+    left: calc(var(--from) / var(--span) * 100%);
+    display: flex;
+    width: calc((min(var(--to, var(--span)), var(--span)) - var(--from)) / var(--span) * 100%);
+    min-width: var(--edit-clip-min);
+    height: calc(var(--lane-height) - var(--hairline-width) * 2);
+    align-items: center;
+    overflow: hidden;
+    border-radius: var(--radius-chip);
+    font-size: var(--text-footnote);
+    font-weight: var(--font-weight-semibold);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .edit-clip[data-track="work"] {
+    --clip-fill: var(--color-accent-fill);
+    color: var(--color-on-accent);
+  }
+
+  .edit-clip[data-track="research"] {
+    --clip-fill: var(--color-accent-2);
+    color: var(--color-on-accent);
+  }
+
+  .edit-clip[data-track="education"] {
+    --clip-fill: color-mix(in srgb, var(--color-fg-3) 30%, var(--color-surface));
+    color: var(--color-fg);
+  }
+
+  .edit-clip {
+    background-color: var(--clip-fill);
+  }
+
+  /* A clip that runs on past today fades at today: its fill only, so the active ring and
+     the focus ring stay whole. */
+  .edit-clip:is([data-continues], [data-ongoing]) {
+    background-color: transparent;
+    background-image: linear-gradient(90deg, var(--clip-fill) calc(100% - min(var(--spacing) * 8, 40%)), transparent);
+  }
+
+  /* A year bracket: content knows the year, never the month. One still running has no end. */
+  .edit-clip[data-precision="year"] {
+    border: var(--edit-playhead) solid var(--color-fg-2);
+    border-bottom: 0;
+    border-radius: var(--radius-chip) var(--radius-chip) 0 0;
+    background: none;
+    color: var(--color-fg);
+  }
+
+  .edit-clip[data-precision="year"][data-continues] {
+    border-inline-end-color: transparent;
+    border-start-end-radius: 0;
+  }
+
+  .edit-viewer {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 6);
+  }
+
+  /* The stack shows the roles; the conference, the degree and the honors have their own sections. */
+  .edit-panel {
+    display: grid;
+    gap: calc(var(--spacing) * 6);
+    padding: calc(var(--spacing) * 6);
+    border-radius: var(--radius-card-l);
+    background-color: var(--color-card);
+  }
+
+  .edit-panel:not([data-kind="role"]) {
+    display: none;
+  }
+
+  @variant md {
+    .edit-panel {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      align-items: start;
+    }
+  }
+
+  .edit-panel-text {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 3);
+  }
+
+  .edit-kicker {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .edit-title {
+    font-size: var(--edit-title);
+    font-weight: var(--text-title--font-weight);
+    line-height: var(--text-title--line-height);
+    letter-spacing: var(--text-title--letter-spacing);
+    text-wrap: balance;
+  }
+
+  .edit-role {
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .edit-summary {
+    color: var(--color-fg-2);
+    font-size: var(--text-body);
+    text-wrap: pretty;
+  }
+
+  .edit-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 3) calc(var(--spacing) * 8);
+    margin-block: var(--spacing);
+  }
+
+  .edit-metric-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 3) calc(var(--spacing) * 6);
+  }
+
+  .edit-metric {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .edit-metric-value {
+    font-size: var(--edit-metric);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-title--line-height);
+    letter-spacing: var(--text-title--letter-spacing);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .edit-metric-label {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+  }
+
+  .edit-highlights {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 2);
+    padding-inline-start: calc(var(--spacing) * 4);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+    list-style: disc;
+    text-wrap: pretty;
+  }
+
+  .edit-status {
+    color: var(--color-fg-2);
+  }
+
+  .edit-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .edit-visual {
+    display: grid;
+    min-width: 0;
+    place-items: center;
+    aspect-ratio: var(--aspect-landscape);
+  }
+
+  .edit-visual > svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ─── The pinned edit ─── */
+
+  @variant edit-pinned {
+    /* data-unfit: the controller found a panel taller than the viewer (with a large default
+       font, say), so the edit stays a stack there. */
+    :root:not([data-motion="reduce"]) .edit:not([data-unfit]) {
+      --lane-height: var(--edit-lane);
+      height: calc(var(--stage-height) + var(--edit-pin));
+
+      /* A grid, so the frame's 100% is the stage's height (Container wraps it). */
+      .edit-stage {
+        position: sticky;
+        top: 0;
+        display: grid;
+        height: var(--stage-height);
+        grid-template-rows: minmax(0, 1fr);
+        padding-block: var(--island-clearance) calc(var(--spacing) * 6);
+      }
+
+      .edit-frame {
+        display: grid;
+        height: 100%;
+        grid-template-rows: minmax(0, 1fr) auto;
+        gap: calc(var(--spacing) * 6);
+      }
+
+      /* The viewer sits above the timeline on screen; in the document it follows it, so
+         Tab reaches the clips before the panel they show. */
+      .edit-viewer {
+        display: grid;
+        min-height: 0;
+        grid-row: 1;
+      }
+
+      .edit-timeline {
+        grid-row: 2;
+      }
+
+      /* Under the timeline's right end, while a clip has keyboard focus. */
+      .edit-hint {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        display: block;
+        margin-block-start: var(--spacing);
+        color: var(--color-fg-2);
+        font-size: var(--text-footnote);
+        line-height: var(--text-footnote--line-height);
+        opacity: 0;
+        transition: opacity var(--duration-ui) var(--ease-out);
+      }
+
+      /* The playhead's label stands above the ruler, so "Now" goes inside it. */
+      .edit-now {
+        top: 0;
+        padding-block-end: 0;
+      }
+
+      .edit-timeline:has(.edit-clip:focus-visible) .edit-hint {
+        opacity: 1;
+      }
+
+      .edit-clip {
+        pointer-events: auto;
+        cursor: pointer;
+      }
+
+      /* The padding is the title's, so a clip is never wider than its dates. */
+      .edit-clip-title {
+        display: block;
+        overflow: hidden;
+        padding-inline: calc(var(--spacing) * 2);
+        text-overflow: ellipsis;
+      }
+
+      /* A clip's name goes inside it when it fits, beside it when its lane has room (the
+         two-day conference's sliver), and otherwise is left to the viewer (the controller
+         measures). */
+      .edit-clip[data-label="beside"] {
+        overflow: visible;
+      }
+
+      .edit-clip[data-label="beside"] .edit-clip-title {
+        position: absolute;
+        left: calc(100% + var(--spacing));
+        padding-inline: 0;
+        color: var(--color-fg);
+      }
+
+      .edit-clip[data-label="none"] .edit-clip-title {
+        visibility: hidden;
+      }
+
+      .edit-clip[aria-current] {
+        box-shadow: 0 0 0 var(--edit-playhead) var(--color-fg);
+      }
+
+      .edit-clip:focus-visible {
+        z-index: 1;
+      }
+
+      /* Over the time column, from the ruler to the last track. */
+      .edit-overlay {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: calc(var(--edit-label) + var(--grid-gutter));
+        display: block;
+        pointer-events: none;
+      }
+
+      .edit-playhead {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: calc(var(--playhead, 0) / var(--span) * 100%);
+        width: var(--edit-playhead);
+        translate: -50% 0;
+        background-color: var(--color-fg);
+      }
+
+      /* Its label leans from the line's right at the start to its left at today, so it
+         never leaves the timeline. */
+      .edit-playhead-time {
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        padding: 0 var(--spacing);
+        border-radius: var(--radius-chip);
+        background-color: var(--color-fg);
+        color: var(--color-surface);
+        font-size: var(--text-footnote);
+        font-weight: var(--font-weight-semibold);
+        font-variant-numeric: tabular-nums;
+        translate: calc(var(--playhead, 0) / var(--span) * -100%) 0;
+        white-space: nowrap;
+      }
+
+      /* Panels share one place and cross-dissolve: the new one resolves in (§5.4). */
+      .edit-panel,
+      .edit-panel:not([data-kind="role"]) {
+        display: grid;
+        min-height: 0;
+        grid-area: 1 / 1;
+        grid-template-columns: minmax(0, 8fr) minmax(0, 5fr);
+        align-content: start;
+        padding: 0;
+        background: none;
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          opacity var(--duration-ui) var(--ease-out),
+          visibility var(--duration-instant) linear var(--duration-ui);
+      }
+
+      .edit-panel[data-active] {
+        opacity: 1;
+        visibility: visible;
+        transition:
+          opacity var(--motion-resolve-duration) var(--ease-out),
+          visibility var(--duration-instant);
+      }
+
+      .edit-panel-text > *,
+      .edit-visual {
+        filter: blur(var(--motion-resolve-blur));
+        scale: var(--motion-resolve-scale);
+        translate: 0 var(--motion-resolve-y);
+        transition:
+          filter var(--motion-resolve-duration) var(--ease-out),
+          scale var(--motion-resolve-duration) var(--ease-out),
+          translate var(--motion-resolve-duration) var(--ease-out);
+      }
+
+      .edit-panel[data-active] :is(.edit-panel-text > *, .edit-visual) {
+        filter: none;
+        scale: 1;
+        translate: 0 0;
+      }
+
+      .edit-panel[data-active] .edit-panel-text > :nth-child(2) {
+        transition-delay: var(--motion-resolve-stagger);
+      }
+
+      .edit-panel[data-active] .edit-panel-text > :nth-child(3) {
+        transition-delay: calc(2 * var(--motion-resolve-stagger));
+      }
+
+      .edit-panel[data-active] .edit-panel-text > :nth-child(n + 4) {
+        transition-delay: calc(3 * var(--motion-resolve-stagger));
+      }
+
+      .edit-visual {
+        aspect-ratio: auto;
+        height: 100%;
+        max-height: 100%;
+      }
+
+      .edit-panel-text {
+        gap: var(--edit-gap);
+      }
+
+      /* The metrics keep to one row: their labels wrap before the row does. */
+      .edit-metrics,
+      .edit-metric-group {
+        flex-wrap: nowrap;
+        margin-block: 0;
+      }
+
+      .edit-metric-label {
+        text-wrap: balance;
+      }
+    }
+  }
+
+  /* ─── The role visuals ─── */
+
+  /* Each rests on its final frame, and plays once while its role is on in the edit. */
+  .role-visual {
+    overflow: visible;
+    font-family: var(--font-sans);
+  }
+
+  .rv-label {
+    fill: var(--color-fg-2);
+    font-size: var(--film-caption);
+  }
+
+  .rv-figure {
+    fill: var(--color-fg);
+    font-size: var(--film-title);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rv-figure-small {
+    fill: var(--color-fg);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .rv-code {
+    fill: var(--color-fg-2);
+    font-family: var(--font-mono-system);
+    font-size: var(--film-caption);
+  }
+
+  /* Code-like at first: runs of tokens whose gaps close as the knot untangles. */
+  .rv-stroke {
+    stroke: var(--color-accent);
+    stroke-dasharray: 12 0 22 0 6 0 16 0;
+    stroke-width: 3;
+    stroke-linecap: round;
+    transform-box: view-box;
+    transform-origin: 0 0;
+    rotate: var(--r);
+    translate: var(--x) var(--y);
+  }
+
+  .rv-node {
+    fill: var(--color-surface);
+    stroke: var(--color-accent);
+    stroke-width: 3;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .rv-link {
+    fill: none;
+    stroke: color-mix(in srgb, var(--color-accent) 60%, transparent);
+    stroke-width: 2;
+    stroke-dasharray: 1;
+  }
+
+  .rv-pulse {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 2;
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .rv-sheet,
+  .rv-window,
+  .rv-region,
+  .rv-api,
+  .rv-db,
+  .rv-block {
+    fill: var(--color-surface);
+    stroke: var(--color-hairline);
+    stroke-width: 1.5;
+  }
+
+  .rv-line,
+  .rv-axis {
+    fill: none;
+    stroke: var(--color-fg-3);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .rv-dot,
+  .rv-bar-head {
+    fill: var(--color-fg-3);
+  }
+
+  .rv-card,
+  .rv-row {
+    fill: color-mix(in srgb, var(--color-fg-3) 30%, transparent);
+  }
+
+  .rv-wire {
+    stroke: var(--color-fg-3);
+    stroke-dasharray: 3 4;
+    stroke-width: 1.5;
+  }
+
+  .rv-token-pill {
+    fill: var(--color-accent-fill);
+  }
+
+  .rv-token-text {
+    fill: var(--color-on-accent);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .rv-block {
+    fill: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+    stroke: var(--color-accent);
+  }
+
+  .rv-ring-track,
+  .rv-ring-arc {
+    fill: none;
+    stroke-width: 10;
+  }
+
+  .rv-ring-track {
+    stroke: var(--color-hairline);
+  }
+
+  .rv-ring-arc {
+    stroke: var(--color-accent);
+    stroke-dasharray: var(--to) 100;
+    stroke-linecap: round;
+    rotate: -90deg;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .rv-defects,
+  .rv-level {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+  }
+
+  .rv-level-dot {
+    fill: var(--color-accent);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .rv-column {
+    fill: color-mix(in srgb, var(--color-accent) 70%, var(--color-surface));
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+  }
+
+  /* When each visual's figures appear, so their counters count then. */
+  .rv-cost {
+    --count-delay: calc(var(--rv-step) * 30);
+  }
+
+  [data-visual="module-blocks"] .rv-figure {
+    --count-delay: calc(var(--rv-step) * 9);
+  }
+
+  .rv-coverage .rv-figure {
+    --count-delay: calc(var(--rv-step) * 12);
+  }
+
+  [data-visual="dashboard"] .rv-figure {
+    --count-delay: calc(var(--rv-step) * 14);
+  }
+
+  @variant edit-pinned {
+    :root:not([data-motion="reduce"]) .edit:not([data-unfit]) .edit-panel[data-active] {
+      .rv-stroke {
+        animation: rv-untangle calc(var(--rv-step) * 14) var(--ease-in-out) calc(var(--k) * var(--rv-step) * 0.4) both;
+      }
+
+      .rv-node {
+        animation: rv-pop calc(var(--rv-step) * 4) var(--ease-out) calc(var(--rv-step) * 13 + var(--k) * var(--rv-step) * 0.5) both;
+      }
+
+      .rv-link {
+        animation: rv-draw calc(var(--rv-step) * 6) var(--ease-in-out) calc(var(--rv-step) * 19 + var(--k) * var(--rv-step) * 0.6) both;
+      }
+
+      .rv-pulse {
+        animation: rv-pulse calc(var(--rv-step) * 10) var(--ease-out) calc(var(--rv-step) * 18 + var(--k) * var(--rv-step) * 2) both;
+      }
+
+      .rv-doc {
+        animation: rv-arrive calc(var(--rv-step) * 5) var(--ease-out) calc(var(--rv-step) * 23 + var(--k) * var(--rv-step) * 0.8) both;
+      }
+
+      .rv-cost {
+        animation: rv-fade calc(var(--rv-step) * 5) var(--ease-out) calc(var(--rv-step) * 30) both;
+      }
+
+      .rv-window,
+      .rv-dot {
+        animation: rv-fade calc(var(--rv-step) * 4) var(--ease-out) both;
+      }
+
+      .rv-segment {
+        animation: rv-slot calc(var(--rv-step) * 6) var(--ease-out) calc(var(--rv-step) * 3 + var(--k) * var(--rv-step) * 2.5) both;
+      }
+
+      .rv-card {
+        animation: rv-arrive calc(var(--rv-step) * 5) var(--ease-out) calc(var(--rv-step) * 12 + var(--k) * var(--rv-step) * 1.2) both;
+      }
+
+      .rv-api,
+      .rv-wire,
+      [data-visual="route-segments"] .rv-label {
+        animation: rv-fade calc(var(--rv-step) * 4) var(--ease-out) calc(var(--rv-step) * 14) both;
+      }
+
+      .rv-token {
+        animation: rv-travel calc(var(--rv-step) * 9) var(--ease-in-out) calc(var(--rv-step) * 18) both;
+      }
+
+      .rv-db {
+        animation: rv-fade calc(var(--rv-step) * 4) var(--ease-out) calc(var(--rv-step) * 24) both;
+      }
+
+      .rv-row {
+        animation: rv-drop calc(var(--rv-step) * 5) var(--ease-out) calc(var(--rv-step) * 27 + var(--k) * var(--rv-step) * 1.5) both;
+      }
+
+      .rv-block {
+        animation: rv-snap calc(var(--rv-step) * 7) var(--ease-out) calc(var(--k) * var(--rv-step) * 0.5) both;
+      }
+
+      [data-visual="module-blocks"] .rv-figure,
+      [data-visual="module-blocks"] .rv-label {
+        animation: rv-fade calc(var(--rv-step) * 4) var(--ease-out) calc(var(--rv-step) * 9) both;
+      }
+
+      .rv-coverage {
+        animation: rv-fade calc(var(--rv-step) * 4) var(--ease-out) calc(var(--rv-step) * 11) both;
+      }
+
+      .rv-ring-arc {
+        animation: rv-fill calc(var(--rv-step) * 12) var(--ease-out) calc(var(--rv-step) * 12) both;
+      }
+
+      .rv-defects {
+        animation: rv-draw calc(var(--rv-step) * 10) var(--ease-in-out) calc(var(--rv-step) * 24) both;
+      }
+
+      .rv-panel {
+        animation: rv-arrive calc(var(--rv-step) * 5) var(--ease-out) calc(var(--rv-step) * 3 + var(--k) * var(--rv-step) * 2) both;
+      }
+
+      .rv-column {
+        animation: rv-rise calc(var(--rv-step) * 6) var(--ease-out) calc(var(--rv-step) * 6 + var(--k) * var(--rv-step) * 0.8) both;
+      }
+
+      .rv-reach {
+        animation: rv-lift calc(var(--rv-step) * 12) var(--ease-out) calc(var(--rv-step) * 14) both;
+      }
+
+      .rv-level {
+        animation: rv-draw calc(var(--rv-step) * 8) var(--ease-in-out) calc(var(--rv-step) * 14) both;
+      }
+
+      .rv-level-dot {
+        animation: rv-pop calc(var(--rv-step) * 3) var(--ease-out) calc(var(--rv-step) * 21) both;
+      }
+
+      [data-visual="dashboard"] .rv-figure {
+        animation: rv-fade calc(var(--rv-step) * 4) var(--ease-out) calc(var(--rv-step) * 14) both;
+      }
+    }
+
+    /* Off-screen and in a hidden tab, the visuals rest where they are. (Each animation
+       shorthand above resets the play state, so this outranks them.) */
+    :root:not([data-motion="reduce"]) .edit:is([data-offscreen], [data-hidden-tab]):not([data-unfit]) .edit-panel[data-active] .role-visual * {
+      animation-play-state: paused;
+    }
+  }
+
+
+  @keyframes rv-untangle {
+    from {
+      rotate: var(--r0);
+      stroke-dasharray: 12 7 22 7 6 7 16 7;
+      translate: var(--x0) var(--y0);
+    }
+  }
+
+  @keyframes rv-pop {
+    from {
+      opacity: 0;
+      scale: 0;
+    }
+  }
+
+  @keyframes rv-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+  }
+
+  @keyframes rv-pulse {
+    from {
+      opacity: 0.9;
+      scale: 0.6;
+    }
+
+    to {
+      opacity: 0;
+      scale: 2.4;
+    }
+  }
+
+  @keyframes rv-arrive {
+    from {
+      opacity: 0;
+      translate: calc(var(--film-shift) * -1) 0;
+    }
+  }
+
+  @keyframes rv-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes rv-slot {
+    from {
+      opacity: 0;
+      translate: calc(var(--film-shift) * -2) calc(var(--film-shift) * -1);
+    }
+  }
+
+  /* From the API (--dx, --dy away) into the client. */
+  @keyframes rv-travel {
+    from {
+      opacity: 0;
+      translate: var(--dx) var(--dy);
+    }
+
+    15% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes rv-lift {
+    from {
+      translate: 0 var(--lift);
+    }
+  }
+
+  @keyframes rv-drop {
+    from {
+      opacity: 0;
+      translate: 0 calc(var(--film-shift) * -1);
+    }
+  }
+
+  @keyframes rv-snap {
+    from {
+      opacity: 0;
+      rotate: 12deg;
+      translate: var(--dx) var(--dy);
+    }
+  }
+
+  @keyframes rv-fill {
+    from {
+      stroke-dasharray: 0 100;
+    }
+  }
+
+  @keyframes rv-rise {
+    from {
+      scale: 1 0;
+    }
+  }
+
   /* ─── Search (§6.3) ───────────────────────────────────────────────────────── */
 
   /* A centered glass panel in a top-layer dialog, 640px wide, with a 24px field. */

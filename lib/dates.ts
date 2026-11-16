@@ -92,3 +92,28 @@ export function formatIsoDate(value: string, locale = "en-GB"): string {
     timeZone: "UTC",
   }).format(utcDate(year, month, day));
 }
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/**
+ * A span of months as a résumé writes it: "Jul–Aug 2025", "Dec 2025 – Jan 2026",
+ * "Jun 2026 – present", or "Jun 2026" for one month.
+ */
+export function formatMonthRange(start: string, end: string): string {
+  const from = parseYearMonth(start);
+  if (end === "present") return `${MONTHS[from.month - 1]} ${from.year} – present`;
+  const to = parseYearMonth(end);
+  if (from.year === to.year && from.month === to.month) return `${MONTHS[from.month - 1]} ${from.year}`;
+  if (from.year === to.year) return `${MONTHS[from.month - 1]}–${MONTHS[to.month - 1]} ${to.year}`;
+  return `${MONTHS[from.month - 1]} ${from.year} – ${MONTHS[to.month - 1]} ${to.year}`;
+}
+
+/** A span of days: "28–29 Apr 2026", "30 Apr – 1 May 2026", or one day. */
+export function formatDayRange(start: string, end: string): string {
+  const from = parseIsoDate(start);
+  const to = parseIsoDate(end);
+  if (start === end) return `${from.day} ${MONTHS[from.month - 1]} ${from.year}`;
+  if (from.year === to.year && from.month === to.month) return `${from.day}–${to.day} ${MONTHS[to.month - 1]} ${to.year}`;
+  if (from.year === to.year) return `${from.day} ${MONTHS[from.month - 1]} – ${to.day} ${MONTHS[to.month - 1]} ${to.year}`;
+  return `${from.day} ${MONTHS[from.month - 1]} ${from.year} – ${to.day} ${MONTHS[to.month - 1]} ${to.year}`;
+}

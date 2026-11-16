@@ -14,7 +14,7 @@ The portfolio of Akshat Sharma: AI & ML engineer, B.Tech CSE '27 at Manipal Univ
 4. [Tokens](#4-tokens): [Neutrals](#41-neutrals) · [Surfaces](#42-surfaces) · [Finishes](#43-finishes) · [Type](#44-type) · [Space and layout](#45-space-and-layout) · [Radii](#46-radii) · [Materials](#47-materials) · [Elevation](#48-elevation) · [Layers](#49-layers) · [Icons](#410-icons)
 5. [Motion](#5-motion): [Curves](#51-curves) · [Springs](#52-springs) · [Durations](#53-durations) · [The Resolve](#54-the-resolve) · [Scroll scenes](#55-scroll-scenes) · [Motion on intent](#56-motion-on-intent) · [Reduced motion edition](#57-reduced-motion-edition)
 6. [Interaction](#6-interaction): [The cursor](#61-the-cursor) · [The Island](#62-the-island) · [Search](#63-search) · [Focus ring](#64-focus-ring) · [Pressed state](#65-pressed-state) · [Depth on hover](#66-depth-on-hover)
-7. [Signature moments](#7-signature-moments): [The hero](#71-the-hero) · [The statement and About](#72-the-statement-and-about) · [The highlights](#73-the-highlights)
+7. [Signature moments](#7-signature-moments): [The hero](#71-the-hero) · [The statement and About](#72-the-statement-and-about) · [The highlights](#73-the-highlights) · [The edit](#74-the-edit)
 8. [Surprises](#8-surprises)
 9. [Voice](#9-voice)
 10. [Budgets](#10-budgets)
@@ -143,7 +143,7 @@ Apple-calibrated, our own tokens.
 
 - Every section sets `data-surface="light|light-alt|dark"`. Text tokens re-map per surface.
 - The page background crossfades between surfaces, scrubbed by scroll, so the lights go down and come up.
-- The crossfade runs over the last 20% of each section, and text tokens switch at its midpoint.
+- The crossfade runs over the last 20% of each section, but never more than half a viewport, and text tokens switch at its midpoint.
 - In the dark theme, both light surfaces (light and light-alt) become bg-alt, so the rhythm between light and dark survives.
 - In the light theme, cards invert against their surface: #FFFFFF on light-alt (§4.1), bg-alt on light.
 
@@ -445,6 +445,34 @@ Built in Part 6 (`components/highlights/`, logic in `lib/reel.ts`). "The highlig
 
 Only the card in view plays, while the reel is on screen and the tab is visible. One control at the bottom right pauses the whole reel for the session (WCAG 2.2.2), and the current card's dot stretches into a bar that fills with its film. Swipes and trackpads scroll it natively, a mouse drags it (the cursor shows its drag state), and the arrow keys, Home and End move between cards from the one tab stop. Each card's + opens a sheet with the full fact, its footnote and a link to its section. With reduced motion every card rests on its final frame.
 
+### 7.4 The edit
+
+Built in Part 7 (`components/experience/`, the scroll and playback in `lib/edit.ts`, the tracks and panels in `content/derive.ts`). Experience as a pro video editor: a viewer over a multi-track timeline the visitor scrubs.
+
+**Pinned**, on screens at least 1069px wide and 760px tall, with motion and JavaScript, for 280svh. The viewer (about 60%) shows the active panel. A role's panel has its company, role, dates, location (hidden while null), summary, first three highlights, metrics as counters with their footnotes, and stack chips, beside its visual. The conference, the degree and each honor have panels too. The timeline (about 40%) runs on a real time scale from July 2023 to today, with a tick a month, a label each January and a "Now" marker, over four tracks:
+
+| Track | Clips |
+|---|---|
+| WORK | The four roles. EY and United overlap in June–July 2026, so they stack on two lanes, both whole. |
+| RESEARCH | SCI-2026, 28–29 April 2026: a sliver with its name beside it. |
+| EDUCATION | The degree, one clip that fades on past today. |
+| HONORS | Year brackets, since content knows the year and never the month. |
+
+The playhead follows the scroll exactly. The clip under it is active (the top track wins, then the upper lane, so EY shows in the overlap), and the viewer cross-dissolves to it with the Resolve. Each role and the conference hold the viewer for the same scroll, however long they ran, and stretches only the degree covers pass in at most half that. A click springs the playhead to a clip on the smooth spring. A honor is a marker: choosing one shows it while the playhead stays in its year.
+
+**Keyboard.** The timeline comes before the viewer in the document, so Tab reaches the clips first, in time order: the roles, the conference, the degree, then one stop for the honors (the arrow keys move between them), then the panel on show. Focusing a clip chooses it. While the timeline has focus, Space plays and pauses (a role per 2.5s at 1×), and J, K and L shuttle backward, pause and forward at 1×, 2× and 4×. "Press Space to play" shows under the timeline while a clip has keyboard focus. Playback scrolls the page, so the visitor's own scroll always wins: a wheel, a touch or any scroll it didn't make stops it. A keyboard user leaves the section in at most 10 presses.
+
+**The role visuals** are abstract SVG, server-rendered, resting on their final frame. Each plays once, in about four seconds, when its role comes on, and pauses off-screen and in a hidden tab. Each draws only figures its role's text or notes state, labeled as they word them, and the schema checks them.
+
+| Role | Visual |
+|---|---|
+| United Airlines | Tangle to map: a knot of code-like strokes untangles into a knowledge graph, two pulses become six documents and the cost settles on $0.08–0.11. |
+| EY | Route segments assemble a UI, a JWT travels from the API into the client and rows land in PostgreSQL. |
+| Truechip | 10+ module blocks snap together, a coverage ring fills to 90%+ and a defect line drops ~30%. |
+| WalkingTree | A dashboard builds itself: skeleton bars, and a daily-active-users line that rises to 2,500+. |
+
+**The stack**, on phones, with reduced motion, on short screens and without JavaScript, has no pin. The role cards stack under a compact, read-only strip of the same tracks, each visual on its final frame and each figure as stated. The strip is hidden from assistive tech, since the cards carry everything it shows.
+
 ---
 
 ## 8. Surprises
@@ -559,6 +587,22 @@ Append as you go, each with its reason.
 - **The reel's cards are dark** (Part 6), like Apple's highlights, with the dark tone set on each card, so the films draw in the on-dark accent on any surface.
 - **The reel's pagination dots are 36×44 on phones** (Part 6). Seven 44-wide targets and the pause control don't fit at 390px. They're above WCAG 2.5.8's 24px, and swipes, the arrow keys and each card's + reach every card too. From tablets up they're 44×44.
 - **Performance after Part 6** (Part 6). The new sections add 9 KB of HTML (gzip) and 7 KB of JavaScript: first-load JS is 162.6 KB, under the 170 KB budget. Under DevTools throttling performance is 0.99, LCP 1.5s and CLS 0; on localhost the simulated score fell from 0.96 to 0.94, for the reasons in the entry above. Best practices and accessibility stay at 1.0.
+- **The edit's timeline comes before its viewer in the document** (Part 7). Tab reaches the clips before the panel they show, and the viewer sits above on screen. The panel on show comes last, and the others are inert, so its footnote marks are the only stops after the clips.
+- **One footnote mark per note, per panel** (Part 7). A role's metrics are grouped by the footnote that backs them, and each group is marked once. The highlights carry no marks: the schema now checks that every number in a role's text is one of its metrics, so the marks beside the metrics cite them all. With one stop for the honors, the worst case is six clips, one honor, two marks and the press that leaves: 10.
+- **The scroll isn't spent evenly on the time scale** (Part 7). On a real scale, WalkingTree's two months are 5% of the scroll and the two degree-only years are 60%. The picture keeps the real scale, but each role and the conference hold the viewer for the same scroll, and degree-only stretches pass at 0.03 of that per month, at most half.
+- **Honors are markers** (Part 7). Their year brackets cover most of the scale, under the roles, so under the top-track rule they'd never show. They show when chosen (a click, focus or the arrow keys) until the playhead leaves their year, and choosing one springs the playhead to it.
+- **The edit pins only where its tallest panel fits** (Part 7). That's 1069px wide and 760px tall: the viewer needs about 400px. The query lives once in a CSS variant and once in `lib/edit.ts`, and a unit test keeps them equal. Lanes grow with the screen's height (28–48px), so the timeline is about 40% at 900px tall. If a panel still overflows (with a large default font, say), the controller marks the edit `data-unfit` and it stays a stack.
+- **The playhead follows the scroll exactly** (Part 7), like the statement's fill and for the same reasons. Clicks and focus travel on the smooth spring.
+- **Playback scrolls the page** (Part 7). The scroll stays the one source of truth, so playing, scrubbing and the Island's links can't disagree, and the visitor's own scroll stops playback. A focused clip is chosen a frame later: the browser scrolls it into view after the focus event, and that scroll would otherwise stop the spring. In WebKit, a wheel tick that lands in the same frame as one of the edit's own scrolls can be lost; it still stops the motion, so from the next tick on the scroll is the visitor's alone.
+- **The edit's counters count when a panel comes on** (Part 7), from zero, over `durations.count`. A visual's figures wait until the visual draws them (`--count-delay`). In the stack, and with reduced motion, they read as stated.
+- **The edit's charts invent no data** (Part 7). Truechip's defect line drops by the stated ~30% on an unlabeled scale. WalkingTree's line rises to the stated level and holds, so it reaches 2,500+ without a history, and its bars are unlabeled skeleton bars, a UI idiom. EY's visual has no figures, since its role states none.
+- **Clips are named by `experience[].short`** (Part 7), which the schema checks is part of `org`: EY, Truechip, WalkingTree. A name goes inside its clip when it fits, beside it when the lane has room there, and otherwise is left to the viewer. A clip's accessible name is always the full name, role and dates.
+- **Clips are never wider than their dates** (Part 7). The padding belongs to the title, and a sliver's minimum is 6px. A clip that runs past today ends at "Now" and its fill fades there; a mask had also hidden its focus ring.
+- **Until the browser knows today, the scale ends at the last date content knows has passed** (Part 7), EY's end. The HTML never claims a today; the browser extends the scale and adds "Now".
+- **The surface crossfade is at most half a viewport** (Part 7, §4.2). The experience section is about four viewports tall, so its last 20% began while United was still pinned and dimmed it. Capped, the lights go down once the pin lets go. Sections shorter than 2.5 viewports keep their 20%; the statement's zone shrinks from about 470px to 450px at 900px tall.
+- **The visuals' code labels use the system monospace** (Part 7). "app/", "layout" and "JWT" made Chrome, which has no `ui-monospace`, fetch JetBrains Mono (40 KB) at load for three decorative labels; on localhost the simulated LCP rose from 2.9s to 3.3s, and with the system face it's 3.0s. Safari draws them in SF Mono either way.
+- **Performance after Part 7** (Part 7). The edit adds 3.1 KB of JavaScript (first-load JS is 165.7 KB, under the 170 KB budget) and 11 KB of HTML over the wire, half of it the section's share of the RSC payload. Under DevTools throttling performance is 1.0, LCP 1.5s and CLS 0; simulated on localhost it's 0.93 with LCP at 3.0s, for the reasons in the Part 5 entry. Accessibility and best practices stay at 1.0.
+- **Truechip's "10+ modules" has no footnote** (Part 7). It's the only metric without a source. TODO(akshat) in content.
 
 ---
 

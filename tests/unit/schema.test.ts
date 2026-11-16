@@ -142,6 +142,34 @@ describe("content schema", () => {
     });
   });
 
+  describe("a role's metrics and visual", () => {
+    it("state only what the role and its notes state", () => {
+      expect(problemsOf(broken([["experience", 0, "metrics", 0, "value"], 7]))).toEqual(
+        expect.arrayContaining(["experience[united-airlines].metrics[0]: 7 isn't stated by this role or the notes it cites"]),
+      );
+      expect(problemsOf(broken([["experience", 2, "visual", "coverage"], 95]))).toEqual([
+        "experience[truechip].visual: 95 isn't stated by this role or the notes it cites",
+      ]);
+    });
+
+    it("cover every number the role's text states, so the edit can footnote each once", () => {
+      const metrics = data.experience[3].metrics!.filter((metric) => metric.value !== 2500);
+      expect(problemsOf(broken([["experience", 3, "metrics"], metrics]))).toEqual([
+        "experience[walkingtree].metrics: 2500 is in this role's text but isn't one of its metrics",
+      ]);
+    });
+
+    it("cite footnotes that exist", () => {
+      expect(problemsOf(broken([["experience", 0, "metrics", 0, "footnotes"], [9]]))).toEqual([
+        "experience[united-airlines].metrics[0].footnotes[0]: footnote 9 doesn't exist",
+      ]);
+    });
+
+    it("shorten the org's name only to a part of it", () => {
+      expect(problemsOf(broken([["experience", 1, "short"], "E&Y"]))).toEqual(['experience[ey].short: "E&Y" isn\'t part of "Ernst & Young (EY)"']);
+    });
+  });
+
   it("puts the statement's gradient phrase in the statement, once", () => {
     expect(problemsOf(broken([["copy", "statement", "emphasis"], "the murky kind"]))).toEqual([
       "copy.statement.emphasis: must appear in the headline exactly once",
