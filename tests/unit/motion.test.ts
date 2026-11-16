@@ -86,7 +86,9 @@ describe("durations", () => {
     ["--duration-reveal", durations.reveal],
     ["--duration-reveal-long", durations.revealLong],
     ["--duration-count", durations.count],
+    ["--duration-swap", durations.swap],
     ["--stagger-lines", stagger.lines],
+    ["--stagger-results", stagger.results],
   ])("%s matches lib/motion.ts", (token, ms) => {
     expect(tokens.get(token)).toBe(`${ms}ms`);
   });
@@ -100,6 +102,8 @@ describe("durations", () => {
     expect(durations.revealLong).toBeLessThanOrEqual(900);
     expect(durations.reveal).toBe(700);
     expect(durations.count).toBeLessThanOrEqual(1200);
+    expect(durations.swap).toBeGreaterThanOrEqual(150);
+    expect(durations.swap).toBeLessThanOrEqual(200);
   });
 
   it("scrub matches its token", () => {

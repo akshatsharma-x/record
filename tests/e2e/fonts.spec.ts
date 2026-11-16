@@ -2,18 +2,29 @@ import { expect, test } from "@playwright/test";
 
 /**
  * DESIGN.md §4.4: Apple devices render SF Pro, the visitor's own system font, and never
- * download Inter. Run on macOS, where Playwright's WebKit and Chromium use the system fonts.
+ * download Inter. Serif text is New York in Safari; Chromium has no ui-serif, so it may
+ * fetch Newsreader, and nothing else. Run on macOS, where both use the system fonts.
  */
 test.skip(process.platform !== "darwin", "needs Apple's system fonts");
 
-test("SF Pro renders and no font file is requested", async ({ page, browserName }) => {
+test("SF Pro renders and Inter is never requested", async ({ page, browserName }) => {
   const fontRequests: string[] = [];
   page.on("request", (request) => {
     if (request.resourceType() === "font" || /\.woff2?(\?|$)/.test(request.url())) fontRequests.push(request.url());
   });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
-  expect(fontRequests).toEqual([]);
+  const loaded = await page.evaluate(async () => {
+    await document.fonts.ready;
+    // next/font's "… Fallback" faces are local fonts with adjusted metrics: nothing downloads.
+    return [...document.fonts]
+      .filter((face) => face.status === "loaded" && !/fallback/i.test(face.family))
+      .map((face) => face.family);
+  });
+  if (browserName === "webkit") expect(fontRequests).toEqual([]);
+  // Whatever did load is the serif fallback, never a sans.
+  expect(loaded.every((family) => /newsreader/i.test(family)), loaded.join(", ")).toBe(true);
+  expect(fontRequests.length).toBeLessThanOrEqual(loaded.length);
 
   // Inter's @font-face is declared, but the browser never needed it.
   const inter = await page.evaluate(async () => {

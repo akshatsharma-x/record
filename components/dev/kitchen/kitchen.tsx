@@ -32,6 +32,7 @@ import {
 import { FINISHES } from "@/lib/preferences";
 import { type Tier, TIER_OVERRIDE_KEY, TIER_SESSION_KEY, TIERS } from "@/lib/tier";
 import { CursorLab } from "./cursor-lab";
+import { IslandLab } from "./island-lab";
 import "./kitchen.css";
 
 export interface TokenGroups {
@@ -49,10 +50,10 @@ const TestCube = dynamic(() => import("@/components/three/test-cube"), { ssr: fa
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
-export function Kitchen({ tokens }: { tokens: TokenGroups }) {
+export function Kitchen({ tokens, email }: { tokens: TokenGroups; email: string }) {
   return (
     <main>
-      <Section id="kitchen" surface="light">
+      <Section id="kitchen" name="Kitchen" surface="light">
         <Container width="wide" className="flex flex-col gap-24">
           <Header />
           <NeutralsAndSurfaces tokens={tokens} />
@@ -64,6 +65,7 @@ export function Kitchen({ tokens }: { tokens: TokenGroups }) {
           <Controls />
           <Overlays />
           <Cursor />
+          <IslandBlock email={email} />
           <NumbersAndFootnotes />
           <Reveal />
           <Depth />
@@ -71,7 +73,7 @@ export function Kitchen({ tokens }: { tokens: TokenGroups }) {
           <Stage />
         </Container>
       </Section>
-      <Section id="lights-down" surface="dark" aria-labelledby="lights-down-title">
+      <Section id="lights-down" name="Lights down" surface="dark" aria-labelledby="lights-down-title">
         <Container>
           <Display id="lights-down-title">The lights go down.</Display>
           <Lead tone="fg-2" className="mt-4 max-w-measure">
@@ -80,7 +82,7 @@ export function Kitchen({ tokens }: { tokens: TokenGroups }) {
           </Lead>
         </Container>
       </Section>
-      <Section id="lights-up" surface="light-alt" aria-labelledby="lights-up-title">
+      <Section id="lights-up" name="Lights up" surface="light-alt" aria-labelledby="lights-up-title">
         <Container>
           <Display id="lights-up-title">The lights come up.</Display>
           <Lead tone="fg-2" className="mt-4 max-w-measure">
@@ -88,7 +90,7 @@ export function Kitchen({ tokens }: { tokens: TokenGroups }) {
           </Lead>
         </Container>
       </Section>
-      <Section id="kitchen-end" surface="light" aria-labelledby="kitchen-end-title">
+      <Section id="kitchen-end" name="Back to light" surface="light" aria-labelledby="kitchen-end-title">
         <Container>
           <Title as="h2" id="kitchen-end-title">
             Back to light.
@@ -686,6 +688,18 @@ function Cursor() {
       note="The dot is the hotspot: it never trails the pointer and shows on anything. Shake the pointer to find it; rest it for three seconds and a ring pulses once."
     >
       <CursorLab />
+    </Block>
+  );
+}
+
+function IslandBlock({ email }: { email: string }) {
+  return (
+    <Block
+      id="island"
+      title="The Island"
+      note="Activities grow the pill into a wider capsule for 2.2 seconds, one at a time, and each is announced. The same message twice in a row stays up instead of repeating."
+    >
+      <IslandLab email={email} />
     </Block>
   );
 }

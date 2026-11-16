@@ -49,6 +49,8 @@
   html {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    /* Anchors stop below the Island (§6.2), so it never covers a heading. */
+    scroll-padding-top: var(--island-clearance);
   }
 
   body {
@@ -106,6 +108,20 @@
     background-color: transparent;
   }
 
+  /* The body paints the active surface too: overscroll shows it, and anything reading the
+     page's background (axe, for offscreen text in the active tone) gets the right one. */
+  html[data-surface-controller][data-surface-active="light"] body {
+    background-color: var(--surface-light);
+  }
+
+  html[data-surface-controller][data-surface-active="light-alt"] body {
+    background-color: var(--surface-light-alt);
+  }
+
+  html[data-surface-controller][data-surface-active="dark"] body {
+    background-color: var(--surface-dark);
+  }
+
   /* Lucide icons at a 1.5px stroke (§4.10). */
   .lucide {
     width: var(--icon-size);
@@ -128,7 +144,13 @@
     .swatch,
     .switch-track,
     .switch-thumb,
-    .cursor * {
+    .cursor *,
+    .island-shell,
+    .island-monogram,
+    .island-link,
+    .island-search,
+    .island-hello,
+    .island-kbd {
       corner-shape: round;
     }
 
@@ -254,6 +276,12 @@ html:has(dialog[open]) {
   &[data-force~="pressed"] {
     transform: scale(var(--motion-press-scale));
   }
+}
+
+/* A pause for screen readers: a comma that's read but not seen. It stays inline (sr-only
+   is a block), so names read "Work, Built to be used" rather than "Work , Built…". */
+@utility sr-pause {
+  clip-path: inset(50%);
 }
 
 /* A hit area of at least 44×44 around a small target, such as a footnote superscript. */

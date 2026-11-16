@@ -11,11 +11,13 @@
     z-index: var(--layer-content);
   }
 
+  /* The page's background, so it takes part in hit-testing: tools that read colors from
+     the elements under a point (axe, the cursor's ink) see the surface that's painted. It
+     sits beneath everything, so it never catches a click meant for the content. */
   .surface-backdrop {
     position: fixed;
     inset: 0;
     z-index: var(--layer-backdrop);
-    pointer-events: none;
   }
 
   html:not([data-surface-controller]) .surface-backdrop {
@@ -777,6 +779,814 @@
 
   :root[data-motion="reduce"] .switch-thumb {
     transition: none;
+  }
+
+  /* ─── The Island (§6.2) ───────────────────────────────────────────────────── */
+
+  /* A black pill at the top center, black in both themes. Its shell springs between the
+     sizes of three views (collapsed, activity, expanded), which JavaScript measures. */
+  .island {
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + var(--island-top) - var(--island-hit));
+    left: 50%;
+    z-index: var(--layer-island);
+    padding-block: var(--island-hit);
+    translate: -50% 0;
+    color: var(--color-fg);
+  }
+
+  .island-shell {
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    border-radius: calc(var(--island-height) / 2);
+    background-color: var(--neutral-dark-bg);
+    box-shadow: inset 0 0 0 var(--hairline-width) var(--island-hairline);
+    transition:
+      width var(--duration-spring-island) var(--ease-spring-island),
+      height var(--duration-spring-island) var(--ease-spring-island),
+      border-radius var(--duration-spring-island) var(--ease-spring-island);
+  }
+
+  .island[data-view="activity"] .island-shell {
+    border-radius: calc(var(--island-activity-height) / 2);
+  }
+
+  .island[data-view="expanded"] .island-shell {
+    border-radius: var(--island-radius);
+  }
+
+  /* The shell clips its content, so the toggle's focus ring is drawn on the shell. */
+  .island-toggle:focus-visible {
+    outline-color: transparent;
+  }
+
+  .island-shell:has(.island-toggle:focus-visible) {
+    outline: var(--focus-ring-width) solid var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* Collapsed: the monogram, the section's name and the progress ring. */
+  .island-bar {
+    display: flex;
+  }
+
+  .island-shell[data-measured] > .island-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .island[data-view="activity"] .island-bar {
+    opacity: 0;
+  }
+
+  .island-toggle {
+    display: flex;
+    height: var(--island-height);
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    padding-inline: var(--island-inset) calc(var(--spacing) * 3);
+    border-radius: calc(var(--island-height) / 2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-caption--line-height);
+    white-space: nowrap;
+  }
+
+  .island-monogram {
+    display: grid;
+    width: var(--island-monogram);
+    height: var(--island-monogram);
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background-color: var(--island-marker);
+    font-size: var(--text-footnote);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .island-name {
+    position: relative;
+    display: flex;
+  }
+
+  /* Only a real change animates: the first name after load just appears. */
+  .island-name-in[data-swap] {
+    animation: island-swap-in var(--duration-swap) var(--ease-out);
+  }
+
+  .island-name-out {
+    position: absolute;
+    top: 0;
+    left: 0;
+    animation: island-swap-out var(--duration-swap) var(--ease-out) forwards;
+  }
+
+  @keyframes island-swap-in {
+    from {
+      opacity: 0;
+      filter: blur(var(--island-swap-blur));
+    }
+  }
+
+  @keyframes island-swap-out {
+    to {
+      opacity: 0;
+      filter: blur(var(--island-swap-blur));
+    }
+  }
+
+  .island-ring {
+    width: var(--island-ring);
+    height: var(--island-ring);
+    flex-shrink: 0;
+    rotate: -90deg;
+  }
+
+  .island-ring circle {
+    fill: none;
+    stroke-width: var(--island-ring-stroke);
+  }
+
+  .island-ring-track {
+    stroke: var(--island-track);
+  }
+
+  .island-ring-fill {
+    stroke: var(--color-accent);
+    stroke-dasharray: 1;
+    stroke-dashoffset: calc(1 - var(--island-progress, 0));
+  }
+
+  /* An activity: the pill grows into a wider capsule, centered on the same spot. */
+  .island-activity {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    display: flex;
+    height: var(--island-activity-height);
+    align-items: center;
+    padding-inline: calc(var(--spacing) * 4);
+    translate: -50% 0;
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-micro) var(--ease-out);
+  }
+
+  .island[data-view="activity"] .island-activity {
+    opacity: 1;
+  }
+
+  .island-activity-content {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    animation: island-swap-in var(--duration-swap) var(--ease-out);
+  }
+
+  .island-activity-title {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .island-activity-detail {
+    color: var(--color-fg-2);
+  }
+
+  [data-activity-tone="accent"] .island-activity-icon {
+    color: var(--color-accent);
+  }
+
+  [data-activity-tone="success"] .island-activity-icon {
+    color: var(--status-success);
+  }
+
+  [data-activity-tone="error"] .island-activity-icon {
+    color: var(--status-error);
+  }
+
+  /* Expanded: the bar stays put at the top left; the panel arranges itself around it. */
+  .island-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    width: max-content;
+    grid-template-columns: auto 1fr auto auto auto;
+    grid-template-areas:
+      "spacer . search theme hello"
+      "links links links links links";
+    align-items: center;
+    column-gap: calc(var(--spacing) * 2);
+    padding: 0 calc(var(--spacing) * 2) calc(var(--spacing) * 2) 0;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      opacity var(--duration-micro) var(--ease-out),
+      visibility var(--duration-instant) linear var(--duration-micro);
+  }
+
+  .island[data-view="expanded"] .island-panel {
+    visibility: visible;
+    opacity: 1;
+    transition:
+      opacity var(--duration-ui) var(--ease-out),
+      visibility var(--duration-instant);
+  }
+
+  .island-spacer {
+    display: flex;
+    width: var(--island-bar-width);
+    height: var(--target-min);
+    grid-area: spacer;
+    align-items: center;
+    padding-inline-start: var(--island-inset);
+  }
+
+  .island-spacer > .island-monogram {
+    visibility: hidden;
+  }
+
+  .island[data-view="expanded"] .island-bar {
+    translate: 0 var(--island-hit);
+    transition:
+      opacity var(--duration-micro) var(--ease-out),
+      translate var(--duration-spring-island) var(--ease-spring-island);
+  }
+
+  .island-bar {
+    transition:
+      opacity var(--duration-micro) var(--ease-out),
+      translate var(--duration-spring-island) var(--ease-spring-island);
+  }
+
+  .island-search,
+  .island-link {
+    display: flex;
+    min-height: var(--target-min);
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    padding-inline: calc(var(--spacing) * 3);
+    border-radius: var(--radius-pill);
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-caption--line-height);
+    white-space: nowrap;
+    transition:
+      color var(--duration-micro) var(--ease-out),
+      background-color var(--duration-micro) var(--ease-out);
+  }
+
+  .island-search {
+    grid-area: search;
+  }
+
+  .island-theme {
+    grid-area: theme;
+  }
+
+  .island-kbd {
+    padding: var(--hairline-width) calc(var(--spacing) * 1.5);
+    border-radius: var(--radius-chip);
+    background-color: var(--island-marker);
+    font-family: var(--font-sans);
+    font-size: var(--text-footnote);
+  }
+
+  .island-link[aria-current="true"] {
+    background-color: var(--island-marker);
+    color: var(--color-fg);
+  }
+
+  @media (hover: hover) {
+    .island-search:hover,
+    .island-link:hover {
+      background-color: var(--island-marker);
+      color: var(--color-fg);
+    }
+  }
+
+  .island-hello {
+    display: flex;
+    height: var(--island-height);
+    grid-area: hello;
+    align-items: center;
+    justify-content: center;
+    padding-inline: calc(var(--spacing) * 4);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent-fill);
+    color: var(--color-on-accent);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+  }
+
+  .island-links {
+    display: flex;
+    grid-area: links;
+    gap: var(--spacing);
+  }
+
+  .island-scrim {
+    display: none;
+  }
+
+  /* Phones: a full-width sheet with 44pt rows, over a dimmed page. */
+  @variant max-md {
+    .island-scrim {
+      position: fixed;
+      inset: 0;
+      z-index: var(--layer-island);
+      display: block;
+      background-color: var(--backdrop-dim);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--duration-ui) var(--ease-out);
+    }
+
+    .island-scrim[data-open] {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .island-search {
+      color: var(--color-fg);
+    }
+
+    .island-panel {
+      width: var(--island-sheet-width);
+      grid-template-columns: auto 1fr auto auto;
+      grid-template-areas:
+        "spacer . search theme"
+        "links links links links"
+        "hello hello hello hello";
+      row-gap: var(--spacing);
+      padding: 0 calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+    }
+
+    .island-links {
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .island-link {
+      font-size: var(--text-body);
+    }
+
+    .island-search > span,
+    .island-kbd {
+      display: none;
+    }
+
+    .island-hello {
+      height: var(--target-min);
+      margin-inline: calc(var(--spacing) * 2);
+      font-size: var(--text-body);
+    }
+  }
+
+  /* Without JavaScript the Island can't open, so it shows its links, open, at the top of
+     the page, and scrolls away rather than covering headings. */
+  @media (scripting: none) {
+    .island {
+      position: absolute;
+    }
+
+    .island-bar,
+    .island-scripted {
+      display: none;
+    }
+
+    .island-shell {
+      border-radius: var(--island-radius);
+    }
+
+    .island-panel {
+      position: static;
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .island-spacer {
+      width: auto;
+    }
+
+    .island-spacer > .island-monogram {
+      visibility: visible;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .island-shell {
+      border: var(--hairline-width) solid CanvasText;
+    }
+  }
+
+  /* Reduced motion: the shell changes size at once; contents still fade. */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) :is(.island-shell, .island-bar) {
+      transition-property: opacity;
+    }
+  }
+
+  :root[data-motion="reduce"] :is(.island-shell, .island-bar) {
+    transition-property: opacity;
+  }
+
+  /* ─── Search (§6.3) ───────────────────────────────────────────────────────── */
+
+  /* A centered glass panel in a top-layer dialog, 640px wide, with a 24px field. */
+  .search {
+    width: min(var(--search-width), calc(100% - 2 * var(--grid-gutter)));
+    max-width: none;
+    max-height: none;
+    margin: var(--search-offset) auto auto;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: var(--radius-card-l);
+    background: none;
+    box-shadow: var(--shadow-soft);
+    color: var(--color-fg);
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--duration-micro) var(--ease-out),
+      transform var(--duration-spring-snappy) var(--ease-spring-snappy);
+  }
+
+  .search::backdrop {
+    background-color: var(--backdrop-dim);
+    opacity: 1;
+    transition: opacity var(--duration-micro) var(--ease-out);
+  }
+
+  @starting-style {
+    .search[open] {
+      opacity: 0;
+      transform: scale(var(--sheet-scale));
+    }
+
+    .search[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  .search[data-closing],
+  .search[data-closing]::backdrop {
+    opacity: 0;
+  }
+
+  /* Denser than the generic glass, so its secondary text stays legible on any page. */
+  .search-panel {
+    display: flex;
+    max-height: var(--search-panel-max);
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: inherit;
+    background-color: var(--color-search-glass);
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
+    box-shadow:
+      inset 0 var(--hairline-width) 0 var(--color-glass-rim-top),
+      inset 0 calc(-1 * var(--hairline-width)) 0 var(--color-glass-rim-bottom);
+
+    @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+      background-color: var(--color-glass-solid);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
+    @media (forced-colors: active) {
+      border: var(--hairline-width) solid CanvasText;
+      background-color: Canvas;
+    }
+  }
+
+  .search-field {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 4) calc(var(--spacing) * 5);
+    border-bottom: var(--hairline-width) solid var(--color-hairline);
+    font-size: var(--text-search);
+  }
+
+  /* The field is always focused while Search is open, and the panel is one big field:
+     the focus ring frames the panel, following its radius (§6.4). */
+  .search-input:focus-visible {
+    outline-color: transparent;
+  }
+
+  .search:has(.search-input:focus-visible) {
+    outline: var(--focus-ring-width) solid var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .search-field-icon {
+    width: var(--search-field-icon);
+    height: var(--search-field-icon);
+    color: var(--color-fg-2);
+  }
+
+  .search-input {
+    min-width: 0;
+    flex: 1;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-fg);
+    font-size: var(--text-search);
+    line-height: var(--text-search--line-height);
+    letter-spacing: var(--text-search--letter-spacing);
+  }
+
+  .search-input::placeholder {
+    color: var(--color-fg-2);
+  }
+
+  .search-results {
+    position: relative;
+    max-height: var(--search-results);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: calc(var(--spacing) * 2);
+  }
+
+  /* One highlight slides from row to row, a layout animation on the snappy spring. */
+  .search-highlight {
+    position: absolute;
+    top: 0;
+    right: calc(var(--spacing) * 2);
+    left: calc(var(--spacing) * 2);
+    border-radius: var(--radius-control);
+    background-color: color-mix(in srgb, var(--color-accent) 14%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      translate var(--duration-spring-snappy) var(--ease-spring-snappy),
+      height var(--duration-spring-snappy) var(--ease-spring-snappy),
+      opacity var(--duration-micro) var(--ease-out);
+  }
+
+  .search-group-title {
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 3) var(--spacing);
+    color: var(--color-fg-2);
+    font-size: var(--text-footnote);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-footnote--line-height);
+  }
+
+  /* Results resolve in, 40ms apart. */
+  .search-option {
+    position: relative;
+    display: flex;
+    min-height: var(--target-min);
+    align-items: center;
+    gap: calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+    border-radius: var(--radius-control);
+    animation: search-resolve var(--duration-ui) var(--ease-out) both;
+    animation-delay: calc(min(var(--i), 10) * var(--stagger-results));
+  }
+
+  @keyframes search-resolve {
+    from {
+      opacity: 0;
+      translate: 0 var(--search-resolve-y);
+      filter: blur(var(--search-resolve-blur));
+    }
+  }
+
+  .search-option-icon {
+    flex-shrink: 0;
+    color: var(--color-fg-2);
+  }
+
+  .search-option[data-selected] .search-option-icon {
+    color: var(--color-accent);
+  }
+
+  .search-option-text {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .search-option-title,
+  .search-option-subtitle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .search-option-title {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  .search-option-top .search-option-title {
+    font-size: var(--text-lead);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-lead--line-height);
+  }
+
+  .search-option-subtitle {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .search-option-meta {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+  }
+
+  .search-state {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .search-kbd {
+    display: inline-flex;
+    min-width: calc(var(--spacing) * 5);
+    justify-content: center;
+    padding: var(--hairline-width) calc(var(--spacing) * 1.5);
+    border-radius: var(--radius-chip);
+    background-color: var(--color-control-track);
+    color: var(--color-fg-2);
+    font-family: var(--font-sans);
+    font-size: var(--text-footnote);
+    line-height: var(--text-footnote--line-height);
+  }
+
+  .search-esc {
+    font-size: var(--text-footnote);
+  }
+
+  .search-empty {
+    padding: calc(var(--spacing) * 6) calc(var(--spacing) * 3);
+    color: var(--color-fg-2);
+    text-align: center;
+  }
+
+  .search-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing) calc(var(--spacing) * 5);
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 5);
+    border-top: var(--hairline-width) solid var(--color-hairline);
+    color: var(--color-fg-2);
+    font-size: var(--text-footnote);
+    line-height: var(--text-footnote--line-height);
+  }
+
+  .search-footer > span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing);
+  }
+
+  @media (hover: none) {
+    .search-footer,
+    .search-esc {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) :is(.search-highlight) {
+      transition-property: opacity;
+    }
+  }
+
+  :root[data-motion="reduce"] .search-highlight {
+    transition-property: opacity;
+  }
+
+  /* ─── Page modes (§6.3) ───────────────────────────────────────────────────── */
+
+  /* Focus mode: the section being read stays lit; the rest of the page dims. */
+  [data-section] {
+    transition: opacity var(--duration-ui) var(--ease-out);
+  }
+
+  html[data-focus-mode] [data-section]:not([data-focused]) {
+    opacity: var(--focus-mode-dim);
+  }
+
+  /* Show grid: the layout grid's columns over the page. */
+  .grid-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--layer-sticky);
+    pointer-events: none;
+  }
+
+  .grid-overlay-column {
+    background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+    box-shadow: inset 0 0 0 var(--hairline-width) color-mix(in srgb, var(--color-accent) 35%, transparent);
+  }
+
+  .grid-overlay-column:nth-child(n + 5) {
+    display: none;
+  }
+
+  @variant md {
+    .grid-overlay-column:nth-child(-n + 8) {
+      display: block;
+    }
+  }
+
+  @variant lg {
+    .grid-overlay-column:nth-child(n) {
+      display: block;
+    }
+  }
+
+  /* ─── The résumé edition (§6.3) ───────────────────────────────────────────── */
+
+  /* Hidden on screen. Printing any page prints this, set for paper. */
+  .resume-edition {
+    display: none;
+  }
+
+  @media print {
+    html,
+    body {
+      background: var(--neutral-light-bg);
+      color: var(--neutral-light-fg);
+    }
+
+    body > :not(.resume-edition) {
+      display: none;
+    }
+
+    .resume-edition {
+      display: flex;
+      flex-direction: column;
+      gap: calc(var(--print-gap) * 2);
+      color: var(--neutral-light-fg);
+      font-family: var(--font-sans);
+      font-size: var(--print-text);
+      line-height: var(--text-caption--line-height);
+    }
+
+    .resume-name {
+      font-size: var(--print-title);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--text-hero--line-height);
+    }
+
+    .resume-role {
+      font-size: var(--print-heading);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .resume-contact,
+    .resume-dates {
+      color: var(--neutral-light-fg-2);
+      font-size: var(--print-small);
+    }
+
+    .resume-section {
+      display: flex;
+      flex-direction: column;
+      gap: var(--print-gap);
+      break-inside: avoid-page;
+    }
+
+    .resume-section h2 {
+      padding-bottom: calc(var(--print-gap) / 2);
+      border-bottom: var(--hairline-width) solid var(--neutral-light-hairline);
+      font-size: var(--print-heading);
+      font-weight: var(--font-weight-semibold);
+      text-transform: uppercase;
+      letter-spacing: var(--print-caps-tracking);
+    }
+
+    .resume-entry {
+      break-inside: avoid;
+    }
+
+    .resume-entry-head {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--print-gap);
+    }
+
+    .resume-edition ul {
+      padding-inline-start: calc(var(--print-gap) * 2);
+      list-style: disc;
+    }
   }
 
   /* ─── Reduced motion (§5.7) ──────────────────────────────────────────────── */
