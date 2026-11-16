@@ -16,7 +16,7 @@ function Runs({ runs }: { runs: readonly CiteRun[] }) {
  * A paper's citation in APA, IEEE and BibTeX (DESIGN.md §7.5). All three are in the HTML;
  * the segmented control's radios show one (styles/components.css), with or without
  * JavaScript. Copy puts the shown one on the clipboard, with its italics where the page
- * pastes rich text, and the Island confirms it (./research-actions.tsx). It needs
+ * pastes rich text, and the Island confirms it (lib/research-behavior.ts, attachActions). It needs
  * JavaScript, so it's hidden without it.
  */
 export function Citations({ citations, name }: { citations: CitationSet; name: string }) {

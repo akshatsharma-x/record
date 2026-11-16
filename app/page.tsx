@@ -5,11 +5,12 @@ import { type EditMarks, Experience } from "@/components/experience/experience";
 import { Hero } from "@/components/hero/hero";
 import { Highlights } from "@/components/highlights/highlights";
 import { Research } from "@/components/research/research";
+import { Skills } from "@/components/skills/skills";
 import { Work, type WorkMarks } from "@/components/work/work";
 import { Container, Section, Stack } from "@/components/ui/layout";
 import { Body, Display, Eyebrow, Footnote, FootnoteBackLink, FootnoteRef, Lead } from "@/components/ui/type";
 import { content } from "@/content";
-import { allSkills, credentialsHeadline, edit, work } from "@/content/derive";
+import { credentialsHeadline, edit, work } from "@/content/derive";
 import type { Claim } from "@/content/schema";
 import { formatYearMonth } from "@/lib/dates";
 import { portraitFor } from "@/lib/portrait-fixture";
@@ -24,13 +25,11 @@ const dates = (start: string, end: string) =>
  * The story (DESIGN.md §3.1), in order. Part 4 laid down its structure so the Island and
  * Search have somewhere to go: every section with its id, surface and real copy, plainly
  * set. Parts 5–12 turn each one into its signature moment (§7): the hero is Part 5's, the
- * statement, About and the highlights Part 6's, the edit Part 7's, research Part 8's and
- * the work bento Part 9's.
+ * statement, About and the highlights Part 6's, the edit Part 7's, research Part 8's, the
+ * work bento Part 9's and the chip Part 10's.
  */
 export default function Home() {
   const { profile, copy, highlights, education, achievements } = content;
-  const skills = allSkills(content);
-  const categories = [...new Set(skills.map((skill) => skill.category))];
 
   // Footnotes are numbered by content; each mention gets its own back-link (§9).
   const mentions = new Map<number, number>();
@@ -82,30 +81,7 @@ export default function Home() {
 
       <Work marks={workMarks()} />
 
-      <Section id="skills" name={nameOf("skills")} surface="dark" aria-labelledby="skills-title">
-        <Container>
-          <Stack gap={6}>
-            <Eyebrow tone="fg-2">{nameOf("skills")}</Eyebrow>
-            <Display id="skills-title">{copy.skills.headline}</Display>
-            {copy.skills.sub ? <Lead tone="fg-2">{copy.skills.sub}</Lead> : null}
-            <dl className="flex flex-col gap-3">
-              {categories.map((category) => (
-                <div key={category}>
-                  <Body as="dt" className="font-semibold">
-                    {category}
-                  </Body>
-                  <Body as="dd" tone="fg-2">
-                    {skills
-                      .filter((skill) => skill.category === category)
-                      .map((skill) => skill.label)
-                      .join(", ")}
-                  </Body>
-                </div>
-              ))}
-            </dl>
-          </Stack>
-        </Container>
-      </Section>
+      <Skills />
 
       <Section id="credentials" name={nameOf("credentials")} surface="dark" aria-labelledby="credentials-title">
         <Container>

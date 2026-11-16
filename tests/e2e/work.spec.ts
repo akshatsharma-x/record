@@ -202,13 +202,14 @@ test.describe("the case-study sheet", () => {
     else await link(page, "quizmuj").click();
     await opened(page, "quizmuj");
     await expect(sheet(page).locator(".case-title")).toHaveText("QuizMUJ");
-    // The page behind stays where it was, inert, scaled and dimmed.
-    expect(await page.evaluate(() => window.scrollY)).toBe(before);
+    // The page behind stays where it was (to the pixel: WebKit can round a fractional
+    // scroll), inert, scaled and dimmed.
+    expect(Math.abs((await page.evaluate(() => window.scrollY)) - before)).toBeLessThanOrEqual(1);
     await expect(page.locator(".content-layer")).toHaveCSS("transform", /matrix\(0\.94/);
     if (isMobile) await sheet(page).locator(".case-close").tap();
     else await sheet(page).locator(".case-close").click();
     await closed(page);
-    expect(await page.evaluate(() => window.scrollY)).toBe(before);
+    expect(Math.abs((await page.evaluate(() => window.scrollY)) - before)).toBeLessThanOrEqual(1);
     await expect(link(page, "quizmuj")).toBeFocused();
     await expect(page.locator(".content-layer")).toHaveCSS("transform", "none");
   });

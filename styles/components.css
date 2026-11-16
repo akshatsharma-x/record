@@ -1006,6 +1006,26 @@
     color: var(--color-fg-2);
   }
 
+  /* An activity's link ("Jump to …"): the one part of the capsule that takes the pointer. */
+  .island-activity-action {
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
+    border-radius: var(--radius-pill);
+    color: var(--color-accent);
+    font-weight: var(--font-weight-semibold);
+    pointer-events: auto;
+  }
+
+  .island-activity-action:hover {
+    text-decoration: underline;
+    text-underline-offset: var(--underline-offset);
+  }
+
+  .island:not([data-view="activity"]) .island-activity-action {
+    visibility: hidden;
+  }
+
   [data-activity-tone="accent"] .island-activity-icon {
     color: var(--color-accent);
   }
@@ -6155,6 +6175,723 @@
   .case-diagram-caption {
     color: var(--color-fg-2);
     font-size: var(--text-caption);
+  }
+
+  /* ─── Skills (§7.7, Part 10) ──────────────────────────────────────────────── */
+
+  .skills-head {
+    display: grid;
+    justify-items: start;
+    gap: calc(var(--spacing) * 6);
+    margin-block-end: calc(var(--spacing) * 10);
+  }
+
+  /* The chip. By default it's the poster, simply the exploded view. With the 3D chip it's a
+     tall stage, and its sticky frame holds the chip while it rises, turns and explodes. */
+  .chip {
+    position: relative;
+  }
+
+  .chip[data-scene="3d"] {
+    height: var(--chip-stage);
+  }
+
+  .chip[data-scene="3d"] > .chip-sticky {
+    position: sticky;
+    top: 0;
+    display: grid;
+    height: var(--chip-sticky);
+    align-items: center;
+  }
+
+  .chip-frame {
+    display: grid;
+    gap: calc(var(--spacing) * 8);
+  }
+
+  /* The box is the exploded chip's: the 3D view and the poster fill it. From 735px up the
+     labels sit at its layers' corners, by fractions of it (lib/chip.ts); on phones, where
+     the layers are closer than a finger, they're a list under it, in the stack's order. */
+  .chip-art {
+    position: relative;
+    width: 100%;
+    container-type: inline-size;
+  }
+
+  .chip-box {
+    position: relative;
+    width: 100%;
+    aspect-ratio: var(--aspect);
+  }
+
+  .chip-view,
+  .chip-poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* On desktop: the chip, a column its labels reach into, then the panel. */
+  @variant lg {
+    .chip-frame {
+      grid-template-columns: auto var(--chip-labels) minmax(0, 1fr);
+      align-items: center;
+      gap: 0;
+    }
+
+    .chip-panel {
+      grid-column: 3;
+    }
+  }
+
+  .chip-labels {
+    display: grid;
+    margin-block-start: calc(var(--spacing) * 6);
+    border-block-start: var(--hairline-width) solid var(--color-hairline);
+  }
+
+  .chip-anchor {
+    border-block-end: var(--hairline-width) solid var(--color-hairline);
+    transition: opacity var(--duration-ui) var(--ease-out);
+  }
+
+  .chip-label {
+    display: flex;
+    width: 100%;
+    min-height: var(--target-min);
+    align-items: baseline;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 2);
+    border-radius: var(--radius-control);
+    color: var(--color-fg);
+    text-align: start;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: background-color var(--duration-micro) var(--ease-out);
+  }
+
+  @variant md {
+    .chip-art {
+      width: 60%;
+    }
+
+    .chip-labels {
+      position: absolute;
+      inset: 0;
+      display: block;
+      margin: 0;
+      border: 0;
+      pointer-events: none;
+    }
+
+    .chip-anchor {
+      position: absolute;
+      top: var(--y);
+      left: calc(var(--x) * 1cqw);
+      display: flex;
+      width: max-content;
+      align-items: center;
+      border: 0;
+      translate: 0 -50%;
+    }
+
+    /* A hairline from the layer's corner out to the label column. */
+    .chip-anchor::before {
+      content: "";
+      width: calc((100 - var(--x)) * 1cqw + var(--chip-leader));
+      height: var(--hairline-width);
+      flex: none;
+      background-color: var(--chip-hairline);
+    }
+
+    .chip-label {
+      display: grid;
+      width: auto;
+      gap: 0;
+      padding-block: 0;
+    }
+  }
+
+  /* On desktop the chip is as large as the screen's height allows. */
+  @variant lg {
+    .chip-art {
+      width: min(var(--chip-box-width), calc(var(--chip-box-max) * var(--ratio)));
+    }
+  }
+
+  .chip-label:hover,
+  .chip-label[aria-expanded="true"] {
+    background-color: color-mix(in srgb, var(--color-fg) 10%, transparent);
+  }
+
+  .chip-label-name {
+    font-size: var(--chip-label);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .chip-label-count {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+  }
+
+  /* Until the 3D chip has exploded, its labels and the die's button wait. */
+  .chip[data-scene="3d"]:not([data-exploded]) :is(.chip-anchor, .chip-die, .chip-panel) {
+    opacity: 0;
+  }
+
+  /* The die's button: over the die, the size of its cores. */
+  .chip-die {
+    position: absolute;
+    top: var(--y);
+    left: var(--x);
+    width: 22%;
+    aspect-ratio: 1;
+    border-radius: var(--radius-card-s);
+    translate: -50% -50%;
+    cursor: pointer;
+  }
+
+  /* The panel: the skills of the layer that's out. On desktop it's beside the chip; on
+     phones, under it. */
+  .chip-panel {
+    min-height: calc(var(--spacing) * 40);
+    transition: opacity var(--duration-ui) var(--ease-out);
+  }
+
+  .chip-list {
+    display: none;
+  }
+
+  .chip-list[data-active] {
+    display: block;
+  }
+
+  .chip-list-title {
+    margin-block-end: calc(var(--spacing) * 3);
+    font-size: var(--text-eyebrow);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .chip-list-count {
+    color: var(--color-fg-2);
+    font-weight: var(--font-weight-regular);
+  }
+
+  .chip-list ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .chip-list li {
+    padding: var(--spacing) calc(var(--spacing) * 3);
+    border: var(--hairline-width) solid var(--color-hairline);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+  }
+
+  /* Without JavaScript, hovering or focusing a label shows its list and slides its layer out. */
+  .chip:has(.chip-anchor:nth-of-type(1) .chip-label:is(:hover, :focus-visible)) .chip-list:nth-of-type(1),
+  .chip:has(.chip-anchor:nth-of-type(2) .chip-label:is(:hover, :focus-visible)) .chip-list:nth-of-type(2),
+  .chip:has(.chip-anchor:nth-of-type(3) .chip-label:is(:hover, :focus-visible)) .chip-list:nth-of-type(3),
+  .chip:has(.chip-anchor:nth-of-type(4) .chip-label:is(:hover, :focus-visible)) .chip-list:nth-of-type(4),
+  .chip:has(.chip-anchor:nth-of-type(5) .chip-label:is(:hover, :focus-visible)) .chip-list:nth-of-type(5),
+  .chip:has(.chip-anchor:nth-of-type(6) .chip-label:is(:hover, :focus-visible)) .chip-list:nth-of-type(6) {
+    display: block;
+  }
+
+  .chip-layer {
+    transition: translate var(--duration-spring-smooth) var(--ease-spring-smooth);
+  }
+
+  .chip-layer[data-active],
+  .chip:has(.chip-anchor:nth-of-type(1) .chip-label:is(:hover, :focus-visible)) .chip-layer[data-index="0"],
+  .chip:has(.chip-anchor:nth-of-type(2) .chip-label:is(:hover, :focus-visible)) .chip-layer[data-index="1"],
+  .chip:has(.chip-anchor:nth-of-type(3) .chip-label:is(:hover, :focus-visible)) .chip-layer[data-index="2"],
+  .chip:has(.chip-anchor:nth-of-type(4) .chip-label:is(:hover, :focus-visible)) .chip-layer[data-index="3"],
+  .chip:has(.chip-anchor:nth-of-type(5) .chip-label:is(:hover, :focus-visible)) .chip-layer[data-index="4"],
+  .chip:has(.chip-anchor:nth-of-type(6) .chip-label:is(:hover, :focus-visible)) .chip-layer[data-index="5"] {
+    translate: calc(var(--slide) * -1) 0;
+  }
+
+  /* The poster's chip: each layer lit from above, its faces shaded. */
+  .chip-face-top {
+    fill: var(--chip-base);
+  }
+
+  .chip-face-left {
+    fill: color-mix(in srgb, var(--chip-base) var(--chip-shade-left), var(--chip-shade));
+  }
+
+  .chip-face-right {
+    fill: color-mix(in srgb, var(--chip-base) var(--chip-shade-right), var(--chip-shade));
+  }
+
+  .chip-rim {
+    fill: none;
+    stroke: var(--chip-rim);
+    stroke-width: var(--hairline-width);
+  }
+
+  .chip-layer[data-index="0"] {
+    --chip-base: var(--chip-die);
+  }
+  .chip-layer[data-index="1"] {
+    --chip-base: var(--chip-interposer);
+  }
+  .chip-layer[data-index="2"] {
+    --chip-base: var(--chip-spreader);
+  }
+  .chip-layer[data-index="3"] {
+    --chip-base: var(--chip-routing);
+  }
+  .chip-layer[data-index="4"] {
+    --chip-base: var(--chip-package);
+  }
+  .chip-layer[data-index="5"] {
+    --chip-base: var(--chip-substrate);
+  }
+
+  .chip-core {
+    fill: var(--color-accent);
+    filter: drop-shadow(0 0 var(--spacing) var(--color-accent));
+  }
+
+  .chip-engraving {
+    fill: var(--chip-engrave);
+    font-size: var(--chip-engraving);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-caps);
+  }
+
+  .chip-bump {
+    fill: var(--chip-bump);
+  }
+
+  .chip-recess {
+    fill: none;
+    stroke: var(--chip-recess);
+    stroke-width: var(--pv-line);
+  }
+
+  .chip-trace {
+    stroke: var(--chip-trace);
+    stroke-linecap: round;
+    stroke-width: var(--pv-line);
+  }
+
+  .chip-trace-pad {
+    fill: none;
+    stroke: var(--chip-trace);
+    stroke-width: var(--pv-line);
+  }
+
+  .chip-pad {
+    fill: var(--chip-pad);
+  }
+
+  .chip-ball {
+    fill: var(--chip-ball);
+  }
+
+  /* The die's ripple, in the poster: the inner ring of cores first. */
+  .chip[data-ripple] .chip-core {
+    animation: chip-ripple var(--chip-ripple) var(--ease-out) calc((1 - var(--ring)) * var(--chip-ripple-step)) both;
+  }
+
+  @keyframes chip-ripple {
+    0% {
+      opacity: 0.45;
+    }
+
+    12% {
+      opacity: 1;
+      filter: drop-shadow(0 0 calc(var(--spacing) * 3) var(--color-accent));
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
+  /* The core six: large tiles, each with where it was used. */
+  .skills-body {
+    display: grid;
+    gap: calc(var(--spacing) * 24);
+    margin-block-start: calc(var(--spacing) * 16);
+  }
+
+  .core-six-title {
+    margin-block-end: calc(var(--spacing) * 8);
+    font-size: var(--text-title);
+    font-weight: var(--text-title--font-weight);
+    letter-spacing: var(--text-title--letter-spacing);
+    line-height: var(--text-title--line-height);
+  }
+
+  .core-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--grid-gutter);
+  }
+
+  @variant lg {
+    .core-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .core-tile {
+    display: grid;
+    align-content: start;
+    gap: calc(var(--spacing) * 2);
+    padding: calc(var(--spacing) * 6);
+    border-radius: var(--radius-card-l);
+    background-color: var(--color-card);
+  }
+
+  .core-icon {
+    width: var(--core-icon);
+    height: var(--core-icon);
+    margin-block-end: calc(var(--spacing) * 4);
+    color: var(--color-fg);
+  }
+
+  .core-icon.skill-monogram {
+    --cloud-glyph: var(--core-icon);
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--color-fg) 12%, transparent);
+  }
+
+  .core-name {
+    font-size: var(--text-title);
+    font-weight: var(--text-title--font-weight);
+    letter-spacing: var(--text-title--letter-spacing);
+    line-height: var(--text-title--line-height);
+  }
+
+  .core-detail {
+    color: var(--color-fg-2);
+    font-size: var(--text-body);
+  }
+
+  .core-used {
+    margin-block-start: calc(var(--spacing) * 2);
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .core-evidence {
+    display: grid;
+    gap: var(--spacing);
+  }
+
+  .core-link {
+    display: inline-flex;
+    min-height: calc(var(--spacing) * 8);
+    align-items: center;
+    border-radius: var(--radius-chip);
+    color: var(--color-accent);
+    font-size: var(--text-body);
+  }
+
+  .core-link:hover {
+    text-decoration: underline;
+    text-underline-offset: var(--underline-offset);
+  }
+
+  /* Every skill, two ways. */
+  .skills-views {
+    display: grid;
+    gap: calc(var(--spacing) * 10);
+  }
+
+  .skills-switch {
+    justify-self: start;
+  }
+
+  .skills:has(input[name="skills-view"][value="cloud"]:checked) .skills-view[data-view="specs"],
+  .skills:has(input[name="skills-view"][value="specs"]:checked) .skills-view[data-view="cloud"] {
+    display: none;
+  }
+
+  /* The specs, in the manner of Apple's: categories on the left, items on the right,
+     between hairlines. */
+  .specs {
+    display: grid;
+  }
+
+  .specs-row {
+    display: grid;
+    gap: calc(var(--spacing) * 3);
+    padding-block: calc(var(--spacing) * 8);
+    border-block-start: var(--hairline-width) solid var(--color-hairline);
+  }
+
+  @variant md {
+    .specs-row {
+      grid-template-columns: var(--specs-term) minmax(0, 1fr);
+      gap: var(--grid-gutter);
+    }
+  }
+
+  .specs-term {
+    font-size: var(--text-eyebrow);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-eyebrow--line-height);
+  }
+
+  .specs-items > ul {
+    columns: 2;
+    column-gap: var(--grid-gutter);
+  }
+
+  @variant lg {
+    .specs-items > ul {
+      columns: 3;
+    }
+  }
+
+  .specs-item {
+    break-inside: avoid;
+    padding-block: var(--spacing);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  .specs-skill {
+    min-height: calc(var(--spacing) * 8);
+    border-radius: var(--radius-chip);
+    color: var(--color-fg);
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .specs-skill:hover {
+    color: var(--color-accent);
+  }
+
+  .specs-skill[aria-pressed="true"],
+  .cloud-cell[aria-pressed="true"] {
+    color: var(--color-accent);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* "Show me where", right after the skill: its jump and a way to stop. */
+  .show-me-inline {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: calc(var(--spacing) * 3);
+    margin-inline-start: calc(var(--spacing) * 2);
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+  }
+
+  .show-me-jump {
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
+    border-radius: var(--radius-chip);
+    color: var(--color-accent);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .show-me-clear {
+    min-height: var(--target-min);
+    border-radius: var(--radius-chip);
+    color: var(--color-fg-2);
+    text-decoration: underline;
+    text-underline-offset: var(--underline-offset);
+    cursor: pointer;
+  }
+
+  /* While it shows, what doesn't name the skill dims, and what does stands out. */
+  html[data-show-me] :is([data-evidence-id], [data-evidence-clip]) {
+    transition: opacity var(--duration-ui) var(--ease-out);
+  }
+
+  html[data-show-me] :is([data-evidence-id], [data-evidence-clip]):not([data-match]) {
+    opacity: 0.3;
+  }
+
+  html[data-show-me] .work-tile[data-match] {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: var(--focus-ring-offset);
+    border-radius: var(--radius-card-l);
+  }
+
+  html[data-show-me] .chapter[data-match] .paper-card {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* The cloud: a honeycomb in a window, magnified around the pointer. */
+  .cloud {
+    position: relative;
+    height: var(--cloud-height-phone);
+    overflow: hidden;
+    border-radius: var(--radius-card-l);
+    background-color: var(--color-card);
+    touch-action: none;
+    user-select: none;
+  }
+
+  @variant md {
+    .cloud {
+      height: var(--cloud-height);
+    }
+  }
+
+  .cloud-lattice {
+    position: absolute;
+    inset: 0;
+    transition: transform var(--duration-spring-smooth) var(--ease-spring-smooth);
+  }
+
+  .cloud[data-fisheye] .cloud-lattice {
+    transition: none;
+  }
+
+  .cloud-cell {
+    position: absolute;
+    top: calc(50% + var(--cy) * var(--cloud-cell));
+    left: calc(50% + var(--cx) * var(--cloud-cell));
+    display: grid;
+    width: var(--cloud-icon);
+    height: var(--cloud-icon);
+    margin: calc(var(--cloud-icon) / -2) 0 0 calc(var(--cloud-icon) / -2);
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--color-fg) 10%, var(--color-card));
+    color: var(--color-fg);
+    cursor: pointer;
+    transition: transform var(--duration-spring-smooth) var(--ease-spring-smooth);
+  }
+
+  .cloud[data-fisheye] .cloud-cell {
+    transition: transform var(--duration-micro-short) var(--ease-out);
+  }
+
+  .cloud-cell[data-core] {
+    background-color: color-mix(in srgb, var(--color-accent) 26%, var(--color-card));
+  }
+
+  .cloud-cell[aria-pressed="true"] {
+    box-shadow: 0 0 0 var(--focus-ring-width) var(--color-accent);
+  }
+
+  .skill-icon {
+    width: var(--cloud-glyph);
+    height: var(--cloud-glyph);
+    fill: currentColor;
+  }
+
+  .skill-monogram {
+    font-size: clamp(var(--monogram-min), calc(var(--cloud-glyph) * 1.5 / (var(--letters) + 1.4)), var(--monogram-max));
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--text-caption--letter-spacing, 0);
+    line-height: 1;
+  }
+
+  .cloud-frame {
+    display: grid;
+    justify-items: center;
+    gap: calc(var(--spacing) * 3);
+  }
+
+  .cloud-frame > .cloud {
+    justify-self: stretch;
+  }
+
+  /* The icon under the pointer, named; and the skill chosen, with its jump. */
+  .cloud-name {
+    min-height: var(--text-body--line-height);
+    color: var(--color-fg-2);
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .cloud-caption {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .cloud-caption:empty {
+    display: none;
+  }
+
+  .skills-specs-link {
+    justify-self: start;
+  }
+
+  /* The full tech specs (/specs). */
+  .specs-section {
+    padding-block: calc(var(--island-clearance) + var(--spacing) * 10) var(--spacing-section);
+  }
+
+  .specs-head {
+    display: grid;
+    justify-items: start;
+    gap: calc(var(--spacing) * 4);
+    margin-block-end: calc(var(--spacing) * 12);
+  }
+
+  .specs-title {
+    font-size: var(--text-display);
+    font-weight: var(--text-display--font-weight);
+    letter-spacing: var(--text-display--letter-spacing);
+    line-height: var(--text-display--line-height);
+  }
+
+  .specs-sub {
+    color: var(--color-fg-2);
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+  }
+
+  .specs-strong {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* /specs prints as itself, in the light tone, not as the résumé edition. */
+  @media print {
+    body:has(.specs-page) > .content-layer {
+      display: block;
+    }
+
+    body:has(.specs-page) > .resume-edition,
+    .specs-page .paper-back {
+      display: none;
+    }
+
+    .specs-page {
+      --color-fg: var(--neutral-light-fg);
+      --color-fg-2: var(--neutral-light-fg-2);
+      --color-hairline: var(--neutral-light-hairline);
+      color: var(--neutral-light-fg);
+    }
+
+    .specs-section {
+      padding-block: 0;
+      background: none;
+    }
+
+    .specs-row {
+      break-inside: avoid;
+    }
   }
 
   /* ─── Search (§6.3) ───────────────────────────────────────────────────────── */

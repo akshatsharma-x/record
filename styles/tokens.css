@@ -497,6 +497,45 @@
   /* SVG labels in a narrow illustration, in its view units (about 13px on a phone). */
   --illustration-label-narrow: 24px;
 
+  /* Skills (Part 10): the chip's layers and the marks on their faces, its stage and
+     labels, the core tiles, the specs sheet and the cloud's honeycomb. */
+  --chip-die: #15161a;
+  --chip-interposer: #2b2e35;
+  --chip-spreader: #aeb3bc;
+  --chip-routing: #14202e;
+  --chip-package: #1d3b31;
+  --chip-substrate: #1a1b1f;
+  --chip-engrave: #6a717e;
+  --chip-bump: #6f7682;
+  --chip-recess: #8e939c;
+  --chip-trace: #c9a45c;
+  --chip-pad: #d8b56b;
+  --chip-ball: #c3c7cf;
+  --chip-rim: rgb(255 255 255 / 0.28);
+  --chip-shade-left: 74%;
+  --chip-shade-right: 56%;
+  --chip-stage: 230svh;
+  --chip-sticky: 100svh;
+  --chip-box-max: 74svh;
+  --chip-box-width: 32rem;
+  --chip-labels: 15rem;
+  --chip-shade: #000000;
+  --chip-engraving: 21px;
+  --chip-leader: 28px;
+  --chip-label: 15px;
+  --chip-ripple: 1.8s;
+  --chip-ripple-step: 160ms;
+  --chip-hairline: rgb(255 255 255 / 0.32);
+  --monogram-min: 10px;
+  --monogram-max: 19px;
+  --cloud-cell: 64px;
+  --cloud-icon: 52px;
+  --cloud-glyph: 24px;
+  --cloud-height: 600px;
+  --cloud-height-phone: 440px;
+  --core-icon: 40px;
+  --specs-term: 13rem;
+
   /* Work (Part 9): the bento's tiles and their previews, the case-study sheet and the page
      behind it, and the architecture diagrams. Preview sizes are in the previews' view units. */
   --work-title: clamp(1.3125rem, 1.0982rem + 0.5357vw, 1.75rem);

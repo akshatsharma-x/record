@@ -1,7 +1,6 @@
 import { type CSSProperties, useId } from "react";
 import { Button } from "@/components/ui/button";
 import { forecastLabel, forecastPaths, HAZE, hazeDensity, hazeLine, hazeX, hazeY, levelAt, skyline, timeWords } from "@/lib/research";
-import { HazeController } from "./haze-controller";
 
 const vars = (values: Record<string, number | string>) => values as CSSProperties;
 const { scene: SCENE, chart: CHART } = HAZE;
@@ -15,7 +14,7 @@ export const HAZE_RESOLUTION = 1000;
  * number.
  *
  * It's all rendered here, on the server, at its final frame: the forecast reaching the
- * horizon. ./haze-controller.tsx moves the reach and draws the particles.
+ * horizon. lib/research-behavior.ts (attachHaze) moves the reach and draws the particles.
  */
 export function Haze() {
   const id = useId();
@@ -85,7 +84,6 @@ export function Haze() {
         </Button>
         <p className="sr-only" aria-live="polite" data-haze-said="" />
       </div>
-      <HazeController id={id} resolution={HAZE_RESOLUTION} />
     </div>
   );
 }

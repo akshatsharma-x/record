@@ -28,6 +28,7 @@ function RedrawOnScroll() {
 export default function StageCanvas({ tier }: { tier: Tier }) {
   return (
     <Canvas
+      className="stage-canvas"
       frameloop="demand"
       dpr={tier === "HIGH" ? [1, 2] : [1, 1.5]}
       gl={{ antialias: tier === "HIGH", alpha: true, powerPreference: "high-performance" }}

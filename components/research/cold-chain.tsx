@@ -1,7 +1,6 @@
 import { type CSSProperties, useId } from "react";
 import { Button } from "@/components/ui/button";
 import { CHAIN, chainStops, smoothPath, tracePoints } from "@/lib/research";
-import { ChainController } from "./chain-controller";
 
 const vars = (values: Record<string, number | string>) => values as CSSProperties;
 const riskWord = (risk: number) => (risk < 0.34 ? "low" : risk < 0.67 ? "moderate" : "high");
@@ -23,7 +22,7 @@ function whySentence(factors: readonly string[], weights: readonly number[]): st
  * illustration, and nothing is a number.
  *
  * All of it is rendered here, on the server, every stop's "Why?" included; the browser
- * only says which one is open (./chain-controller.tsx).
+ * only says which one is open (lib/research-behavior.ts, attachChain).
  */
 export function ColdChain({ stops, factors }: { stops: readonly string[]; factors: readonly string[] }) {
   const id = useId();
@@ -133,7 +132,6 @@ export function ColdChain({ stops, factors }: { stops: readonly string[]; factor
         </Button>
         <p className="sr-only" aria-live="polite" data-chain-said="" data-overview={`The whole chain, ${stops[0]} to ${stops.at(-1)}.`} />
       </div>
-      <ChainController id={id} />
     </div>
   );
 }

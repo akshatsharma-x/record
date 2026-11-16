@@ -14,7 +14,7 @@ The portfolio of Akshat Sharma: AI & ML engineer, B.Tech CSE '27 at Manipal Univ
 4. [Tokens](#4-tokens): [Neutrals](#41-neutrals) · [Surfaces](#42-surfaces) · [Finishes](#43-finishes) · [Type](#44-type) · [Space and layout](#45-space-and-layout) · [Radii](#46-radii) · [Materials](#47-materials) · [Elevation](#48-elevation) · [Layers](#49-layers) · [Icons](#410-icons)
 5. [Motion](#5-motion): [Curves](#51-curves) · [Springs](#52-springs) · [Durations](#53-durations) · [The Resolve](#54-the-resolve) · [Scroll scenes](#55-scroll-scenes) · [Motion on intent](#56-motion-on-intent) · [Reduced motion edition](#57-reduced-motion-edition)
 6. [Interaction](#6-interaction): [The cursor](#61-the-cursor) · [The Island](#62-the-island) · [Search](#63-search) · [Focus ring](#64-focus-ring) · [Pressed state](#65-pressed-state) · [Depth on hover](#66-depth-on-hover)
-7. [Signature moments](#7-signature-moments): [The hero](#71-the-hero) · [The statement and About](#72-the-statement-and-about) · [The highlights](#73-the-highlights) · [The edit](#74-the-edit) · [Research](#75-research) · [Work](#76-work)
+7. [Signature moments](#7-signature-moments): [The hero](#71-the-hero) · [The statement and About](#72-the-statement-and-about) · [The highlights](#73-the-highlights) · [The edit](#74-the-edit) · [Research](#75-research) · [Work](#76-work) · [Skills](#77-skills)
 8. [Surprises](#8-surprises)
 9. [Voice](#9-voice)
 10. [Budgets](#10-budgets)
@@ -109,7 +109,7 @@ Part 4 laid every section down with its id, surface and real copy, plainly set, 
 | `/` | The story. |
 | `/work/[slug]` | A case study. Opened from inside the site, it expands over the page as a sheet (§7.6). |
 | `/research/[slug]` | A paper page. |
-| `/specs` | The full "Tech Specs" page. |
+| `/specs` | The full "Tech Specs" page: every skill by category, then education and coursework. It prints as itself (§7.7). |
 | `/compare` | A hidden easter egg. |
 | `/colophon` | How the site is built. |
 | 404 | The page is "out of focus". |
@@ -245,7 +245,7 @@ Anything above the canvas is transparent where a scene shows through it.
 ### 4.10 Icons
 
 - Lucide at a 1.5px stroke, which sits well next to SF.
-- Tech logos come from Simple Icons (CC0), in monochrome.
+- Tech logos come from Simple Icons (CC0), in monochrome: one sprite, `/skill-icons.svg`, made at build time from the package's files for the slugs content names (§7.7).
 
 ---
 
@@ -358,7 +358,7 @@ A living black pill at the top. It is the nav, the section indicator, the scroll
 
 - **Shape.** Black in both themes, with a hairline at rgb(255 255 255 / .14) so it reads against black, 12px below the safe area at the top center. Collapsed, it's 36px tall (a 44px target) and holds the "AS" monogram, the current section's name and a 14px scroll-progress ring. Its width hugs the content. When the section changes, the name swaps with a 180ms blur-crossfade while the width springs on the island spring, so the pill seems to breathe.
 - **Expanded** on hover (after a 120ms intent delay), click, tap or keyboard focus. It springs into a rounded rect holding the seven section links (the current one marked), Search ⌘K, the theme toggle and an accent "Say hello" pill. Escape collapses it, and so do a click outside, focus leaving and the pointer leaving after a 300ms grace period. On phones, a tap opens a full-width sheet of 44pt rows over a dimmed page.
-- **Activities.** Other parts confirm things with `island.show({ icon, title, detail?, tone })`, where the tone is neutral, accent, success or error. The pill grows into a wider capsule for 2.2s, then returns. Activities that fire rapidly queue, and each gets its full time. The same message twice in a row extends the one showing instead of repeating, and while the Island is expanded the queue waits. Each one is announced through a visually hidden role="status".
+- **Activities.** Other parts confirm things with `island.show({ icon, title, detail?, tone })`, where the tone is neutral, accent, success or error. The pill grows into a wider capsule for 2.2s, then returns. Activities that fire rapidly queue, and each gets its full time. The same message twice in a row extends the one showing instead of repeating, and while the Island is expanded the queue waits. Each one is announced through a visually hidden role="status". An activity can offer a link (`action`, such as "Show me where"'s "Jump to Cognivault AI ›", §7.7) and can `persist` until `island.dismiss(title)` ends it, for as long as a mode lasts.
 - **Semantics.** A `<nav aria-label="Primary">` with a disclosure button (aria-expanded, aria-controls). The links are real anchors to `/#id`, so they work without JavaScript; without it, the Island renders open at the top of the page and scrolls away. On the home page, a link travels to its section smoothly (instantly with reduced motion), updates the URL and moves focus to the section's heading. The current section's link has aria-current="true". Overview is the hero (`#top`) and stays current through About and Highlights. `scroll-padding-top` keeps every heading clear of the pill.
 - **Reduced motion:** the shell changes size at once, and the name crossfades without blur.
 
@@ -521,6 +521,23 @@ A preview plays once on hover or focus, or the first time its tile comes into vi
 | Automated Resume Screening | Résumés → extraction → TF-IDF and BERT → weighted ensemble → candidate matching → the XAI dashboard (PCA) |
 | Predictive Customer Churn | Data → SMOTE → base learners → stacking meta-learner → 97% · 0.98 → feature importance → retention insights |
 | Web Accessibility Analyzer | URL → headless crawler → WCAG 2.1 rules → score and fixes → report |
+
+### 7.7 Skills
+
+Built in Part 10 (`components/skills/`; the chip's geometry in `lib/chip.ts`, its shared state in `lib/chip-state.ts`, the honeycomb in `lib/honeycomb.ts`, the behavior in `lib/skills-behavior.ts`, evidence in `content/derive.ts` and `lib/evidence.ts`, the full sheet at `app/specs`). The bar: every skill is reachable by keyboard and screen reader in the specs, and every "used in" is a role, project or paper that names it.
+
+**The chip.** On the dark surface, under `copy.skills.headline`: a procedural chip in three.js, with nothing downloaded. Six slabs make it: the die (engraved "AS", ringed by cores in the finish's accent), an interposer, the heat spreader, a routing layer, the package and the substrate on its solder balls. It's lit by drei Lightformers, with no HDR file. It renders on the shared stage (§10) through a drei `<View>`, on demand, and only while on screen. As its stage scrolls (230svh, sticky), the chip rises and turns into view, then explodes into six labeled layers, top to bottom: AI & ML · Data & analytics · Frameworks & backend · Languages · Platforms & tools · Foundations (`copy.skills.chip.layers`, which the schema keeps equal to the categories). Each label shows its count. Hovering, focusing or tapping a label (or, in 3D, the layer itself) slides that layer out like a card from a deck, and its skills appear beside it as a list. The die's button ripples the cores, ring by ring (§8). On tier LOW or OFF, with reduced motion or without JavaScript, the chip is a crisp SVG poster of the exploded view, drawn from the same projection, so the labels sit at the same corners in either edition; its layers slide out in CSS. On phones the labels are a list under the chip, in the stack's order.
+
+**The core six:** Python, TypeScript, Java, LangGraph, Next.js and FastAPI (content's `core` skills), as large tiles with their logo and what they were used in: each role (to its panel in the edit), project (to its case study) and paper (to its page). No bars, percentages or years.
+
+**Every skill, two ways**, from a segmented control (Specs | Cloud) whose radios CSS reads:
+
+- **Specs:** in the manner of Apple's Tech Specs pages: each category on the left, its skills on the right in columns, between hairlines, with room to breathe. Each skill is a button.
+- **Cloud:** a watchOS-style honeycomb of every skill as a round icon (its Simple Icons logo, or a monogram), the core six in the middle. A fisheye centers on the pointer, so the pointer is at the middle of the effect: icons grow by a Gaussian, and along each ray the spacing grows with the size, so neighbors never overlap. Dragging pans it; on touch screens the fisheye stays on the middle while you drag, and a tap chooses. The arrow keys move between neighbors. The icon under the pointer, or in focus, is named beneath.
+
+**Show me where.** Choosing a skill in either view lights up the roles, projects and papers that name it (the edit's panel and clip, the bento's tile, the paper's chapter), dims the rest, and the Island offers a jump to the first ("Jump to Cognivault AI ›"), as a persisting activity. The same jump, and "Show all", appear right after the skill, so the keyboard reaches them in one step. Choosing it again, "Show all" or Escape ends it. A skill nothing names says so.
+
+**"See full tech specs ›"** leads to /specs: every skill by category, then education and coursework, as one sheet that prints as itself.
 
 ---
 
@@ -691,6 +708,21 @@ Append as you go, each with its reason.
 - **The fourth chapter is "Built with."** (Part 9): the stack as chips, each linking to the skills when it is one, and the code and live links once content has them. The next-project card shows the next project's category and name, not its tagline: a tagline's footnote can't sit inside a link.
 - **Search links to the case studies** (Part 9). Every page now exists, so the pending-route indirection is gone; the proxy answers 404 for an unknown project too.
 - **Performance after Part 9** (Part 9). First-load JS is 169.7 KB, 0.1 KB less than after Part 8: the bento adds only its 0.5 KB loader (its behavior is a 1.5 KB lazy chunk), and the tier's GPU check now loads with the first 3D view. The sheet, its motion and the case study's counters are a 10.6 KB chunk that loads with the first case study opened. The home page's HTML is 57 KB over the wire (9 KB more: the bento's tiles and previews, and their share of the RSC payload). The home page scores 0.99 under DevTools throttling (LCP 1.6s, CLS 0) and 0.96 simulated (LCP 2.8s, up from 2.6s with the heavier HTML); a case study's page 1.0 and 0.97 (LCP 1.5s and 2.5s). Accessibility, best practices and SEO are 1.0 on both.
+- **The chip's layers are stylized, and content orders them** (Part 10). Top to bottom: the die, an interposer, the heat spreader, a routing layer, the package and the substrate. Which category each layer carries is `copy.skills.chip.layers`, which the schema keeps equal to the skill categories, each exactly once. The specs keep content's own order.
+- **One projection, two editions** (Part 10). The poster (SVG) and the 3D scene (an orthographic camera; the chip turned 45° and seen from 30° above) both draw from `lib/chip.ts`. The exploded 3D chip lands exactly on the poster's view, and the DOM labels sit at the same corners in either. The view leaves room on the left for a layer sliding out.
+- **Only the 3D chip has a scroll scene** (Part 10). Its stage is 230svh with a sticky frame; the poster is simply the exploded view, and reduced motion gets the poster, so it never pins (§5.7). The labels and the die's button wait until the chip has exploded, and tabbing into a label skips the scene to the exploded chip (§5.5).
+- **The 3D chip is driven from the DOM** (Part 10). drei's View raycasts only events on its own element, so the labels and the die are DOM buttons over it; hovering a layer in 3D slides it too. The scene and the DOM share a small store (`lib/chip-state.ts`). Focus outranks hover: a label that scrolls under a still pointer doesn't take over from the one in focus.
+- **Phones list the labels under the chip** (Part 10). Exploded on a 390px screen, the layers are about 25px apart, under the 44pt target (§2 rule 7); from 735px the labels sit at the corners.
+- **The chip holds 60fps** (Part 10). Measured in WebKit with the Apple GPU at DPR 2, on an M5 Pro (faster than an M1 Air): scrolling through the stage, frames averaged 16.7ms with none over 19ms; sliding the layers and the ripple matched. Headless Chromium renders in software and gets the poster (tier OFF), as it should. An iPhone 12 hasn't been measured: Safari reports "Apple GPU" on every iPhone, so its tier rests on the frame-time probe.
+- **The logos are one prerendered sprite** (Part 10). `/skill-icons.svg` is made at build time from Simple Icons' SVG files, for the slugs content names. Importing the package put all of its 3,000 logos into the server's source maps, where one path's digits looked like a phone number to the privacy test; inline logos would also have added their paths to the HTML and, again, to the RSC payload.
+- **A monogram where Simple Icons has no logo** (Part 10): Java, SQL, Power BI, Excel, Oracle, Windows, AWS and the ideas (RAG, DSA). The rule: a short name as it is, else a short alias, else a leading acronym, else its initials.
+- **Show me where's jump is in two places** (Part 10). The Island's activity is far from the specs in the tab order, so the same jump, and "Show all", follow the pressed skill. A role jumps to its panel in the edit, a project to its tile, a paper to its chapter. It lasts until Escape, "Show all" or choosing the skill again; the activity persists as long.
+- **"Used in" is what the text names** (Part 10). Evidence is derive's `skillEvidence`: a role, project or paper whose text names the skill or an alias, as a whole term. So Python is used in Automated Resume Screening only; no other text names it, though FastAPI implies it. Content would have to say so.
+- **The cloud keeps the plain cursor dot** (Part 10). The fisheye is the feedback; a magnetic platter on every icon, or the drag circle over the middle one, covered what the fisheye magnifies.
+- **/specs prints as itself** (Part 10). Every other page prints the résumé edition (§6.3); /specs prints its own sheet, in the light tone.
+- **Sections share one lazy loader for their behavior** (Part 10). `components/ui/behavior.tsx` imports a section's behavior once it's within two screens, from a registry: the bento's, the skills', and now research's too. Research's four controllers (the pins, the cards' actions, the haze and the cold chain) were React components that rendered nothing and were in first-load JS (3.5 KB); they're one lazy module now (`lib/research-behavior.ts`), on the home page and on a paper's page. The illustrations attach before the pins, so the first scroll position reaches them.
+- **The 3D stage is asked for three screens ahead of the chip** (Part 10). Registered at load, the chip's view started the tier's probe and loaded three.js with the page, far above the section: blocking time rose from 60ms to 560ms, and the home page's score fell to 0.85. Now the poster stands in until the chip is three screens away; then the stage loads (240 KB of three.js, r3f and drei, on HIGH and MID tiers only) and the scene compiles its shaders off screen. The poster gives way to the scene only while the chip is off screen, so the editions never swap in view and the stage's height never changes under the visitor.
+- **Performance after Part 10** (Part 10). First-load JS is 166.3 KB, 3.4 KB less than after Part 9: research's controllers moved to a lazy chunk, and the skills section adds about 0.5 KB (the chip's view and the Island's link). Its behavior is a 4.5 KB lazy chunk, and the logos are a 17.7 KB sprite, fetched and cached on its own. The home page's HTML is 72 KB over the wire (15 KB more: the skills section's markup and its share of the RSC payload; the poster's dot grids are tiled patterns). The home page scores 0.99 under DevTools throttling (LCP 1.6s, CLS 0, blocking time 40ms) and 0.96 simulated (LCP 2.8s); /specs 1.0 and 0.99 (LCP 1.4s and 2.2s). Accessibility, best practices and SEO are 1.0 on both.
 
 ---
 

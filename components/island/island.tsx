@@ -341,12 +341,24 @@ export function Island({ initials }: { initials: string }) {
             </button>
           </span>
 
-          <div ref={capsule} className="island-activity" aria-hidden="true" data-activity-tone={activity?.tone}>
+          <div ref={capsule} className="island-activity" data-activity-tone={activity?.tone}>
             {activity ? (
               <span key={activity.key} className="island-activity-content">
                 {ActivityIcon ? <ActivityIcon aria-hidden="true" className="island-activity-icon" /> : null}
-                <span className="island-activity-title">{activity.title}</span>
-                {activity.detail ? <span className="island-activity-detail">{activity.detail}</span> : null}
+                <span className="island-activity-title" aria-hidden="true">
+                  {activity.title}
+                </span>
+                {activity.detail ? (
+                  <span className="island-activity-detail" aria-hidden="true">
+                    {activity.detail}
+                  </span>
+                ) : null}
+                {activity.action ? (
+                  <a className="island-activity-action" href={activity.action.href}>
+                    {activity.action.label}
+                    <span aria-hidden="true"> ›</span>
+                  </a>
+                ) : null}
               </span>
             ) : null}
           </div>

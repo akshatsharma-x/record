@@ -5,8 +5,8 @@ import { Fragment } from "react";
 import { Citations } from "@/components/research/citations";
 import { Illustration } from "@/components/research/illustration";
 import { ShareButton } from "@/components/research/paper-card";
-import { ResearchActions } from "@/components/research/research-actions";
 import { StatusPill } from "@/components/research/status-pill";
+import { Behavior } from "@/components/ui/behavior";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Container, Section, Stack } from "@/components/ui/layout";
@@ -174,7 +174,7 @@ export default async function PaperPage({ params }: PageProps<"/research/[slug]"
         </Container>
       </Section>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
-      <ResearchActions />
+      <Behavior section="paper" />
     </>
   );
 }
