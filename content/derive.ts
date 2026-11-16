@@ -6,7 +6,7 @@
  * Runs under plain Node for the prebuild content check: relative imports with .ts
  * extensions, `import type` for types, no path aliases.
  */
-import type { Conference, Content, Degree, Education, Illustration, Path, Publication, RoleVisual } from "./schema.ts";
+import type { Claim, Conference, Content, Degree, Education, Illustration, Path, Project, ProjectPreview, Publication, RoleVisual } from "./schema.ts";
 import { claimsOf, formatPath, resolvePattern } from "./schema.ts";
 import type { CalendarDate } from "../lib/dates.ts";
 import {
@@ -21,6 +21,8 @@ import {
   toIsoDate,
   utcDate,
 } from "../lib/dates.ts";
+import { apart, type DiagramLayout, type DiagramNode, layout } from "../lib/architecture.ts";
+import { type Place, pack, sizes } from "../lib/bento.ts";
 import { type Citations, cite, splitName } from "../lib/cite.ts";
 import { MONTH_NAMES } from "../lib/dates.ts";
 import { degreeProgress, monthsLabel } from "../lib/glance.ts";
@@ -873,6 +875,172 @@ export function reel(content: Content): ReelItem[] {
       section: section.id,
       sectionName: section.name,
       film: resolved,
+    };
+  });
+}
+
+// ─── Work (Part 9) ───────────────────────────────────────────────────────────
+
+/** A figure as the project's text states it, with its digits apart for a counter. */
+export interface WorkMetric {
+  token: string;
+  label: string;
+  footnotes: number[];
+  parts: MetricPart[];
+}
+
+/** A tile's living preview, its figures labeled as the project's text states them. */
+export type WorkPreview =
+  | Exclude<ProjectPreview, { kind: "roc" }>
+  | { kind: "roc"; auc: number; aucLabel: string; aucName: string; accuracy: number; accuracyLabel: string; accuracyName: string };
+
+export interface WorkTile {
+  slug: string;
+  href: string;
+  name: string;
+  category: string;
+  tagline: { text: string; footnotes: number[] };
+  /** Its first metric, if it has one. */
+  metric: WorkMetric | null;
+  /** The filters it shows under. */
+  filters: string[];
+  preview: WorkPreview;
+  /** Once content has screenshots, the first one is the cover. */
+  screenshot: { src: string; alt: string } | null;
+  /** Where it sits on desktop (lg) and tablets (md) under each filter it shows under. */
+  places: Record<string, { lg: Place; md: Place }>;
+}
+
+export interface CaseStudy {
+  slug: string;
+  href: string;
+  name: string;
+  category: string;
+  tagline: { text: string; footnotes: number[] };
+  summary: { text: string; footnotes: number[] };
+  problem: { text: string; footnotes: number[] } | null;
+  outcome: { text: string; footnotes: number[] } | null;
+  year: number | null;
+  role: string | null;
+  /** Each item of its stack, and whether it's one of the skills (a chip that links there). */
+  stack: { name: string; skill: boolean }[];
+  /** Metrics in runs that share their footnotes, so each note is cited once. */
+  metrics: { footnotes: number[]; metrics: WorkMetric[] }[];
+  /** Its architecture, drawn top to bottom (lib/architecture.ts), and the boxes with no arrows. */
+  diagram: { down: DiagramLayout; apart: DiagramNode[]; footnotes: number[] };
+  links: { repo: string | null; live: string | null };
+  preview: WorkPreview;
+  screenshot: { src: string; alt: string } | null;
+  /** The next project, for the peek card that ends a case study. */
+  next: Pick<WorkTile, "slug" | "href" | "name" | "category" | "tagline" | "preview" | "screenshot">;
+}
+
+/** What a project's claims and the notes they cite state, for labeling its figures. */
+function statedBy(content: Content, project: Project): string {
+  const notes = new Map(content.footnotes.map((footnote) => [footnote.id, footnote]));
+  const claims: Claim[] = [project.tagline, project.summary];
+  const cited = [...new Set([...claims.flatMap((claim) => claim.footnotes), ...project.metrics.flatMap((metric) => metric.footnotes)])];
+  return [...claims.map((claim) => claim.text), ...cited.flatMap((id) => [notes.get(id)?.note ?? "", notes.get(id)?.source ?? ""])].join(" ");
+}
+
+function metricsOf(content: Content, project: Project): WorkMetric[] {
+  const stated = statedBy(content, project);
+  return project.metrics.map((metric) => {
+    const token = statedAs(stated, Array.isArray(metric.value) ? metric.value : [metric.value]);
+    return { token, label: metric.label, footnotes: metric.footnotes, parts: partsOf(token) };
+  });
+}
+
+function previewOf(content: Content, project: Project): WorkPreview {
+  const { preview } = project;
+  if (preview.kind !== "roc") return preview;
+  const stated = statedBy(content, project);
+  // The schema checks that both figures are the project's metrics; they're named as those are.
+  const name = (value: number) => project.metrics.find((metric) => metric.value === value)?.label ?? "";
+  return {
+    ...preview,
+    aucLabel: statedAs(stated, [preview.auc]),
+    aucName: name(preview.auc),
+    accuracyLabel: statedAs(stated, [preview.accuracy]),
+    accuracyName: name(preview.accuracy),
+  };
+}
+
+const claimOf = (claim: Claim) => ({ text: claim.text, footnotes: claim.footnotes });
+const screenshotOf = (project: Project) => (project.screenshots?.[0] ? { src: project.screenshots[0].src, alt: project.screenshots[0].alt } : null);
+
+/**
+ * The work bento (DESIGN.md §7.6): a tile per project and, for each filter, where every
+ * tile it shows sits. The first project in content is the flagship: under any filter that
+ * shows it, it takes the large square.
+ */
+export function work(content: Content): { filters: { id: string; label: string }[]; tiles: WorkTile[] } {
+  const { filters } = content.copy.work;
+  const flagship = content.projects[0]?.slug;
+  const tiles: WorkTile[] = content.projects.map((project) => ({
+    slug: project.slug,
+    href: `/work/${project.slug}`,
+    name: project.name,
+    category: project.category,
+    tagline: claimOf(project.tagline),
+    metric: metricsOf(content, project)[0] ?? null,
+    filters: filters.filter((filter) => filter.categories.includes(project.category)).map((filter) => filter.id),
+    preview: previewOf(content, project),
+    screenshot: screenshotOf(project),
+    places: {},
+  }));
+  for (const filter of filters) {
+    const shown = tiles.filter((tile) => tile.filters.includes(filter.id));
+    const lead = shown[0]?.slug === flagship;
+    const lg = pack(sizes(shown.length, lead, "lg"));
+    const md = pack(sizes(shown.length, lead, "md"));
+    shown.forEach((tile, i) => {
+      tile.places[filter.id] = { lg: lg[i], md: md[i] };
+    });
+  }
+  return { filters: filters.map(({ id, label }) => ({ id, label })), tiles };
+}
+
+/** Each project's case study (DESIGN.md §7.6), in content's order. */
+export function caseStudies(content: Content): CaseStudy[] {
+  const skills = allSkills(content);
+  const tiles = work(content).tiles;
+  return content.projects.map((project, i) => {
+    const metrics = metricsOf(content, project);
+    const groups: CaseStudy["metrics"] = [];
+    for (const metric of metrics) {
+      const previous = groups.at(-1);
+      if (previous && previous.footnotes.join() === metric.footnotes.join()) previous.metrics.push(metric);
+      else groups.push({ footnotes: metric.footnotes, metrics: [metric] });
+    }
+    const { nodes, edges } = project.architecture;
+    const boxes = nodes.map(({ id, label, detail }) => ({ id, label, ...(detail ? { detail } : {}) }));
+    const next = tiles[(i + 1) % tiles.length];
+    return {
+      slug: project.slug,
+      href: `/work/${project.slug}`,
+      name: project.name,
+      category: project.category,
+      tagline: claimOf(project.tagline),
+      summary: claimOf(project.summary),
+      problem: project.problem ? claimOf(project.problem) : null,
+      outcome: project.outcome ? claimOf(project.outcome) : null,
+      year: project.year,
+      role: project.role,
+      stack: (project.stack ?? []).map((name) => ({
+        name,
+        skill: skills.some((skill) => [skill.name, ...skill.aliases].some((term) => mentions(name, term) || mentions(term, name))),
+      })),
+      metrics: groups,
+      diagram: {
+        down: layout(boxes, edges, "down"),
+        apart: apart(boxes, edges),
+        footnotes: [...new Set(nodes.flatMap((node) => node.footnotes))],
+      },
+      links: { repo: project.links?.repo ?? null, live: project.links?.live ?? null },
+      preview: previewOf(content, project),
+      screenshot: screenshotOf(project),
+      next: { slug: next.slug, href: next.href, name: next.name, category: next.category, tagline: next.tagline, preview: next.preview, screenshot: next.screenshot },
     };
   });
 }

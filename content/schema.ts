@@ -253,11 +253,40 @@ const Publication = z.strictObject({
   illustration: Illustration.optional(),
 });
 
+const ProjectCategory = z.enum(["AI system", "Full-stack", "NLP", "Machine learning", "Accessibility"]);
+
+/**
+ * A box in a case study's architecture diagram (DESIGN.md §7.6). Its words come from the
+ * project's own text: `from` is the phrase it stands for when the label is a short form
+ * ("Base learners" stands for "Stacking ensemble"), else the label itself.
+ */
+const ArchitectureNode = z.strictObject({
+  id: Id,
+  label: Text,
+  /** A second, smaller line: "PDF extraction". */
+  detail: Text.optional(),
+  from: Text.optional(),
+  /** Notes for a figure the box states. */
+  footnotes: z.array(FootnoteId).default([]),
+});
+
+/** An arrow between two boxes; "dashed" for a relation that isn't a step, like evaluation. */
+const ArchitectureEdge = z.union([z.tuple([Id, Id]), z.tuple([Id, Id, z.literal("dashed")])]);
+
+/** A tile's living preview (DESIGN.md §7.6), labeled in the project's own words. */
+const ProjectPreview = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("agents"), labels: z.strictObject({ query: Text, agents: Text, hypothetical: Text, neighbors: Text, summary: Text }) }),
+  z.strictObject({ kind: z.literal("exam-room"), labels: z.strictObject({ room: Text, alert: Text, proctor: Text }) }),
+  z.strictObject({ kind: z.literal("lanes"), labels: z.strictObject({ left: Text, right: Text, ranked: Text, scatter: Text }) }),
+  z.strictObject({ kind: z.literal("roc"), auc: z.number().gt(0).lte(1), accuracy: Share }),
+  z.strictObject({ kind: z.literal("scan"), labels: z.strictObject({ issues: Text, score: Text }) }),
+]);
+
 const Project = z.strictObject({
   slug: Id,
   name: Text,
   tagline: Claim,
-  category: z.enum(["AI system", "Full-stack", "NLP", "Machine learning", "Accessibility"]),
+  category: ProjectCategory,
   summary: Claim,
   /** The technologies the summary names, in order. */
   stack: z.array(Text).min(1).nullable(),
@@ -265,6 +294,14 @@ const Project = z.strictObject({
   role: Text.nullable(),
   links: z.strictObject({ repo: Url.optional(), live: Url.optional() }).nullable(),
   screenshots: z.array(Image).min(1).nullable(),
+  /** Every number the tagline and summary state, as counters; the first is the tile's. */
+  metrics: z.array(Metric).default([]),
+  /** The case study's first chapter: the problem it solves. */
+  problem: Claim.nullable(),
+  /** What came of it, in words, beside or instead of the metrics. */
+  outcome: Claim.nullable(),
+  preview: ProjectPreview,
+  architecture: z.strictObject({ nodes: z.array(ArchitectureNode).min(2), edges: z.array(ArchitectureEdge) }),
 });
 
 const Skill = z.strictObject({
@@ -369,7 +406,24 @@ const Copy = z.strictObject({
     /** Under every concept illustration, so none reads as a result. */
     caption: Text,
   }),
-  work: SectionCopy,
+  work: SectionCopy.extend({
+    /** The bento's filter: each shows the projects in its categories. */
+    filters: z
+      .array(z.strictObject({ id: Id, label: Text, categories: z.array(ProjectCategory).min(1) }))
+      .min(1),
+    /** The label for the filter group, for assistive tech. */
+    filterLabel: Text,
+    /** A case study's words around the project's own (DESIGN.md §7.6). */
+    caseStudy: z.strictObject({
+      chapters: z.strictObject({ problem: Text, approach: Text, outcome: Text, built: Text }),
+      facts: z.strictObject({ year: Text, role: Text, stack: Text }),
+      architecture: Text,
+      links: z.strictObject({ repo: Text, live: Text }),
+      next: Text,
+      back: Text,
+      notes: Text,
+    }),
+  }),
   skills: SectionCopy,
   credentials: SectionCopy.extend({
     /** Used while there are no certificates, so the heading never counts zero (DESIGN.md §12). */
@@ -410,6 +464,8 @@ export type Degree = z.output<typeof Degree>;
 export type Publication = z.output<typeof Publication>;
 export type Conference = z.output<typeof Conference>;
 export type Project = z.output<typeof Project>;
+export type ProjectPreview = z.output<typeof ProjectPreview>;
+export type ArchitectureNode = z.output<typeof ArchitectureNode>;
 export type Skill = z.output<typeof Skill>;
 export type Certificate = z.output<typeof Certificate>;
 export type Achievement = z.output<typeof Achievement>;
@@ -442,6 +498,8 @@ export function* claimsOf(content: z.output<typeof ContentShape>): Generator<{
   for (const [i, project] of content.projects.entries()) {
     yield { path: ["projects", i, "tagline"], ...project.tagline };
     yield { path: ["projects", i, "summary"], ...project.summary };
+    if (project.problem) yield { path: ["projects", i, "problem"], ...project.problem };
+    if (project.outcome) yield { path: ["projects", i, "outcome"], ...project.outcome };
   }
   for (const [i, achievement] of content.achievements.entries()) {
     if (achievement.detail) yield { path: ["achievements", i, "detail"], ...achievement.detail };
@@ -506,6 +564,23 @@ export function visualFigures(visual: z.output<typeof RoleVisual>): number[] {
 }
 
 // ─── Cross-references ────────────────────────────────────────────────────────
+
+/** Words that frame a diagram rather than state a fact, so need no source. */
+const FRAMING_WORDS = new Set(["query", "data"]);
+
+/**
+ * The words of a phrase that a project's own text doesn't use (DESIGN.md §7.6). A word of
+ * four letters or more counts as used when the text has a word that starts the same way
+ * (its first five letters, or all of a shorter word): "Summary" is "summarization"'s.
+ */
+export function ungroundedWords(phrase: string, text: string): string[] {
+  const words = new Set(text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []);
+  const stems = [...words].map((word) => word.slice(0, 5));
+  return (phrase.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []).filter((word) => {
+    if (word.length < 4 || FRAMING_WORDS.has(word) || words.has(word)) return false;
+    return !stems.includes(word.slice(0, 5));
+  });
+}
 
 function checkReferences(content: z.output<typeof ContentShape>, ctx: z.RefinementCtx): void {
   const problem = (path: Path, message: string) => ctx.addIssue({ code: "custom", path, message });
@@ -645,11 +720,73 @@ function checkReferences(content: z.output<typeof ContentShape>, ctx: z.Refineme
     // Text with a phone-shaped number already fails, and its digits must never be repeated.
     const text = claims.map((claim) => claim.text).join(" ");
     if (findPhoneNumbers(text).length === 0) {
-      for (const value of valuesIn(text)) {
+      for (const value of new Set(valuesIn(text))) {
         if (!counted.includes(value)) problem(["experience", i, "metrics"], `${value} is in this role's text but isn't one of its metrics`);
       }
     }
   });
+
+  // A project's metrics follow the same rules, its preview's figures too, and its diagram
+  // and preview speak only in its own words.
+  content.projects.forEach((project, i) => {
+    const claims = [project.tagline, project.summary];
+    const cited = new Set([...claims.flatMap((claim) => claim.footnotes), ...project.metrics.flatMap((metric) => metric.footnotes)]);
+    project.metrics.forEach((metric, j) => {
+      metric.footnotes.forEach((id, k) => {
+        if (!notes.has(id)) problem(["projects", i, "metrics", j, "footnotes", k], `footnote ${id} doesn't exist`);
+      });
+    });
+    project.architecture.nodes.forEach((node, j) => {
+      node.footnotes.forEach((id, k) => {
+        if (!notes.has(id)) problem(["projects", i, "architecture", "nodes", j, "footnotes", k], `footnote ${id} doesn't exist`);
+      });
+    });
+    if ([...cited].some((id) => !notes.has(id))) return;
+    const own = [project.name, project.category, ...claims.map((claim) => claim.text), ...(project.stack ?? [])].join(" ");
+    const stated = valuesIn([own, ...[...cited].flatMap((id) => [notes.get(id)!.note, notes.get(id)!.source ?? ""])].join(" "));
+    const counted = project.metrics.flatMap((metric) => (Array.isArray(metric.value) ? metric.value : [metric.value]));
+    project.metrics.forEach((metric, j) => {
+      for (const value of Array.isArray(metric.value) ? metric.value : [metric.value]) {
+        if (!stated.includes(value)) problem(["projects", i, "metrics", j], `${value} isn't stated by this project or the notes it cites`);
+      }
+    });
+    if (project.preview.kind === "roc") {
+      for (const figure of [project.preview.auc, project.preview.accuracy]) {
+        if (!counted.includes(figure)) problem(["projects", i, "preview"], `${figure} isn't one of this project's metrics`);
+      }
+    }
+    const text = claims.map((claim) => claim.text).join(" ");
+    if (findPhoneNumbers(text).length === 0) {
+      for (const value of new Set(valuesIn(text))) {
+        if (!counted.includes(value)) problem(["projects", i, "metrics"], `${value} is in this project's text but isn't one of its metrics`);
+      }
+    }
+    const words = own.toLowerCase();
+    const ungrounded = (phrase: string) => ungroundedWords(phrase, words);
+    const ids = new Set<string>();
+    project.architecture.nodes.forEach((node, j) => {
+      if (ids.has(node.id)) problem(["projects", i, "architecture", "nodes", j, "id"], `"${node.id}" is used twice`);
+      ids.add(node.id);
+      for (const phrase of [node.from ?? node.label, ...(node.from ? [] : [node.detail ?? ""])]) {
+        const missing = ungrounded(phrase);
+        if (missing.length > 0) problem(["projects", i, "architecture", "nodes", j], `"${missing.join(", ")}" isn't in this project's own words`);
+      }
+    });
+    project.architecture.edges.forEach((edge, j) => {
+      for (const id of edge.slice(0, 2)) {
+        if (!ids.has(id)) problem(["projects", i, "architecture", "edges", j], `no box "${id}"`);
+      }
+    });
+    if ("labels" in project.preview) {
+      for (const [slot, label] of Object.entries(project.preview.labels)) {
+        const missing = ungrounded(label);
+        if (missing.length > 0) problem(["projects", i, "preview", "labels", slot], `"${missing.join(", ")}" isn't in this project's own words`);
+      }
+    }
+  });
+
+  // The work filter's ids are unique.
+  unique(content.copy.work.filters, (filter) => filter.id, ["copy", "work", "filters"], "id");
 
   // The statement's gradient phrase is in the statement, once.
   const { headline, emphasis } = content.copy.statement;

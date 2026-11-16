@@ -5,10 +5,11 @@ import { type EditMarks, Experience } from "@/components/experience/experience";
 import { Hero } from "@/components/hero/hero";
 import { Highlights } from "@/components/highlights/highlights";
 import { Research } from "@/components/research/research";
+import { Work, type WorkMarks } from "@/components/work/work";
 import { Container, Section, Stack } from "@/components/ui/layout";
 import { Body, Display, Eyebrow, Footnote, FootnoteBackLink, FootnoteRef, Lead } from "@/components/ui/type";
 import { content } from "@/content";
-import { allSkills, credentialsHeadline, edit } from "@/content/derive";
+import { allSkills, credentialsHeadline, edit, work } from "@/content/derive";
 import type { Claim } from "@/content/schema";
 import { formatYearMonth } from "@/lib/dates";
 import { portraitFor } from "@/lib/portrait-fixture";
@@ -23,10 +24,11 @@ const dates = (start: string, end: string) =>
  * The story (DESIGN.md §3.1), in order. Part 4 laid down its structure so the Island and
  * Search have somewhere to go: every section with its id, surface and real copy, plainly
  * set. Parts 5–12 turn each one into its signature moment (§7): the hero is Part 5's, the
- * statement, About and the highlights Part 6's, the edit Part 7's and research Part 8's.
+ * statement, About and the highlights Part 6's, the edit Part 7's, research Part 8's and
+ * the work bento Part 9's.
  */
 export default function Home() {
-  const { profile, copy, highlights, projects, education, achievements } = content;
+  const { profile, copy, highlights, education, achievements } = content;
   const skills = allSkills(content);
   const categories = [...new Set(skills.map((skill) => skill.category))];
 
@@ -57,6 +59,15 @@ export default function Home() {
       ]),
     );
 
+  // Each tile cites a note once, on its top metric or else its tagline.
+  const workMarks = (): WorkMarks =>
+    Object.fromEntries(
+      work(content).tiles.map((tile) => [
+        tile.slug,
+        <>{marks([...new Set([...tile.tagline.footnotes, ...(tile.metric?.footnotes ?? [])])])}</>,
+      ]),
+    );
+
   const story = (
     <>
       <Hero photo={portraitFor(profile.photo)} />
@@ -69,24 +80,7 @@ export default function Home() {
 
       <Research />
 
-      <Section id="work" name={nameOf("work")} surface="light-alt" aria-labelledby="work-title">
-        <Container>
-          <Stack gap={6}>
-            <Display id="work-title">{copy.work.headline}</Display>
-            {copy.work.sub ? <Lead tone="fg-2">{copy.work.sub}</Lead> : null}
-            <ul className="flex flex-col gap-3">
-              {projects.map((project) => (
-                <li key={project.slug}>
-                  <Body>
-                    <strong className="font-semibold">{project.name}</strong>
-                  </Body>
-                  <Body tone="fg-2">{cite(project.tagline)}</Body>
-                </li>
-              ))}
-            </ul>
-          </Stack>
-        </Container>
-      </Section>
+      <Work marks={workMarks()} />
 
       <Section id="skills" name={nameOf("skills")} surface="dark" aria-labelledby="skills-title">
         <Container>

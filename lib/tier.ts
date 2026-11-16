@@ -4,6 +4,8 @@
  * signals in the browser, runs a one-second frame-time probe and caches the answer for
  * the session.
  */
+import { SLOW_FRAME_MS, VERY_SLOW_FRAME_MS } from "./frames";
+
 export const TIERS = ["HIGH", "MID", "LOW", "OFF"] as const;
 export type Tier = (typeof TIERS)[number];
 
@@ -23,10 +25,7 @@ export interface TierSignals {
   frameTime?: number;
 }
 
-/** Above this many milliseconds a frame, the device drops a tier: slower than ~40fps. */
-export const SLOW_FRAME_MS = 24;
-/** Above this, it drops straight to posters: slower than ~25fps. */
-export const VERY_SLOW_FRAME_MS = 40;
+export { SLOW_FRAME_MS, VERY_SLOW_FRAME_MS };
 
 export function classifyGpu(renderer: string | null): GpuClass {
   if (!renderer) return "unknown";

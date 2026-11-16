@@ -13,7 +13,6 @@ import { Container, Section, Stack } from "@/components/ui/layout";
 import { Footnote, FootnoteBackLink, FootnoteRef } from "@/components/ui/type";
 import { content } from "@/content";
 import { research, scholarlyArticle, scholarMeta } from "@/content/derive";
-import { liveHref } from "@/lib/search/routes";
 
 const paperFor = (slug: string) => research(content).find((paper) => paper.slug === slug);
 
@@ -130,7 +129,7 @@ export default async function PaperPage({ params }: PageProps<"/research/[slug]"
             <ul className="related">
               {paper.related.map((project) => (
                 <li key={project.slug} className="related-card">
-                  <Link className="related-name" href={liveHref(`/work/${project.slug}`)}>
+                  <Link className="related-name" href={`/work/${project.slug}`}>
                     {project.name}
                   </Link>
                   <span className="related-tagline">

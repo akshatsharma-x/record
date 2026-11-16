@@ -4802,6 +4802,1361 @@
     font-size: var(--text-caption);
   }
 
+  /* ─── Work (§7.6, Part 9) ─────────────────────────────────────────────────── */
+
+  .work-head {
+    display: grid;
+    justify-items: start;
+    gap: calc(var(--spacing) * 6);
+    margin-block-end: calc(var(--spacing) * 10);
+  }
+
+  /* The filter. On phones its five labels don't fit a segmented control, so they're a row
+     of chips that scrolls sideways under the screen's edges, the checked one filled. From
+     735px up it's the segmented control, its segments as wide as the widest label. */
+  .segmented.work-filter {
+    display: flex;
+    min-inline-size: 0;
+    max-inline-size: calc(100% + 2 * var(--grid-gutter));
+    justify-self: stretch;
+    gap: calc(var(--spacing) * 2);
+    margin-inline: calc(-1 * var(--grid-gutter));
+    padding: var(--spacing) var(--grid-gutter);
+    overflow-x: auto;
+    border-radius: 0;
+    background: none;
+    scrollbar-width: none;
+  }
+
+  .work-filter > .segmented-thumb {
+    display: none;
+  }
+
+  /* The track is an opaque mix of the surface: the page's surface crossfades under the
+     section (§4.2), and a see-through track would show the other surface through its
+     labels mid-fade. */
+  /* No color transition: when the page's surface changes, every section's tone flips at
+     once, and a chip easing its color would sit in the old tone on the new track. */
+  .work-filter > label {
+    flex: none;
+    background-color: color-mix(in srgb, var(--color-fg) 7%, var(--color-surface));
+  }
+
+  .work-filter > label:has(> input:checked) {
+    background-color: var(--color-fg);
+    color: var(--color-bg);
+  }
+
+  @variant md {
+    .segmented.work-filter {
+      display: grid;
+      max-inline-size: 100%;
+      justify-self: start;
+      gap: 0;
+      margin-inline: 0;
+      padding: var(--spacing);
+      overflow: visible;
+      border-radius: var(--radius-pill);
+      background-color: color-mix(in srgb, var(--color-fg) 7%, var(--color-surface));
+    }
+
+    .work-filter > .segmented-thumb {
+      display: block;
+    }
+
+    .work-filter > label,
+    .work-filter > label:has(> input:checked) {
+      background: none;
+      color: var(--color-fg);
+    }
+  }
+
+  /* The bento (§4.5): twelve columns from 735px, square rows (as tall as a 6-span tile is
+     wide on tablets, a 4-span tile on desktop). Each tile carries its place under each
+     filter, by the filter's position (components/work/work.tsx); the checked radio picks
+     the set, and hides the tiles it doesn't show. Phones stack the tiles. */
+  .work-frame {
+    container-type: inline-size;
+  }
+
+  .work-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--grid-gutter);
+  }
+
+  /* The tile is the size container its card's layout asks about. */
+  .work-tile {
+    display: grid;
+    min-width: 0;
+    aspect-ratio: var(--work-tile-phone);
+    container: work-tile / size;
+  }
+
+  .work:has(.work-filter > label:nth-of-type(1) > input:checked) .work-tile:not([data-in~="1"]),
+  .work:has(.work-filter > label:nth-of-type(2) > input:checked) .work-tile:not([data-in~="2"]),
+  .work:has(.work-filter > label:nth-of-type(3) > input:checked) .work-tile:not([data-in~="3"]),
+  .work:has(.work-filter > label:nth-of-type(4) > input:checked) .work-tile:not([data-in~="4"]),
+  .work:has(.work-filter > label:nth-of-type(5) > input:checked) .work-tile:not([data-in~="5"]),
+  .work:has(.work-filter > label:nth-of-type(6) > input:checked) .work-tile:not([data-in~="6"]) {
+    display: none;
+  }
+
+  @variant md {
+    .work-grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      grid-auto-rows: calc((100cqi - 11 * var(--grid-gutter)) / 2 + 5 * var(--grid-gutter));
+    }
+
+    .work-tile {
+      aspect-ratio: auto;
+      grid-area: var(--md1);
+    }
+
+    .work:has(.work-filter > label:nth-of-type(1) > input:checked) .work-tile {
+      grid-area: var(--md1);
+    }
+    .work:has(.work-filter > label:nth-of-type(2) > input:checked) .work-tile {
+      grid-area: var(--md2);
+    }
+    .work:has(.work-filter > label:nth-of-type(3) > input:checked) .work-tile {
+      grid-area: var(--md3);
+    }
+    .work:has(.work-filter > label:nth-of-type(4) > input:checked) .work-tile {
+      grid-area: var(--md4);
+    }
+    .work:has(.work-filter > label:nth-of-type(5) > input:checked) .work-tile {
+      grid-area: var(--md5);
+    }
+    .work:has(.work-filter > label:nth-of-type(6) > input:checked) .work-tile {
+      grid-area: var(--md6);
+    }
+  }
+
+  @variant lg {
+    .work-grid {
+      grid-auto-rows: calc((100cqi - 11 * var(--grid-gutter)) / 3 + 3 * var(--grid-gutter));
+    }
+
+    .work-tile {
+      grid-area: var(--lg1);
+    }
+
+    .work:has(.work-filter > label:nth-of-type(1) > input:checked) .work-tile {
+      grid-area: var(--lg1);
+    }
+    .work:has(.work-filter > label:nth-of-type(2) > input:checked) .work-tile {
+      grid-area: var(--lg2);
+    }
+    .work:has(.work-filter > label:nth-of-type(3) > input:checked) .work-tile {
+      grid-area: var(--lg3);
+    }
+    .work:has(.work-filter > label:nth-of-type(4) > input:checked) .work-tile {
+      grid-area: var(--lg4);
+    }
+    .work:has(.work-filter > label:nth-of-type(5) > input:checked) .work-tile {
+      grid-area: var(--lg5);
+    }
+    .work:has(.work-filter > label:nth-of-type(6) > input:checked) .work-tile {
+      grid-area: var(--lg6);
+    }
+  }
+
+  /* The reflow (work-controller.tsx): each tile glides to its new place on the smooth
+     spring, and a tile that leaves or arrives fades. The page around it doesn't crossfade,
+     and clicks reach the real page, so the visitor can pick again mid-flight. */
+  html[data-work-filtering]::view-transition {
+    pointer-events: none;
+  }
+
+  html[data-work-filtering]::view-transition-old(root),
+  html[data-work-filtering]::view-transition-new(root) {
+    animation: none;
+  }
+
+  html[data-work-filtering] .work-tile {
+    view-transition-class: work-tile;
+  }
+
+  ::view-transition-group(*.work-tile) {
+    animation-duration: var(--duration-spring-smooth);
+    animation-timing-function: var(--ease-spring-smooth);
+  }
+
+  ::view-transition-old(*.work-tile),
+  ::view-transition-new(*.work-tile) {
+    height: 100%;
+    animation-duration: var(--duration-ui);
+    animation-timing-function: var(--ease-out);
+  }
+
+  /* A tile: its cover over its words, or beside them when the tile is wide. The title's
+     link covers the card, so the whole card opens the case study, and the focus ring is
+     drawn on the card. Footnote marks sit above the link. */
+  .work-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    border-radius: var(--radius-card-l);
+    background-color: var(--color-card);
+    transition:
+      transform var(--duration-spring-smooth) var(--ease-spring-smooth),
+      scale var(--duration-spring-snappy) var(--ease-spring-snappy),
+      box-shadow var(--duration-ui) var(--ease-out);
+  }
+
+  .work-card[data-tilting] {
+    transition:
+      transform var(--duration-micro-short) var(--ease-out),
+      scale var(--duration-spring-snappy) var(--ease-spring-snappy),
+      box-shadow var(--duration-ui) var(--ease-out);
+  }
+
+  .work-card:hover {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .work-card:has(.work-link:active) {
+    scale: var(--motion-press-scale);
+  }
+
+  .work-card:has(.work-link:focus-visible) {
+    outline: var(--focus-ring-width) solid var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* While its case study is open (or flying), the tile is the sheet: it steps aside. So
+     does the next-project card a sheet grew out of. */
+  [data-work-origin][data-work-open] {
+    opacity: 0;
+  }
+
+  .work-cover {
+    position: relative;
+    display: grid;
+    min-height: 0;
+    flex: 1;
+    padding: calc(var(--spacing) * 5) calc(var(--spacing) * 5) 0;
+  }
+
+  .work-text {
+    display: grid;
+    gap: var(--spacing);
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 6) calc(var(--spacing) * 6);
+  }
+
+  .work-eyebrow {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .work-title {
+    font-size: clamp(var(--work-title), 6cqw, var(--text-title));
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--text-title--letter-spacing);
+    line-height: var(--text-title--line-height);
+    text-wrap: balance;
+  }
+
+  .work-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .work-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .work-link:focus-visible {
+    outline-color: transparent;
+  }
+
+  .work-tagline {
+    color: var(--color-fg-2);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    letter-spacing: var(--text-body--letter-spacing);
+  }
+
+  .work-metric {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: calc(var(--spacing) * 2);
+    margin-block-start: calc(var(--spacing) * 2);
+  }
+
+  .work-metric-value {
+    font-size: var(--work-metric);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--text-display--letter-spacing);
+    line-height: 1;
+  }
+
+  .work-metric-label {
+    color: var(--color-fg-2);
+    font-size: var(--text-body);
+  }
+
+  /* While the preview plays, the metric counts up over its own figure, which keeps the
+     width and is what screen readers read. */
+  .work-metric-count {
+    position: relative;
+  }
+
+  .work-tile[data-playing] .work-metric-count {
+    color: transparent;
+  }
+
+  .work-tile[data-playing] .work-metric-count::after {
+    --film-p: var(--to);
+    position: absolute;
+    inset-inline-start: 0;
+    color: var(--color-fg);
+    counter-reset: p var(--film-p);
+    content: var(--prefix) counter(p) var(--suffix);
+    animation: pv-count calc(var(--work-film) * 0.56) var(--ease-out) calc(var(--work-film) * 0.08) both;
+  }
+
+  .work-text sup {
+    position: relative;
+    z-index: 2;
+  }
+
+  .work-shot {
+    object-fit: cover;
+    border-radius: var(--radius-card-s);
+  }
+
+  /* Wide tiles set their words beside the preview; short ones set them smaller. These come
+     after the tile's own rules, which they override. */
+  @variant tile-wide {
+    .work-card {
+      flex-direction: row-reverse;
+    }
+
+    .work-text {
+      width: 42%;
+      flex: none;
+      align-content: end;
+      padding-block-start: calc(var(--spacing) * 6);
+    }
+
+    .work-cover {
+      padding: calc(var(--spacing) * 6) calc(var(--spacing) * 6) calc(var(--spacing) * 6) 0;
+    }
+  }
+
+  /* A short tile sets its words smaller, so its preview keeps room to be read. */
+  @variant tile-compact {
+    .work-text {
+      gap: 0;
+      padding: calc(var(--spacing) * 2) calc(var(--spacing) * 5) calc(var(--spacing) * 5);
+    }
+
+    .work-cover {
+      padding: calc(var(--spacing) * 4) calc(var(--spacing) * 4) 0;
+    }
+
+    .work-tagline {
+      font-size: var(--text-caption);
+      line-height: var(--text-caption--line-height);
+    }
+
+    .work-metric {
+      margin-block-start: var(--spacing);
+    }
+
+    .work-metric-value {
+      font-size: var(--work-metric-compact);
+    }
+  }
+
+  /* ─── The previews (components/work/previews.tsx) ─────────────────────────── */
+
+  /* Each rests on its final frame. While its tile plays (data-playing), the film runs once
+     inside the cover's clock, and the controller lets it rest when the clock ends. */
+  .preview-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: visible;
+    font-family: inherit;
+  }
+
+  .work-tile[data-playing] .work-cover {
+    animation: work-film-clock var(--work-film) linear;
+  }
+
+  @keyframes work-film-clock {
+    from,
+    to {
+      opacity: 1;
+    }
+  }
+
+  .pv-label {
+    fill: var(--color-fg-2);
+    font-size: var(--pv-label);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .pv-label-strong {
+    fill: var(--color-fg);
+  }
+
+  .pv-pill {
+    fill: var(--color-accent-fill);
+  }
+
+  .pv-query .pv-label-strong {
+    fill: var(--color-on-accent);
+  }
+
+  .pv-route,
+  .pv-merge,
+  .pv-curve {
+    fill: none;
+    stroke-dasharray: 1;
+    stroke-linecap: round;
+  }
+
+  .pv-route,
+  .pv-merge {
+    stroke: var(--color-fg-3);
+    stroke-width: var(--pv-line);
+  }
+
+  .pv-relay {
+    stroke: color-mix(in srgb, var(--color-accent) 55%, transparent);
+    stroke-dasharray: 3 5;
+    stroke-width: var(--pv-line);
+  }
+
+  .pv-message {
+    fill: var(--color-accent);
+    opacity: 0;
+  }
+
+  .pv-agent {
+    fill: color-mix(in srgb, var(--color-accent) 16%, var(--color-card));
+    stroke: var(--color-accent);
+    stroke-width: var(--pv-line-strong);
+  }
+
+  .pv-doc,
+  .pv-page,
+  .pv-panel {
+    fill: var(--color-surface);
+    stroke: var(--color-hairline);
+    stroke-width: var(--pv-line);
+  }
+
+  .pv-dashed {
+    stroke: var(--color-fg-3);
+    stroke-dasharray: 6 5;
+  }
+
+  .pv-line {
+    stroke: var(--color-fg-3);
+    stroke-linecap: round;
+    stroke-width: var(--pv-line-strong);
+  }
+
+  .pv-line-strong {
+    stroke: var(--color-accent);
+  }
+
+  .pv-dot {
+    fill: color-mix(in srgb, var(--color-fg-3) 70%, transparent);
+  }
+
+  .pv-neighbor {
+    fill: var(--color-accent);
+  }
+
+  .pv-probe {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: var(--pv-line);
+  }
+
+  .pv-seat {
+    fill: color-mix(in srgb, var(--color-accent) 18%, var(--color-card));
+    stroke: color-mix(in srgb, var(--color-accent) 45%, var(--color-card));
+    stroke-width: var(--pv-line);
+  }
+
+  .pv-seat-alert {
+    fill: color-mix(in srgb, var(--status-error) 22%, var(--color-card));
+    stroke: var(--status-error);
+  }
+
+  .pv-alert-dot,
+  .pv-pin > circle:first-child,
+  .pv-legend-pin {
+    fill: var(--status-error);
+  }
+
+  .pv-band {
+    fill: color-mix(in srgb, var(--color-accent) 12%, var(--color-card));
+    stroke: color-mix(in srgb, var(--color-accent) 40%, var(--color-card));
+    stroke-width: var(--pv-line);
+  }
+
+  .pv-rank {
+    fill: var(--color-accent);
+  }
+
+  .pv-rank:nth-of-type(n + 2) {
+    fill: color-mix(in srgb, var(--color-accent) 55%, var(--color-card));
+  }
+
+  .pv-pca {
+    fill: var(--color-accent);
+  }
+
+  .pv-pca:nth-of-type(3n + 2) {
+    fill: var(--color-accent-2);
+  }
+
+  .pv-pca:nth-of-type(3n) {
+    fill: var(--color-fg-3);
+  }
+
+  .pv-axis {
+    fill: none;
+    stroke: var(--color-fg-3);
+    stroke-width: var(--pv-line);
+  }
+
+  .pv-chance {
+    fill: none;
+    stroke: var(--color-fg-3);
+    stroke-dasharray: 4 6;
+    stroke-width: var(--pv-line);
+  }
+
+  .pv-curve {
+    stroke: var(--color-accent);
+    stroke-linejoin: round;
+    stroke-width: var(--pv-line-strong);
+  }
+
+  .pv-area {
+    fill: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  }
+
+  .pv-block {
+    fill: color-mix(in srgb, var(--color-fg-3) 32%, transparent);
+  }
+
+  .pv-image {
+    fill: color-mix(in srgb, var(--color-fg-3) 18%, transparent);
+  }
+
+  .pv-button {
+    fill: var(--color-accent-fill);
+  }
+
+  .pv-button-quiet {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: var(--pv-line);
+  }
+
+  .pv-scan {
+    opacity: 0;
+  }
+
+  .pv-scan-glow {
+    fill: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  }
+
+  .pv-scan-line {
+    stroke: var(--color-accent);
+    stroke-width: var(--pv-line);
+  }
+
+  .pv-pin > line {
+    stroke: var(--color-on-accent);
+    stroke-linecap: round;
+    stroke-width: var(--pv-line);
+  }
+
+  .pv-pin-dot {
+    fill: var(--color-on-accent);
+  }
+
+  .pv-ring-track,
+  .pv-ring {
+    fill: none;
+    stroke-width: calc(var(--pv-line-strong) * 3);
+  }
+
+  .pv-ring-track {
+    stroke: color-mix(in srgb, var(--color-fg-3) 30%, transparent);
+  }
+
+  .pv-ring {
+    stroke: var(--color-accent);
+    stroke-dasharray: 78 100;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* SVG shapes scale and turn about their own middle. */
+  :is(.pv-query, .pv-agent, .pv-probe, .pv-hyde, .pv-summary, .pv-seat, .pv-alert, .pv-pin, .pv-flow, .pv-pca, .pv-dot) {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  :is(.pv-line, .pv-rank) {
+    transform-box: fill-box;
+    transform-origin: left center;
+  }
+
+  /* The films, on the film's clock (--work-film). */
+  [data-playing] .pv-query {
+    animation: pv-pop calc(var(--work-film) * 0.14) var(--ease-out) both;
+  }
+
+  [data-playing] .pv-route {
+    animation: pv-draw calc(var(--work-film) * 0.2) var(--ease-in-out) calc(var(--work-film) * 0.08 + var(--k) * var(--work-step)) both;
+  }
+
+  [data-playing] .pv-agent {
+    animation: pv-pop calc(var(--work-film) * 0.14) var(--ease-spring-bouncy) calc(var(--work-film) * 0.18 + var(--k) * var(--work-step)) both;
+  }
+
+  [data-playing] .pv-message {
+    animation: pv-travel calc(var(--work-film) * 0.22) var(--ease-in-out) calc(var(--work-film) * 0.32 + var(--k) * var(--work-step)) both;
+  }
+
+  [data-playing] .pv-hyde {
+    animation: pv-rise calc(var(--work-film) * 0.18) var(--ease-out) calc(var(--work-film) * 0.44) both;
+  }
+
+  [data-playing] .pv-dot {
+    animation: pv-fade calc(var(--work-film) * 0.14) var(--ease-out) calc(var(--work-film) * 0.5) both;
+  }
+
+  [data-playing] .pv-neighbor {
+    animation:
+      pv-fade calc(var(--work-film) * 0.14) var(--ease-out) calc(var(--work-film) * 0.5) both,
+      pv-light calc(var(--work-film) * 0.12) var(--ease-out) calc(var(--work-film) * 0.62 + var(--k) * var(--work-step) / 3) both;
+  }
+
+  [data-playing] .pv-probe {
+    animation: pv-pop calc(var(--work-film) * 0.12) var(--ease-out) calc(var(--work-film) * 0.58) both;
+  }
+
+  [data-playing] .pv-summary {
+    animation: pv-rise calc(var(--work-film) * 0.14) var(--ease-out) calc(var(--work-film) * 0.72) both;
+  }
+
+  [data-playing] .pv-summary .pv-line {
+    animation: pv-grow calc(var(--work-film) * 0.1) var(--ease-out) calc(var(--work-film) * 0.78 + var(--k) * var(--work-step)) both;
+  }
+
+  [data-playing] .pv-seat {
+    animation: pv-seat calc(var(--work-film) * 0.12) var(--ease-out) calc(var(--k) * var(--work-step)) both;
+  }
+
+  [data-playing] .pv-seat-alert {
+    animation:
+      pv-seat calc(var(--work-film) * 0.12) var(--ease-out) calc(var(--k) * var(--work-step)) both,
+      pv-blip calc(var(--work-film) * 0.24) var(--ease-out) calc(var(--work-film) * 0.6) both;
+  }
+
+  [data-playing] .pv-alert {
+    animation: pv-rise calc(var(--work-film) * 0.14) var(--ease-out) calc(var(--work-film) * 0.66) both;
+  }
+
+  [data-playing] .pv-flow {
+    animation: pv-enter calc(var(--work-film) * 0.16) var(--ease-out) calc(var(--k) * var(--work-step)) both;
+  }
+
+  [data-playing] .pv-lane {
+    animation: pv-fade calc(var(--work-film) * 0.14) var(--ease-out) calc(var(--work-film) * 0.14 + var(--k) * var(--work-step) * 2) both;
+  }
+
+  [data-playing] .pv-merge {
+    animation: pv-draw calc(var(--work-film) * 0.14) var(--ease-in-out) calc(var(--work-film) * 0.34) both;
+  }
+
+  [data-playing] .pv-rank {
+    animation: pv-grow calc(var(--work-film) * 0.14) var(--ease-out) calc(var(--work-film) * 0.44 + var(--k) * var(--work-step)) both;
+  }
+
+  [data-playing] .pv-pca {
+    animation: pv-settle calc(var(--work-film) * 0.3) var(--ease-spring-smooth) calc(var(--work-film) * 0.56 + var(--k) * var(--work-step) / 2) both;
+  }
+
+  [data-playing] .pv-curve {
+    animation: pv-draw calc(var(--work-film) * 0.56) var(--ease-in-out) calc(var(--work-film) * 0.08) both;
+  }
+
+  [data-playing] .pv-area {
+    animation: pv-fade calc(var(--work-film) * 0.3) var(--ease-out) calc(var(--work-film) * 0.44) both;
+  }
+
+  [data-playing] .pv-scan {
+    animation: pv-sweep calc(var(--work-film) * 0.6) var(--ease-in-out) both;
+  }
+
+  [data-playing] .pv-pin {
+    animation: pv-pop calc(var(--work-film) * 0.1) var(--ease-spring-bouncy) calc(var(--work-film) * 0.6 * var(--at)) both;
+  }
+
+  [data-playing] .pv-ring {
+    animation: pv-ring calc(var(--work-film) * 0.34) var(--ease-out) calc(var(--work-film) * 0.56) both;
+  }
+
+  @keyframes pv-pop {
+    from {
+      opacity: 0;
+      scale: 0.6;
+    }
+  }
+
+  @keyframes pv-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes pv-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes pv-rise {
+    from {
+      opacity: 0;
+      translate: 0 var(--pv-travel);
+    }
+  }
+
+  @keyframes pv-enter {
+    from {
+      opacity: 0;
+      translate: calc(-1 * var(--pv-travel)) 0;
+    }
+  }
+
+  @keyframes pv-grow {
+    from {
+      scale: 0 1;
+    }
+  }
+
+  @keyframes pv-travel {
+    0% {
+      opacity: 0;
+      translate: 0 0;
+    }
+
+    15%,
+    85% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+      translate: var(--dx) var(--dy);
+    }
+  }
+
+  @keyframes pv-light {
+    from {
+      fill: color-mix(in srgb, var(--color-fg-3) 70%, transparent);
+      scale: 1;
+    }
+
+    50% {
+      scale: 1.6;
+    }
+  }
+
+  /* Opacity, not color: Chrome mixes a hex color into a color-mix() one through broken oklab
+     values on the way (yellow and red seats). */
+  @keyframes pv-seat {
+    from {
+      fill-opacity: 0;
+      stroke-opacity: 0.35;
+    }
+  }
+
+  @keyframes pv-blip {
+    0% {
+      fill: color-mix(in srgb, var(--color-accent) 18%, var(--color-card));
+      stroke: color-mix(in srgb, var(--color-accent) 45%, var(--color-card));
+      scale: 1;
+    }
+
+    35% {
+      fill: color-mix(in srgb, var(--status-error) 40%, var(--color-card));
+      stroke: var(--status-error);
+      scale: 1.12;
+    }
+
+    100% {
+      fill: color-mix(in srgb, var(--status-error) 22%, var(--color-card));
+      stroke: var(--status-error);
+      scale: 1;
+    }
+  }
+
+  @keyframes pv-settle {
+    from {
+      opacity: 0;
+      translate: var(--dx) var(--dy);
+    }
+  }
+
+  @keyframes pv-count {
+    from {
+      --film-p: 0;
+    }
+  }
+
+  @keyframes pv-sweep {
+    from {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    90% {
+      opacity: 1;
+    }
+
+    to {
+      opacity: 0;
+      translate: 0 var(--travel);
+    }
+  }
+
+  @keyframes pv-ring {
+    from {
+      stroke-dasharray: 0 100;
+    }
+  }
+
+  /* ─── Case studies (§7.6, Part 9) ─────────────────────────────────────────── */
+
+  /* The sheet: a full-screen top-layer dialog holding the dim and the panel, which scrolls.
+     Its ghost (lib/case-sheet.ts) is a copy that flies home after the route has gone. */
+  html[data-case-open] {
+    overflow: hidden;
+    scrollbar-gutter: stable;
+    background-color: var(--case-desk);
+  }
+
+  html[data-case-open] body {
+    background-color: var(--case-desk);
+  }
+
+  .case-sheet {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: none;
+    color: var(--color-fg);
+  }
+
+  .case-sheet::backdrop {
+    background: none;
+  }
+
+  .case-ghost {
+    position: fixed;
+    inset: 0;
+    z-index: var(--layer-overlay);
+    background: none;
+    color: var(--color-fg);
+    pointer-events: none;
+  }
+
+  :is(.case-sheet, .case-ghost) > .case-dim {
+    position: absolute;
+    inset: 0;
+    background-color: var(--backdrop-dim);
+    opacity: 0;
+  }
+
+  :is(.case-sheet, .case-ghost) > .case-panel {
+    position: absolute;
+    inset: var(--case-top) 0 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: var(--radius-card-l) var(--radius-card-l) 0 0;
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+  }
+
+  @variant md {
+    :is(.case-sheet, .case-ghost) > .case-panel {
+      inset: var(--case-top-wide) var(--grid-gutter) 0;
+      max-width: var(--container-wide);
+      margin-inline: auto;
+    }
+  }
+
+  /* × stays at the panel's top corner as it scrolls; the grabber says it can be pulled down. */
+  .case-chrome {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    height: 0;
+    justify-content: flex-end;
+  }
+
+  .case-close {
+    display: inline-flex;
+    min-width: var(--target-min);
+    min-height: var(--target-min);
+    align-items: center;
+    justify-content: center;
+    margin: calc(var(--spacing) * 3) calc(var(--spacing) * 3) 0 0;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-control-track);
+    color: var(--color-fg);
+    cursor: pointer;
+  }
+
+  .case-close:hover {
+    background-color: color-mix(in srgb, var(--color-fg) 14%, var(--color-surface));
+  }
+
+  .case-grabber {
+    position: absolute;
+    top: calc(var(--spacing) * 2);
+    left: 50%;
+    width: var(--case-grabber-width);
+    height: var(--case-grabber-height);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-fg-3);
+    translate: -50% 0;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .case-grabber {
+      display: none;
+    }
+  }
+
+  /* A case study, in the sheet or on its page. */
+  .case-page {
+    padding-block-start: calc(var(--island-clearance) + var(--spacing) * 10);
+  }
+
+  .case-page-head {
+    margin-block-end: calc(var(--spacing) * 4);
+  }
+
+  .case {
+    padding-block-end: var(--spacing-section);
+  }
+
+  .case-hero {
+    display: grid;
+    gap: calc(var(--spacing) * 10);
+  }
+
+  .case-sheet .case-hero,
+  .case-ghost .case-hero {
+    padding-block-start: calc(var(--spacing) * 16);
+  }
+
+  .case-hero-text {
+    display: grid;
+    justify-items: start;
+    gap: calc(var(--spacing) * 3);
+  }
+
+  .case-eyebrow {
+    color: var(--color-fg-2);
+    font-size: var(--text-eyebrow);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-eyebrow--line-height);
+  }
+
+  /* Above the cover: opening, the title flies up from the tile across it. */
+  .case-title {
+    position: relative;
+    z-index: 1;
+    font-size: var(--text-display);
+    font-weight: var(--text-display--font-weight);
+    letter-spacing: var(--text-display--letter-spacing);
+    line-height: var(--text-display--line-height);
+    text-wrap: balance;
+  }
+
+  .case-tagline {
+    max-width: var(--container-measure);
+    color: var(--color-fg-2);
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+  }
+
+  .case-cover {
+    display: grid;
+    aspect-ratio: var(--case-hero-aspect);
+    padding: calc(var(--spacing) * 6);
+    overflow: hidden;
+    border-radius: var(--radius-card-l);
+    background-color: var(--color-card);
+  }
+
+  @variant md {
+    .case-cover {
+      aspect-ratio: var(--case-hero-aspect-wide);
+      padding: calc(var(--spacing) * 12);
+    }
+  }
+
+  .case-cover > .work-cover {
+    padding: 0;
+  }
+
+  .case-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 4) var(--case-facts-gap);
+  }
+
+  .case-fact {
+    display: grid;
+    gap: var(--spacing);
+  }
+
+  .case-fact > dt {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .case-fact > dd {
+    font-size: var(--text-body);
+  }
+
+  .case-fact-item {
+    white-space: nowrap;
+  }
+
+  .case-chapters {
+    display: grid;
+    gap: calc(var(--spacing) * 20);
+    padding-block-start: calc(var(--spacing) * 20);
+  }
+
+  /* A chapter: its title, then its body; side by side on desktop. */
+  .case-chapter-inner {
+    display: grid;
+    gap: calc(var(--spacing) * 6);
+  }
+
+  @variant lg {
+    .case-chapter-inner {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      column-gap: var(--grid-gutter);
+    }
+  }
+
+  .case-chapter-title {
+    font-size: var(--text-title);
+    font-weight: var(--text-title--font-weight);
+    letter-spacing: var(--text-title--letter-spacing);
+    line-height: var(--text-title--line-height);
+  }
+
+  .case-chapter-body {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    gap: calc(var(--spacing) * 10);
+  }
+
+  .case-text {
+    max-width: var(--container-measure);
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+  }
+
+  .case-metrics {
+    display: grid;
+    gap: calc(var(--spacing) * 8);
+  }
+
+  .case-metric-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 6) calc(var(--spacing) * 14);
+  }
+
+  .case-metric {
+    display: grid;
+    gap: var(--spacing);
+  }
+
+  .case-metric-value {
+    font-size: var(--text-display);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--text-display--letter-spacing);
+    line-height: 1;
+  }
+
+  .case-metric-label {
+    color: var(--color-fg-2);
+    font-size: var(--text-lead);
+  }
+
+  .case-stack,
+  .case-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .case-stack-link {
+    display: inline-flex;
+    border-radius: var(--radius-chip);
+  }
+
+  .case-stack-link:hover .rounded-chip {
+    border-color: var(--color-fg-2);
+  }
+
+  .case-link {
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
+    border-radius: var(--radius-chip);
+    color: var(--color-accent);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .case-link:hover {
+    text-decoration: underline;
+    text-underline-offset: var(--underline-offset);
+  }
+
+  /* The next project: a card that grows into its case study. */
+  .case-next {
+    position: relative;
+    display: grid;
+    gap: calc(var(--spacing) * 4);
+    padding: calc(var(--spacing) * 6);
+    overflow: hidden;
+    border-radius: var(--radius-card-l);
+    background-color: var(--color-card);
+    color: inherit;
+    text-decoration: none;
+    transition:
+      scale var(--duration-spring-snappy) var(--ease-spring-snappy),
+      box-shadow var(--duration-ui) var(--ease-out);
+  }
+
+  .case-next:hover {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .case-next:active {
+    scale: var(--motion-press-scale);
+  }
+
+  @variant md {
+    .case-next {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      grid-template-rows: auto 1fr;
+      align-items: end;
+      padding: calc(var(--spacing) * 8);
+    }
+
+    .case-next-cover {
+      grid-row: 1 / 3;
+      grid-column: 2;
+    }
+  }
+
+  .case-next-eyebrow {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    align-self: start;
+  }
+
+  .case-next-cover {
+    display: grid;
+    aspect-ratio: var(--case-hero-aspect-wide);
+  }
+
+  .case-next-cover > .work-cover {
+    padding: 0;
+  }
+
+  .case-next-text {
+    display: grid;
+    gap: var(--spacing);
+  }
+
+  .case-next-category {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .case-next-name {
+    font-size: var(--text-title);
+    font-weight: var(--text-title--font-weight);
+    letter-spacing: var(--text-title--letter-spacing);
+    line-height: var(--text-title--line-height);
+  }
+
+  .case-notes > ol {
+    display: grid;
+    max-width: var(--container-measure);
+    gap: calc(var(--spacing) * 2);
+    color: var(--color-fg-2);
+    font-size: var(--text-footnote);
+    line-height: var(--text-footnote--line-height);
+  }
+
+  /* The architecture: drawn step by step from one variable, --draw (0 to 1), that the
+     diagram's scroll through view drives. Without scroll-driven animations, or with
+     reduced motion, --draw stays 1 and it's simply drawn. */
+  .case-diagram {
+    --draw: 1;
+    display: grid;
+    justify-items: start;
+    gap: calc(var(--spacing) * 5);
+  }
+
+  .case-diagram-svg {
+    max-width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .case-node {
+    opacity: clamp(0, (var(--draw) * var(--steps) - var(--step)) * 2, 1);
+  }
+
+  .case-node-box {
+    fill: var(--color-card);
+    stroke: var(--color-hairline);
+    stroke-width: var(--diagram-line);
+  }
+
+  .case-node-label {
+    fill: var(--color-fg);
+    font-size: var(--diagram-label);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .case-node-detail {
+    fill: var(--color-fg-2);
+    font-size: var(--diagram-detail);
+  }
+
+  .case-edge-line,
+  .case-edge-head {
+    fill: none;
+    stroke: var(--color-fg-3);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: var(--diagram-line);
+  }
+
+  .case-edge-line {
+    stroke-dasharray: 1;
+    stroke-dashoffset: calc(1 - clamp(0, (var(--draw) * var(--steps) - var(--step) - 0.5) * 2, 1));
+  }
+
+  .case-edge-head {
+    opacity: clamp(0, (var(--draw) * var(--steps) - var(--step) - 0.92) * 12, 1);
+  }
+
+  /* A dashed arrow (evaluation, say) fades in rather than drawing: its dashes are its own. */
+  .case-edge[data-dashed] .case-edge-line {
+    opacity: clamp(0, (var(--draw) * var(--steps) - var(--step) - 0.5) * 2, 1);
+    stroke-dasharray: 0.05 0.04;
+    stroke-dashoffset: 0;
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      :root:not([data-motion="reduce"]) .case-diagram {
+        animation: case-draw linear both;
+        animation-timeline: view();
+        animation-range: entry 10% cover 45%;
+      }
+    }
+  }
+
+  @keyframes case-draw {
+    from {
+      --draw: 0;
+    }
+
+    to {
+      --draw: 1;
+    }
+  }
+
+  .case-apart {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .case-apart-chip {
+    display: inline-flex;
+    min-height: calc(var(--spacing) * 8);
+    align-items: center;
+    padding-inline: calc(var(--spacing) * 3);
+    border: var(--hairline-width) solid var(--color-hairline);
+    border-radius: var(--radius-chip);
+    background-color: var(--color-card);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .case-apart-detail {
+    color: var(--color-fg-2);
+    font-weight: var(--font-weight-regular);
+  }
+
+  .case-diagram-caption {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+  }
+
   /* ─── Search (§6.3) ───────────────────────────────────────────────────────── */
 
   /* A centered glass panel in a top-layer dialog, 640px wide, with a 24px field. */

@@ -45,19 +45,24 @@ export const Footnote = textStyle<SmallTone>("Footnote", "text-footnote", "p", "
 
 // ─── Footnotes (§9) ──────────────────────────────────────────────────────────
 
-const refId = (n: number, occurrence: number) => (occurrence > 1 ? `fnref-${n}-${occurrence}` : `fnref-${n}`);
+const refId = (n: number, occurrence: number, scope?: string) =>
+  `${scope ? `${scope}-` : ""}${occurrence > 1 ? `fnref-${n}-${occurrence}` : `fnref-${n}`}`;
+
+/** Where note `n` is: the footer's notes, or a scope's own (a case study lists its notes). */
+export const noteId = (n: number, scope?: string) => `${scope ? `${scope}-` : ""}fn-${n}`;
 
 /**
  * A superscript that links to note `n` in the footer. Its hit area is 44×44 (§2 rule 7)
  * even though the numeral is small. A second mention of the same note passes
- * `occurrence={2}`, so each one has its own back-link target.
+ * `occurrence={2}`, so each one has its own back-link target. A `scope` keeps the ids of
+ * a case study's notes apart from the page's.
  */
-export function FootnoteRef({ n, occurrence = 1 }: { n: number; occurrence?: number }) {
+export function FootnoteRef({ n, occurrence = 1, scope }: { n: number; occurrence?: number; scope?: string }) {
   return (
     <sup>
       <a
-        id={refId(n, occurrence)}
-        href={`#fn-${n}`}
+        id={refId(n, occurrence, scope)}
+        href={`#${noteId(n, scope)}`}
         role="doc-noteref"
         aria-label={`Footnote ${n}`}
         className="hit-area rounded-chip font-semibold text-accent underline underline-offset-(--underline-offset)"
@@ -69,10 +74,10 @@ export function FootnoteRef({ n, occurrence = 1 }: { n: number; occurrence?: num
 }
 
 /** The ↩ at the end of note `n`, back to where it was cited. */
-export function FootnoteBackLink({ n, occurrence = 1 }: { n: number; occurrence?: number }) {
+export function FootnoteBackLink({ n, occurrence = 1, scope }: { n: number; occurrence?: number; scope?: string }) {
   return (
     <a
-      href={`#${refId(n, occurrence)}`}
+      href={`#${refId(n, occurrence, scope)}`}
       role="doc-backlink"
       aria-label={occurrence > 1 ? `Back to mention ${occurrence} of footnote ${n}` : `Back to footnote ${n}`}
       className="hit-area ml-1 inline-flex rounded-chip text-accent no-underline"

@@ -1,6 +1,6 @@
 import { prefersReducedMotion } from "@/lib/reduced-motion";
 import { particleAlpha, particles } from "@/lib/research";
-import { SLOW_FRAME_MS } from "@/lib/tier";
+import { SLOW_FRAME_MS } from "@/lib/frames";
 
 /**
  * The PM2.5 illustration's haze (DESIGN.md §7.5), on an inexpensive 2D canvas: a few
