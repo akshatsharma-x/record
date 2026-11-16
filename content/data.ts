@@ -89,6 +89,14 @@ export const data = {
           footnotes: [2],
         },
       ],
+      metrics: [
+        { value: 6, label: "documentation artifacts", footnotes: [1] },
+        { value: 2, label: "LLM calls", footnotes: [1] },
+        { value: [0.08, 0.11], label: "per run", footnotes: [2] },
+        { value: [22, 25], label: "token compression", footnotes: [2] },
+        { value: 35, label: "eval scenarios", footnotes: [2] },
+      ],
+      visual: { kind: "tangle-to-map", calls: 2, documents: 6, cost: [0.08, 0.11] },
       stack: ["LangGraph", "GPT-4.1", "Claude Sonnet 4.5", "knowledge graphs"],
       confidential: {
         note: "Internal work. Keep the visuals abstract and show nothing beyond the résumé.",
@@ -98,6 +106,7 @@ export const data = {
     {
       id: "ey",
       org: "Ernst & Young (EY)",
+      short: "EY",
       role: "Software Development Intern",
       kind: "internship",
       start: "2026-06",
@@ -113,6 +122,7 @@ export const data = {
         },
         { text: "Worked in an Agile team on Git/GitHub: code reviews and SDLC-driven iterative delivery." },
       ],
+      visual: { kind: "route-segments" },
       stack: [
         "Next.js",
         "TypeScript",
@@ -127,6 +137,7 @@ export const data = {
     {
       id: "truechip",
       org: "Truechip Solutions Pvt. Ltd.",
+      short: "Truechip",
       role: "Java Intern",
       kind: "internship",
       start: "2025-12",
@@ -144,11 +155,20 @@ export const data = {
           footnotes: [4],
         },
       ],
+      // TODO(akshat): "10+ modules" has no source to footnote.
+      metrics: [
+        { value: 10, label: "modules" },
+        { value: 90, label: "test coverage", footnotes: [4] },
+        { value: 30, label: "fewer post-integration defects", footnotes: [4] },
+        { value: 25, label: "faster review turnaround", footnotes: [4] },
+      ],
+      visual: { kind: "module-blocks", modules: 10, coverage: 90, defects: 30 },
       stack: ["Java", "OOP", "unit testing", "Git"],
     },
     {
       id: "walkingtree",
       org: "WalkingTree Technologies",
+      short: "WalkingTree",
       role: "Technical Intern",
       kind: "internship",
       start: "2025-07",
@@ -166,6 +186,11 @@ export const data = {
           text: "Built responsive React UI and Power BI dashboards for workforce analytics, validated through manual testing.",
         },
       ],
+      metrics: [
+        { value: 10000, label: "records", footnotes: [3] },
+        { value: 2500, label: "daily active users", footnotes: [3] },
+      ],
+      visual: { kind: "dashboard", users: 2500 },
       stack: ["Java", "MongoDB", "React", "Power BI"],
     },
   ],

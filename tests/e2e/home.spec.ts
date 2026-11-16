@@ -50,6 +50,7 @@ for (const locale of ["en-IN", "de-DE", "ja-JP"]) {
       await page.waitForLoadState("networkidle");
       await page.locator("#about").scrollIntoViewIfNeeded();
       await page.locator("#highlights").scrollIntoViewIfNeeded();
+      await page.locator("#experience").scrollIntoViewIfNeeded();
       await page.waitForTimeout(500);
       expect(errors).toEqual([]);
     });

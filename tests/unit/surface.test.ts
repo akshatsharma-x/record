@@ -20,6 +20,18 @@ describe("the surface blend", () => {
     expect(blendAt(sections, 1950)).toEqual({ from: 1, to: 2, progress: 0.75 });
   });
 
+  it("caps the crossfade, so a tall pinned scene finishes in its own light", () => {
+    const tall = [
+      { top: 0, bottom: 4000 },
+      { top: 4000, bottom: 5000 },
+    ];
+    // 20% of 4000 would be 800px; half of a 900px viewport is 450.
+    expect(blendAt(tall, 3549, 0.2, 450)).toEqual({ from: 0, to: 0, progress: 0 });
+    expect(blendAt(tall, 3775, 0.2, 450)).toEqual({ from: 0, to: 1, progress: 0.5 });
+    // A short section keeps its 20%.
+    expect(blendAt(sections, 900, 0.2, 450)).toEqual({ from: 0, to: 1, progress: 0.5 });
+  });
+
   it("is fully the next surface at the boundary", () => {
     expect(blendAt(sections, 1000)).toEqual({ from: 1, to: 1, progress: 0 });
   });
