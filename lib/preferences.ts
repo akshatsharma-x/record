@@ -3,8 +3,12 @@
  * script that applies them before the first paint. No React and no DOM access at import,
  * so Server Components (the root layout) can use it.
  */
+import { APERTURE } from "./hero.ts";
+
 export const THEME_STORAGE_KEY = "classyfolio:theme";
 export const FINISH_STORAGE_KEY = "classyfolio:finish";
+/** Set once the visitor first scrolls: the hero's scroll cue stops breathing for good (Part 5). */
+export const SCROLLED_STORAGE_KEY = "classyfolio:scrolled";
 
 export const THEME_CHOICES = ["light", "dark", "system"] as const;
 export type ThemeChoice = (typeof THEME_CHOICES)[number];
@@ -38,4 +42,8 @@ export const PREFERENCES_SCRIPT = `(function(){var d=document.documentElement,t,
   THEME_STORAGE_KEY,
 )});f=localStorage.getItem(${JSON.stringify(FINISH_STORAGE_KEY)})}catch(e){}if(t!=="light"&&t!=="dark")t="system";var k=t;if(t==="system")k=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";d.setAttribute("data-theme",k);d.setAttribute("data-theme-choice",t);if(${JSON.stringify(
   FINISH_IDS,
-)}.indexOf(f)>-1)d.setAttribute("data-finish",f)})()`;
+)}.indexOf(f)>-1)d.setAttribute("data-finish",f);try{if(localStorage.getItem(${JSON.stringify(
+  SCROLLED_STORAGE_KEY,
+)})==="1")d.setAttribute("data-scrolled","");var a=sessionStorage.getItem(${JSON.stringify(
+  APERTURE.storageKey,
+)}),b=${JSON.stringify(APERTURE.blur)};if(a&&b[+a]!==undefined)d.style.setProperty("--aperture-blur",b[+a]+"px")}catch(e){}})()`;

@@ -201,6 +201,23 @@ html[data-theme-switching]::view-transition-new(root) {
   mix-blend-mode: normal;
 }
 
+/* The hero's finish wipe: the new finish spreads from the chosen swatch through a circle
+   with a soft 72px edge, so it reads as liquid rather than a hard line. lib/theme.ts grows
+   --wipe-r (registered in tokens.css) over 600ms. */
+html[data-finish-wiping]::view-transition-old(root),
+html[data-finish-wiping]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html[data-finish-wiping]::view-transition-new(root) {
+  mask-image: radial-gradient(
+    circle at var(--wipe-x) var(--wipe-y),
+    var(--neutral-dark-bg) var(--wipe-r),
+    transparent calc(var(--wipe-r) + var(--wipe-feather))
+  );
+}
+
 /* Without View Transitions, colors crossfade instead. */
 html[data-theme-fading] *,
 html[data-theme-fading] *::before,

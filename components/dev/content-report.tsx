@@ -296,7 +296,12 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
             ["scholar", <Value key="scholar" value={content.profile.links.scholar} />],
             ["orcid", <Value key="orcid" value={content.profile.links.orcid} />],
             ["résumé PDF", <Value key="resume" value={content.profile.resumePdf} />],
-            ["photo", content.profile.photo ? content.profile.photo.src : <Gap />],
+            [
+              "photo",
+              content.profile.photo
+                ? `${content.profile.photo.subject.src} + ${content.profile.photo.plate.src} (${content.profile.photo.subject.width}×${content.profile.photo.subject.height}, head at ${Math.round(content.profile.photo.headTop * 100)}%)`
+                : <Gap />,
+            ],
             [
               "bio",
               labeled(

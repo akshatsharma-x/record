@@ -1,10 +1,12 @@
 import { Fragment } from "react";
+import { Hero } from "@/components/hero/hero";
 import { Container, Section, Stack } from "@/components/ui/layout";
-import { Body, Display, Eyebrow, Footnote, FootnoteBackLink, FootnoteRef, Hero, Lead, Title } from "@/components/ui/type";
+import { Body, Display, Eyebrow, Footnote, FootnoteBackLink, FootnoteRef, Lead, Title } from "@/components/ui/type";
 import { content } from "@/content";
 import { allSkills, credentialsHeadline } from "@/content/derive";
 import type { Claim } from "@/content/schema";
 import { formatYearMonth } from "@/lib/dates";
+import { portraitFor } from "@/lib/portrait-fixture";
 import { SECTIONS, type SectionId } from "@/lib/sections";
 
 const nameOf = (id: SectionId) => SECTIONS.find((section) => section.id === id)!.name;
@@ -13,9 +15,9 @@ const dates = (start: string, end: string) =>
   `${formatYearMonth(start)} – ${end === "present" ? "present" : formatYearMonth(end)}`;
 
 /**
- * The story (DESIGN.md §3.1), in order. Part 4 lays down its structure so the Island and
+ * The story (DESIGN.md §3.1), in order. Part 4 laid down its structure so the Island and
  * Search have somewhere to go: every section with its id, surface and real copy, plainly
- * set. Parts 5–12 turn each one into its signature moment (§7).
+ * set. Parts 5–12 turn each one into its signature moment (§7); the hero is Part 5's.
  */
 export default function Home() {
   const { profile, copy, highlights, experience, publications, conferences, projects, education, achievements } = content;
@@ -38,17 +40,7 @@ export default function Home() {
 
   const story = (
     <>
-      <Section id="top" name={nameOf("top")} surface="dark" aria-labelledby="top-title">
-        <Container>
-          <Stack gap={4}>
-            <Eyebrow tone="fg-2">{profile.role}</Eyebrow>
-            <Hero id="top-title">{profile.name}</Hero>
-            <Lead tone="fg-2" className="max-w-measure">
-              {profile.headline}
-            </Lead>
-          </Stack>
-        </Container>
-      </Section>
+      <Hero photo={portraitFor(profile.photo)} />
 
       <Section id="about" name={nameOf("about")} surface="light" aria-labelledby="about-title">
         <Container width="measure">

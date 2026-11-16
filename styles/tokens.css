@@ -87,6 +87,23 @@
   --island-marker: rgb(255 255 255 / 0.14);
   --island-track: rgb(255 255 255 / 0.24);
 
+  /* The hero's light field (Part 5): its warmth follows the visitor's time of day. */
+  --light-dawn: #ff9e7a;
+  --light-noon: #dfe7f7;
+  --light-dusk: #ff9a2e;
+  --light-night: #5856d6;
+
+  /* The loupe: a glass lens with a specular rim and a faint chromatic edge. */
+  --lens-rim: rgb(255 255 255 / 0.55);
+  --lens-shade: rgb(0 0 0 / 0.35);
+  --lens-tint: rgb(255 255 255 / 0.06);
+  --lens-fringe-warm: rgb(255 80 120 / 0.4);
+  --lens-fringe-cool: rgb(80 170 255 / 0.4);
+
+  /* The portrait edition's scrims: the name stays legible on any plate, the UI on any subject. */
+  --portrait-scrim: rgb(0 0 0 / 0.58);
+  --portrait-floor: rgb(0 0 0 / 0.72);
+
   /* Activity tones on dark: Apple's system green and red for dark mode. */
   --status-success: #30d158;
   --status-error: #ff453a;
@@ -290,6 +307,9 @@
   --cursor-ring: 30px;
   --cursor-media: 72px;
   --cursor-drag: 64px;
+  --cursor-loupe: 120px;
+  --cursor-loupe-zoom: 1.35;
+  --cursor-loupe-outline: 2px;
   --cursor-magnet-padding: 8px;
   --cursor-drift: 4px;
   --cursor-drift-label: 2px;
@@ -363,6 +383,48 @@
   --print-heading: 10.5pt;
   --print-gap: 6pt;
   --print-caps-tracking: 0.06em;
+
+  /* The hero (§7, Part 5). */
+  --hero-height: 100svh;
+  --hero-light-alpha: 0.22;
+  --hero-light-size: 72vmax;
+  --hero-light-loop: 20s;
+  --hero-cue-width: 134px;
+  --hero-cue-height: 5px;
+  --hero-cue-breath: 4s;
+  --hero-out-name: -14vh;
+  --hero-out-subject: 9vh;
+  --hero-out-scale: 0.92;
+  --hero-out-dim: 0.6;
+  --hero-ui-delay: 700ms;
+  --hero-ui-fade: 450ms;
+  --hero-parallax-plate: 8px;
+  --hero-parallax-name: 4px;
+  --hero-parallax-subject: 12px;
+  /* The portrait's name starts just under the date line, so a head framed about 15–20%
+     from the top covers only the lower part of the letters, as on the Lock Screen. */
+  --hero-name-top: calc(var(--island-clearance) + var(--text-eyebrow) * 2);
+  /* Room at the foot of the first screen for the scroll cue and the pause button. */
+  --hero-foot: calc(env(safe-area-inset-bottom) + var(--spacing) * 2 + var(--target-min));
+  --aperture-width: 300px;
+  /* The photo sets these two inline (components/hero/hero.tsx); these are the stand-in's. */
+  --portrait-aspect: 3 / 4;
+  --portrait-head: 0.175;
+  /* Short screens scroll rather than squeeze the face between the name and the details. */
+  --portrait-min-height: 47rem;
+  --portrait-height: max(var(--hero-height), var(--portrait-min-height));
+  /* Phones: how far up the first screen the role and headline reach, for the floor. */
+  --portrait-intro: 12rem;
+  /* Phones: where the top of the head lands, across the foot of the name's second line. */
+  --portrait-head-at: calc(var(--hero-name-top) + var(--text-hero) * var(--text-hero--line-height) * 1.7);
+  --portrait-blur-far: 24px;
+  --portrait-blur-near: 8px;
+  --portrait-blur-subject: 12px;
+  --portrait-backdrop-blur: 48px;
+  --portrait-pull: 900ms;
+  --portrait-feather: 16%;
+  --aperture-ticks: 12px;
+  --wipe-feather: 72px;
 
   /* Durations (§5.3). Each DESIGN.md range has a short, default and long step. */
   --duration-micro-short: 150ms;
@@ -442,6 +504,10 @@
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion="full"]) {
     --motion-press-scale: 1;
+    --hero-ui-delay: 0ms;
+    --hero-out-name: 0vh;
+    --hero-out-subject: 0vh;
+    --hero-out-scale: 1;
     --island-swap-blur: 0px;
     --search-resolve-y: 0px;
     --search-resolve-blur: 0px;
@@ -459,6 +525,10 @@
 
 :root[data-motion="reduce"] {
   --motion-press-scale: 1;
+  --hero-ui-delay: 0ms;
+  --hero-out-name: 0vh;
+  --hero-out-subject: 0vh;
+  --hero-out-scale: 1;
   --island-swap-blur: 0px;
   --search-resolve-y: 0px;
   --search-resolve-blur: 0px;
@@ -477,6 +547,13 @@
   to {
     transform: rotate(1turn);
   }
+}
+
+/* The finish wipe's radius (styles/globals.css), registered so it can animate. */
+@property --wipe-r {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
 }
 
 /* ─── 7. Tailwind's theme ─────────────────────────────────────────────────── */

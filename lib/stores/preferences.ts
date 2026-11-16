@@ -16,7 +16,8 @@ export interface PreferencesState {
   finish: Finish;
   sync(): void;
   setTheme(choice: ThemeChoice, origin?: Origin): Promise<void>;
-  setFinish(finish: Finish): void;
+  /** With an origin, the new finish spreads from there (the hero's liquid wipe). */
+  setFinish(finish: Finish, origin?: Origin): Promise<void>;
 }
 
 export const usePreferences = create<PreferencesState>((set) => ({
@@ -30,8 +31,10 @@ export const usePreferences = create<PreferencesState>((set) => ({
     await done;
     set(readPreferences());
   },
-  setFinish: (finish) => {
-    applyFinish(finish);
+  setFinish: async (finish, origin) => {
+    // The swatch answers at once; the new color follows (in the wipe, with an origin).
+    set({ finish });
+    await applyFinish(finish, origin);
     set(readPreferences());
   },
 }));

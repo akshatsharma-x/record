@@ -1,6 +1,6 @@
 import { Check, CircleAlert, LoaderCircle } from "lucide-react";
 import Link from "next/link";
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
 import { cx } from "@/lib/cx";
 
 /**
@@ -62,24 +62,39 @@ export function Button(props: AsButton | AsLink) {
   if (props.href !== undefined) {
     const { variant = "primary", status = "idle", children, className, force, href, disabled, onClick, ...anchor } = props;
     const inert = Boolean(disabled) || status === "loading";
+    const label = (
+      <Label variant={variant} status={status}>
+        {children}
+      </Label>
+    );
+    // A disabled or loading link has no href, so it can't navigate and needs no handler.
+    // That keeps Button usable from Server Components, which can't pass functions on.
+    if (inert) {
+      return (
+        <a
+          aria-disabled="true"
+          aria-busy={status === "loading" || undefined}
+          role="link"
+          tabIndex={disabled ? -1 : 0}
+          data-force={force}
+          data-status={status}
+          className={classes(variant, Boolean(disabled), className)}
+          {...anchor}
+        >
+          {label}
+        </a>
+      );
+    }
     return (
       <Link
         href={href}
-        aria-disabled={inert || undefined}
-        aria-busy={status === "loading" || undefined}
-        tabIndex={disabled ? -1 : undefined}
         data-force={force}
         data-status={status}
-        className={classes(variant, Boolean(disabled), className)}
-        onClick={(event: MouseEvent<HTMLAnchorElement>) => {
-          if (inert) event.preventDefault();
-          else onClick?.(event);
-        }}
+        className={classes(variant, false, className)}
+        onClick={onClick}
         {...anchor}
       >
-        <Label variant={variant} status={status}>
-          {children}
-        </Label>
+        {label}
       </Link>
     );
   }

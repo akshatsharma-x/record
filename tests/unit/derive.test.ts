@@ -3,12 +3,15 @@ import { content } from "@/content";
 import { data } from "@/content/data";
 import {
   allSkills,
+  clockPlace,
   compareTable,
   counts,
   credentialsHeadline,
   drafts,
   gaps,
   graduation,
+  heroChips,
+  initialism,
   mentions,
   nowRole,
   numbersIn,
@@ -261,6 +264,27 @@ describe("/compare", () => {
   it("is built from dated entries only: no undated project appears", () => {
     const everything = JSON.stringify(table);
     for (const project of content.projects) expect(everything).not.toContain(project.name);
+  });
+});
+
+describe("the hero", () => {
+  it("shortens a field of study to its initials", () => {
+    expect(initialism("Computer Science and Engineering")).toBe("CSE");
+    expect(initialism("Artificial Intelligence & Machine Learning")).toBe("AIML");
+  });
+
+  it("derives the three context chips, each pointing at the section that tells the rest", () => {
+    expect(heroChips(content)).toEqual([
+      { label: "Now at United Airlines", section: "experience" },
+      { label: "B.Tech CSE \u201927 \u00b7 Manipal University Jaipur", section: "credentials" },
+      { label: "SCI-2026 \u00b7 Springer LNNS", section: "research" },
+    ]);
+  });
+
+  it("names Akshat's clock by its time zone until the city is confirmed, then by the city", () => {
+    expect(clockPlace(content)).toEqual({ label: "IST", timeZone: "Asia/Kolkata" });
+    const confirmed = parseContent({ ...data, profile: { ...data.profile, location: { ...data.profile.location, cityConfirmed: true } } });
+    expect(clockPlace(confirmed)).toEqual({ label: "in Jaipur", timeZone: "Asia/Kolkata" });
   });
 });
 

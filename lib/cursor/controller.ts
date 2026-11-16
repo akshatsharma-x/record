@@ -29,7 +29,7 @@ export interface CursorController {
   destroy(): void;
 }
 
-type Variant = "magnetic" | "glass" | "ring" | "spinner";
+type Variant = "magnetic" | "glass" | "ring" | "spinner" | "lens";
 type Mode = "anchored" | "absolute";
 
 interface Geometry {
@@ -70,6 +70,8 @@ function readSizes() {
     ring: read("--cursor-ring"),
     media: read("--cursor-media"),
     drag: read("--cursor-drag"),
+    loupe: read("--cursor-loupe"),
+    zoom: read("--cursor-loupe-zoom") || 1,
     padding: read("--cursor-magnet-padding"),
     drift: read("--cursor-drift"),
     driftLabel: read("--cursor-drift-label"),
@@ -126,7 +128,8 @@ export function createCursor(options: { large: boolean }): CursorController {
   const label = part("span", "cursor-label");
   const arrows = part("span", "cursor-arrows");
   arrows.append(chevron("m15 18-6-6 6-6"), chevron("m9 18 6-6-6-6"));
-  shape.append(part("span", "cursor-glass material-glass"), label, arrows, part("span", "cursor-slash"));
+  const lens = part("span", "cursor-lens");
+  shape.append(part("span", "cursor-glass material-glass"), lens, label, arrows, part("span", "cursor-slash"));
 
   const hotspot = part("div", "cursor-hotspot");
   const pulse = part("span", "cursor-pulse");
@@ -183,6 +186,11 @@ export function createCursor(options: { large: boolean }): CursorController {
   let shapeVisible = false;
   let shapeMoving = false;
   let variant: Variant = "magnetic";
+
+  // The loupe: a scaled copy of the target, inside the lens.
+  let lensCopy: HTMLElement | null = null;
+  let lensTarget: Element | null = null;
+  let lensRect = { left: 0, top: 0 };
 
   // The magnet and its drift.
   let magnet: Magnet | null = null;
@@ -296,6 +304,10 @@ export function createCursor(options: { large: boolean }): CursorController {
       line = lineHeightOf(next.element);
     }
     apply(next, line);
+    if (lensTarget) {
+      const rect = lensTarget.getBoundingClientRect();
+      lensRect = { left: rect.left, top: rect.top };
+    }
     if (magnet) {
       const rect = measure(magnet.element);
       if (rect.width && rect.height) magnet.rect = rect;
@@ -334,6 +346,8 @@ export function createCursor(options: { large: boolean }): CursorController {
     if (magnetic && !magnet && !beginMagnet(magnetic)) resolved = "default";
 
     if (next.kind === "media") label.textContent = next.label ?? "";
+    if (next.kind === "loupe" && next.element) buildLens(next.element);
+    else if (lensCopy) clearLens();
     if (resolved !== kind) {
       kind = resolved;
       root.setAttribute("data-state", kind);
@@ -347,6 +361,61 @@ export function createCursor(options: { large: boolean }): CursorController {
     root.setAttribute("data-ink", ink);
     // The shape's glass and label take the tone of what's behind them.
     root.setAttribute("data-tone", ink === "light" ? "dark" : "light");
+  }
+
+  // ─── The loupe ───────────────────────────────────────────────────────────────
+
+  /** The text styles a copy needs to set exactly like its original, line breaks included. */
+  const TEXT_STYLES = [
+    "fontFamily",
+    "fontSize",
+    "fontWeight",
+    "fontStyle",
+    "fontStretch",
+    "fontFeatureSettings",
+    "fontVariationSettings",
+    "lineHeight",
+    "letterSpacing",
+    "wordSpacing",
+    "textAlign",
+    "textTransform",
+    "color",
+  ] as const;
+
+  /** A copy of the target to magnify: inert, without ids, styled exactly like the original. */
+  function buildLens(element: Element) {
+    if (lensTarget === element && lensCopy) return;
+    clearLens();
+    const copy = element.cloneNode(true) as HTMLElement;
+    for (const node of [copy, ...Array.from(copy.querySelectorAll("[id]"))]) node.removeAttribute("id");
+    copy.removeAttribute("data-cursor");
+    copy.setAttribute("aria-hidden", "true");
+    copy.classList.add("cursor-lens-copy");
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    for (const name of TEXT_STYLES) copy.style[name] = style[name];
+    copy.style.width = `${rect.width}px`;
+    copy.style.height = `${rect.height}px`;
+    copy.style.margin = "0";
+    lens.append(copy);
+    lensCopy = copy;
+    lensTarget = element;
+    lensRect = { left: rect.left, top: rect.top };
+  }
+
+  function clearLens() {
+    lensCopy?.remove();
+    lensCopy = null;
+    lensTarget = null;
+  }
+
+  /** Keeps the point under the hotspot fixed at the lens's center while the copy scales. */
+  function positionLens(w: number, h: number) {
+    if (!lensCopy) return;
+    const zoom = sizes.zoom;
+    const tx = w / 2 - zoom * (x - lensRect.left);
+    const ty = h / 2 - zoom * (y - lensRect.top);
+    lensCopy.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(${zoom})`;
   }
 
   // ─── The magnet ──────────────────────────────────────────────────────────────
@@ -474,6 +543,7 @@ export function createCursor(options: { large: boolean }): CursorController {
       };
     }
     if (kind === "media") return circle(sizes.media * scale, "glass");
+    if (kind === "loupe") return circle(sizes.loupe * scale, "lens");
     if (kind === "drag") return circle(sizes.drag * scale, "glass");
     if (kind === "disabled") return circle(sizes.ring * scale, "ring");
     const size = sizes.dot * scale;
@@ -536,6 +606,7 @@ export function createCursor(options: { large: boolean }): CursorController {
     const cx = (mode === "anchored" ? x + spring.x.value : spring.x.value) - offsetX;
     const cy = (mode === "anchored" ? y + spring.y.value : spring.y.value) - offsetY;
     shape.style.translate = `${cx - w / 2}px ${cy - h / 2}px`;
+    positionLens(w, h);
     if (!resize) return;
     const r = clamp(spring.r.value, 0, Math.min(w, h) / 2);
     shape.style.width = `${w}px`;
@@ -854,6 +925,7 @@ export function createCursor(options: { large: boolean }): CursorController {
     }
     window.clearInterval(navigation.poll);
     releaseMagnet(true);
+    clearLens();
     for (const [element, timer] of releasing) {
       window.clearTimeout(timer);
       element.removeAttribute("data-cursor-magnet");

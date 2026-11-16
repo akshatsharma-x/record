@@ -610,6 +610,56 @@
     opacity: 1;
   }
 
+  /* The loupe: a liquid-glass lens with a scaled copy of the letters under it. The dot
+     stays at its center, with a thicker outline over the magnified strokes. */
+  .cursor[data-state="loupe"] {
+    --cursor-outline: var(--cursor-loupe-outline);
+  }
+
+  .cursor-shape[data-variant="lens"] {
+    background-color: var(--lens-tint);
+    box-shadow:
+      inset 0 0 0 var(--hairline-width) var(--lens-rim),
+      inset var(--hairline-width) 0 0 var(--hairline-width) var(--lens-fringe-warm),
+      inset calc(-1 * var(--hairline-width)) 0 0 var(--hairline-width) var(--lens-fringe-cool),
+      inset 0 calc(-3 * var(--hairline-width)) calc(8 * var(--hairline-width)) var(--lens-shade),
+      var(--shadow-soft);
+  }
+
+  .cursor-lens {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  .cursor-shape[data-variant="lens"] .cursor-lens {
+    opacity: 1;
+  }
+
+  /* The specular highlight, above the letters. */
+  .cursor-lens::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 30% 22%, var(--lens-rim), transparent 38%);
+    opacity: 0.35;
+  }
+
+  .cursor-lens-copy {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    pointer-events: none;
+  }
+
+  .cursor-lens-copy,
+  .cursor-lens-copy * {
+    animation: none !important;
+    transition: none !important;
+  }
+
   .cursor-label {
     translate: 0 var(--cursor-label-offset);
     font-size: var(--text-caption);
@@ -1195,6 +1245,647 @@
 
   :root[data-motion="reduce"] :is(.island-shell, .island-bar) {
     transition-property: opacity;
+  }
+
+  /* ─── The hero (§7, Part 5) ───────────────────────────────────────────────── */
+
+  /* Both editions: a full-height dark stage. --hero-out runs 0 → 1 as it scrolls away
+     (components/hero/hero-controller.tsx); --px and --py are the sprung parallax. */
+  .hero {
+    --hero-out: 0;
+    --px: 0;
+    --py: 0;
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    min-height: var(--hero-height);
+    flex-direction: column;
+    justify-content: center;
+    overflow: clip;
+  }
+
+  .hero-stack {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(var(--spacing) * 5);
+    text-align: center;
+  }
+
+  /* The arrival: a focus pull, CSS from the first paint. The name is never transparent,
+     so it's painted (and counted as LCP) at once; it only comes into focus. Arrival
+     animations fill backwards only: once over they leave no effect behind, so nothing in
+     the hero stays a backdrop root and the aperture dial's glass blurs what's behind it. */
+  .hero-line {
+    display: inline-block;
+    animation: hero-focus var(--duration-reveal) var(--ease-out) backwards;
+    animation-delay: calc(var(--line) * var(--motion-resolve-stagger));
+  }
+
+  @keyframes hero-focus {
+    from {
+      filter: blur(var(--motion-resolve-blur));
+      translate: 0 var(--motion-resolve-y);
+    }
+  }
+
+  .hero-date,
+  .hero-role,
+  .hero-headline {
+    animation: hero-fade var(--motion-resolve-duration) var(--ease-out) backwards;
+    animation-delay: calc(2 * var(--motion-resolve-stagger));
+  }
+
+  /* The UI arrives last. */
+  .hero-chips,
+  .hero-ctas,
+  .hero-ui,
+  .hero-pause {
+    animation: hero-fade var(--hero-ui-fade) var(--ease-out) var(--hero-ui-delay) backwards;
+  }
+
+  @keyframes hero-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .hero-name {
+    color: var(--neutral-dark-fg);
+    text-wrap: nowrap;
+  }
+
+  /* Full width, so the box stays put when the live date replaces the fallback. */
+  .hero-date {
+    align-self: stretch;
+    color: var(--color-fg);
+    font-size: var(--text-eyebrow);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-eyebrow--line-height);
+    letter-spacing: var(--text-eyebrow--letter-spacing);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hero-role {
+    color: var(--color-fg);
+  }
+
+  .hero-headline {
+    max-width: var(--container-measure);
+    color: var(--color-fg);
+    text-wrap: balance;
+  }
+
+  .hero-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--spacing) * 6);
+  }
+
+  .hero-ui {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--spacing) * 4);
+  }
+
+  /* Like a product's colors: each swatch with its name beneath, in one row even on phones. */
+  .hero-swatches {
+    justify-content: center;
+  }
+
+  .hero-swatches > label {
+    flex-direction: column;
+    min-width: calc(var(--target-min) * 1.5);
+  }
+
+  /* The scroll cue: a slim home-indicator bar that breathes once every 4s until the first
+     scroll, then never again. */
+  .hero-cue {
+    position: absolute;
+    bottom: calc(env(safe-area-inset-bottom) + var(--spacing) * 3);
+    left: 50%;
+    z-index: 3;
+    width: var(--hero-cue-width);
+    height: var(--hero-cue-height);
+    border-radius: var(--radius-pill);
+    background-color: var(--neutral-dark-fg);
+    opacity: 0.45;
+    translate: -50% 0;
+    animation:
+      hero-fade var(--hero-ui-fade) var(--ease-out) var(--hero-ui-delay) backwards,
+      hero-breathe var(--hero-cue-breath) var(--ease-in-out) var(--hero-ui-delay) infinite;
+  }
+
+  @keyframes hero-breathe {
+    0%,
+    40%,
+    100% {
+      opacity: 0.45;
+      scale: 1;
+    }
+
+    20% {
+      opacity: 0.9;
+      scale: 1.06 1;
+    }
+  }
+
+  html[data-scrolled] .hero-cue {
+    animation: hero-fade var(--hero-ui-fade) var(--ease-out) var(--hero-ui-delay) backwards;
+  }
+
+  .hero-pause {
+    position: absolute;
+    right: var(--grid-gutter);
+    bottom: calc(env(safe-area-inset-bottom) + var(--spacing) * 2);
+    z-index: 4;
+    display: grid;
+    width: var(--target-min);
+    height: var(--target-min);
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-control-track);
+    color: var(--color-fg);
+  }
+
+  /* Loops rest off-screen, in a hidden tab and when paused. */
+  :is(.hero[data-paused], .hero[data-offscreen], .hero[data-hidden-tab]) :is(.hero-light-blob, .hero-cue) {
+    animation-play-state: paused;
+  }
+
+  /* ─── The typographic edition ─── */
+
+  .hero-type .hero-stack {
+    padding-block: var(--island-clearance) calc(var(--spacing) * 16);
+    translate: 0 calc(var(--hero-out) * var(--hero-out-name));
+    opacity: calc(1 - var(--hero-out) * 1.25);
+  }
+
+  /* The light field: soft discs of the finish's hues and the hour's warmth, drifting on a
+     20s loop. Radial gradients, so nothing needs a blur filter. Its strength is capped so
+     every line of hero text keeps its contrast (tests/unit/contrast.test.ts). */
+  .hero-light {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: calc(1 - var(--hero-out) * var(--hero-out-dim));
+    animation: hero-fade var(--duration-count) var(--ease-out) backwards;
+  }
+
+  .hero-light-blob {
+    position: absolute;
+    width: var(--hero-light-size);
+    height: var(--hero-light-size);
+    border-radius: var(--radius-pill);
+    background-image: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--blob) calc(var(--hero-light-alpha) * 100%), transparent),
+      transparent
+    );
+    animation: hero-drift-a var(--hero-light-loop) var(--ease-in-out) infinite;
+    will-change: translate, scale;
+  }
+
+  [data-blob="a"] {
+    --blob: var(--accent-on-dark);
+    top: calc(var(--hero-light-size) * -0.35);
+    left: calc(var(--hero-light-size) * -0.3);
+  }
+
+  [data-blob="b"] {
+    --blob: var(--accent-2-on-dark);
+    top: calc(var(--hero-light-size) * 0.1);
+    right: calc(var(--hero-light-size) * -0.35);
+    animation-name: hero-drift-b;
+  }
+
+  [data-blob="c"] {
+    --blob: color-mix(in oklab, var(--warmth-from, var(--light-noon)), var(--warmth-to, var(--light-noon)) var(--warmth-mix, 0%));
+    bottom: calc(var(--hero-light-size) * -0.5);
+    left: calc(var(--hero-light-size) * 0.15);
+    opacity: 0;
+    transition: opacity var(--duration-count) var(--ease-out);
+    animation-name: hero-drift-c;
+  }
+
+  .hero[data-warm] [data-blob="c"] {
+    opacity: 1;
+  }
+
+  @keyframes hero-drift-a {
+    0%,
+    100% {
+      translate: 0 0;
+      scale: 1;
+    }
+
+    33% {
+      translate: calc(var(--hero-light-size) * 0.22) calc(var(--hero-light-size) * 0.12);
+      scale: 1.12;
+    }
+
+    66% {
+      translate: calc(var(--hero-light-size) * 0.08) calc(var(--hero-light-size) * 0.26);
+      scale: 0.92;
+    }
+  }
+
+  @keyframes hero-drift-b {
+    0%,
+    100% {
+      translate: 0 0;
+      scale: 1;
+    }
+
+    40% {
+      translate: calc(var(--hero-light-size) * -0.2) calc(var(--hero-light-size) * 0.18);
+      scale: 0.9;
+    }
+
+    75% {
+      translate: calc(var(--hero-light-size) * -0.08) calc(var(--hero-light-size) * -0.1);
+      scale: 1.1;
+    }
+  }
+
+  @keyframes hero-drift-c {
+    0%,
+    100% {
+      translate: 0 0;
+      scale: 1.05;
+    }
+
+    50% {
+      translate: calc(var(--hero-light-size) * 0.18) calc(var(--hero-light-size) * -0.12);
+      scale: 0.95;
+    }
+  }
+
+  /* ─── The portrait edition ─── */
+
+  .hero-portrait {
+    min-height: var(--portrait-height);
+    background-color: var(--neutral-dark-bg);
+  }
+
+  /* Desktop: one stack at the foot. Phones split it across the fold (below). */
+  .hero-intro,
+  .hero-more {
+    display: contents;
+  }
+
+  .hero-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* A full-height frame in the photo's shape holds the aligned layers; phones lay it across
+     the width instead (below). */
+  .hero-frame {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 100%;
+    aspect-ratio: var(--portrait-aspect);
+    translate: -50% 0;
+  }
+
+  .hero-frame > img,
+  .hero-backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  .hero-plate {
+    z-index: 0;
+    translate: calc(var(--px) * var(--hero-parallax-plate) * -1) calc(var(--py) * var(--hero-parallax-plate) * -1);
+  }
+
+  /* Past the frame, the plate continues as a heavier blur of itself. */
+  .hero-backdrop {
+    filter: blur(var(--portrait-backdrop-blur));
+    scale: 1.2;
+  }
+
+  .hero-plate .hero-frame {
+    mask-image: linear-gradient(
+      90deg,
+      transparent,
+      var(--neutral-dark-bg) var(--portrait-feather),
+      var(--neutral-dark-bg) calc(100% - var(--portrait-feather)),
+      transparent
+    );
+  }
+
+  /* The plate's blur is the aperture's (ƒ4 is 8px). The focus pull fades out a copy at 24px
+     instead of animating the blur itself. */
+  .hero-plate-near {
+    filter: blur(var(--aperture-blur, var(--portrait-blur-near)));
+  }
+
+  .hero-plate-far {
+    filter: blur(var(--portrait-blur-far));
+    animation: hero-sharpen var(--portrait-pull) var(--ease-out) both;
+  }
+
+  @keyframes hero-sharpen {
+    to {
+      opacity: 0;
+    }
+  }
+
+  /* Scrims: the top third holds the date line and the name, so it's dimmed evenly enough
+     for white text over even a white wall (tests/unit/contrast.test.ts); scrolling away
+     dims the light. */
+  .hero-dim {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(var(--portrait-scrim), var(--portrait-scrim) 32%, transparent 60%);
+  }
+
+  .hero-dim::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: var(--neutral-dark-bg);
+    opacity: calc(var(--hero-out) * var(--hero-out-dim));
+  }
+
+  .hero-top {
+    position: absolute;
+    top: var(--island-clearance);
+    right: 0;
+    left: 0;
+    z-index: 3;
+    text-align: center;
+  }
+
+  .hero-name-layer {
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    /* Under the date line, and low enough that the head overlaps the letters' foot
+       (half a line above the top of the head), whatever the photo's framing. */
+    padding-top: max(
+      var(--hero-name-top),
+      calc(var(--portrait-head) * var(--portrait-height) - var(--text-hero) * var(--text-hero--line-height) * 0.5)
+    );
+    translate: calc(var(--px) * var(--hero-parallax-name) * -1)
+      calc(var(--py) * var(--hero-parallax-name) * -1 + var(--hero-out) * var(--hero-out-name));
+    opacity: calc(1 - var(--hero-out) * 1.3);
+  }
+
+  .hero-portrait .hero-name {
+    text-align: center;
+  }
+
+  /* The subject: in front of the name, scaling to .92 and rising slower as the hero leaves. */
+  .hero-subject {
+    z-index: 2;
+    transform-origin: 50% 100%;
+    translate: calc(var(--px) * var(--hero-parallax-subject) * -1)
+      calc(var(--py) * var(--hero-parallax-subject) * -1 + var(--hero-out) * var(--hero-out-subject));
+    scale: calc(1 - var(--hero-out) * (1 - var(--hero-out-scale)));
+  }
+
+  .hero-subject .hero-frame {
+    mask-image: linear-gradient(var(--neutral-dark-bg) 70%, transparent 97%);
+  }
+
+  .hero-subject-soft {
+    filter: blur(var(--portrait-blur-subject));
+    animation: hero-sharpen var(--portrait-pull) var(--ease-out) both;
+  }
+
+  .hero-bottom {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 3;
+    padding-block: calc(var(--spacing) * 24) calc(var(--spacing) * 14);
+    background-image: linear-gradient(transparent, var(--portrait-floor) calc(var(--spacing) * 24));
+  }
+
+  .hero-stack-portrait {
+    gap: calc(var(--spacing) * 4);
+  }
+
+  /* The aperture dial: ƒ1.4 to ƒ16, live. The button lines up with the swatch circles. */
+  .hero-stack-portrait .hero-ui {
+    align-items: flex-start;
+  }
+
+  .aperture {
+    position: relative;
+    display: inline-flex;
+    margin-top: calc((var(--swatch-size) - var(--target-min)) / 2);
+  }
+
+  .aperture-button {
+    display: grid;
+    width: var(--target-min);
+    height: var(--target-min);
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-control-track);
+    color: var(--color-fg);
+  }
+
+  .aperture-dial {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + var(--spacing) * 3);
+    display: grid;
+    width: var(--aperture-width);
+    gap: calc(var(--spacing) * 2);
+    padding: calc(var(--spacing) * 4);
+    border-radius: var(--radius-card-s);
+    background-color: var(--color-search-glass);
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
+    box-shadow: var(--shadow-soft);
+    text-align: center;
+  }
+
+  .aperture-dial[hidden] {
+    display: none;
+  }
+
+  .aperture-label {
+    display: grid;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .aperture-value {
+    font-size: var(--text-title);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-title--line-height);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .aperture-range {
+    width: 100%;
+    min-height: var(--target-min);
+    accent-color: var(--color-accent);
+  }
+
+  .aperture-scale {
+    display: flex;
+    justify-content: space-between;
+    color: var(--color-fg-2);
+    font-size: var(--text-footnote);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Phones: two lines for the name; everything stacks tighter. */
+  @variant max-md {
+    .hero-line {
+      display: block;
+    }
+
+    .hero-stack {
+      gap: calc(var(--spacing) * 4);
+    }
+
+    .hero-stack-portrait {
+      gap: calc(var(--spacing) * 3);
+    }
+
+    .hero-swatches > label {
+      min-width: var(--target-min);
+    }
+
+    /* The first screen is the portrait, like a Lock Screen: the date, the name behind the
+       head, and the role and headline at its foot. The chips, links and finishes follow
+       on the dark floor. */
+    .hero-portrait {
+      display: block;
+      min-height: var(--hero-height);
+    }
+
+    .hero-portrait .hero-layer {
+      bottom: auto;
+      height: var(--hero-height);
+    }
+
+    /* The frame spans the width, set down so the top of the head lands across the foot of
+       the name: the frame's own height places the head, whatever the photo's framing. */
+    .hero-portrait .hero-frame {
+      top: var(--portrait-head-at);
+      width: 100%;
+      height: auto;
+      translate: -50% calc(var(--portrait-head) * -100%);
+    }
+
+    .hero-plate .hero-frame {
+      mask-image:
+        linear-gradient(
+          90deg,
+          transparent,
+          var(--neutral-dark-bg) var(--portrait-feather),
+          var(--neutral-dark-bg) calc(100% - var(--portrait-feather)),
+          transparent
+        ),
+        linear-gradient(
+          transparent,
+          var(--neutral-dark-bg) var(--portrait-feather),
+          var(--neutral-dark-bg) calc(100% - var(--portrait-feather)),
+          transparent
+        );
+      mask-composite: intersect;
+    }
+
+    .hero-bottom {
+      position: relative;
+      padding-block: 0 calc(var(--spacing) * 16);
+      background-image: linear-gradient(
+        transparent calc(var(--hero-height) - var(--portrait-intro) - var(--spacing) * 24),
+        var(--portrait-floor) calc(var(--hero-height) - var(--portrait-intro)),
+        var(--neutral-dark-bg) var(--hero-height)
+      );
+    }
+
+    .hero-intro,
+    .hero-more {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: calc(var(--spacing) * 3);
+    }
+
+    .hero-intro {
+      min-height: var(--hero-height);
+      justify-content: flex-end;
+      padding-bottom: calc(var(--hero-foot) + var(--spacing) * 4);
+    }
+
+    .hero-more {
+      gap: calc(var(--spacing) * 4);
+    }
+
+    /* The cue and the pause button close the first screen. */
+    .hero-portrait .hero-cue {
+      top: calc(var(--hero-height) - env(safe-area-inset-bottom) - var(--spacing) * 3 - var(--hero-cue-height));
+      bottom: auto;
+    }
+
+    .hero-portrait .hero-pause {
+      top: calc(var(--hero-height) - var(--hero-foot));
+      bottom: auto;
+    }
+  }
+
+  /* Without JavaScript nothing can pause the light, so it holds still; the swatches,
+     pause button and dial need a script, so they wait for one. */
+  @media (scripting: none) {
+    .hero-light-blob,
+    .hero-cue {
+      animation: hero-fade var(--hero-ui-fade) var(--ease-out) backwards;
+    }
+
+    .hero-ui {
+      display: none;
+    }
+  }
+
+  /* Reduced motion: no drift, no breath, no scroll-out; the light holds still. */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) :is(.hero-light-blob, .hero-cue, .hero-plate-far, .hero-subject-soft) {
+      animation: none;
+    }
+
+    :root:not([data-motion="full"]) :is(.hero-plate-far, .hero-subject-soft) {
+      opacity: 0;
+    }
+  }
+
+  :root[data-motion="reduce"] :is(.hero-light-blob, .hero-cue, .hero-plate-far, .hero-subject-soft) {
+    animation: none;
+  }
+
+  :root[data-motion="reduce"] :is(.hero-plate-far, .hero-subject-soft) {
+    opacity: 0;
   }
 
   /* ─── Search (§6.3) ───────────────────────────────────────────────────────── */

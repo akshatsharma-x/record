@@ -96,8 +96,43 @@ export function applyThemeChoice(choice: ThemeChoice, origin?: Origin): Promise<
   );
 }
 
-/** Switches the finish. The accent, focus rings, selection and gradients follow at once. */
-export function applyFinish(finish: Finish): void {
+/**
+ * Switches the finish. The accent, focus rings, selection and gradients follow at once.
+ * With an origin (the hero's swatches), the new finish spreads from that point in a 600ms
+ * liquid wipe: a View Transition whose new image shows through a soft-edged circle.
+ * Without View Transitions, or with reduced motion, it's instant.
+ */
+export function applyFinish(finish: Finish, origin?: Origin): Promise<void> {
   store(FINISH_STORAGE_KEY, finish);
-  document.documentElement.setAttribute("data-finish", finish);
+  const root = document.documentElement;
+  const apply = () => root.setAttribute("data-finish", finish);
+  if (!origin || root.getAttribute("data-finish") === finish || prefersReducedMotion() || !supportsViewTransitions()) {
+    apply();
+    return Promise.resolve();
+  }
+  root.style.setProperty("--wipe-x", `${origin.x}px`);
+  root.style.setProperty("--wipe-y", `${origin.y}px`);
+  root.setAttribute("data-finish-wiping", "");
+  const transition = startViewTransition(apply)!;
+  transition.ready
+    .then(() => {
+      const radius = Math.hypot(
+        Math.max(origin.x, window.innerWidth - origin.x),
+        Math.max(origin.y, window.innerHeight - origin.y),
+      );
+      const feather = parseFloat(getComputedStyle(root).getPropertyValue("--wipe-feather")) || 0;
+      root.animate(
+        { "--wipe-r": ["0px", `${radius + feather}px`] } as PropertyIndexedKeyframes,
+        // In-out, so the spread reads from the swatch instead of filling the screen at once.
+        { duration: durations.revealShort, easing: cssCurve("inOut"), pseudoElement: "::view-transition-new(root)" },
+      );
+    })
+    .catch(() => undefined);
+  return transition.finished
+    .catch(() => undefined)
+    .finally(() => {
+      root.removeAttribute("data-finish-wiping");
+      root.style.removeProperty("--wipe-x");
+      root.style.removeProperty("--wipe-y");
+    });
 }

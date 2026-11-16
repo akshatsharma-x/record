@@ -83,6 +83,41 @@ describe("content schema", () => {
     ]);
   });
 
+  describe("the portrait", () => {
+    const layer = (src: string, height = 3200) => ({ src, width: 2400, height });
+    const portrait = {
+      alt: "Akshat, lit softly from the left.",
+      subject: layer("/portrait/subject.avif"),
+      plate: layer("/portrait/plate.avif"),
+      headTop: 0.18,
+    };
+
+    it("accepts two aligned layers from a tall photo", () => {
+      expect(() => parseContent(broken([["profile", "photo"], portrait]))).not.toThrow();
+    });
+
+    it("asks for a photo at least 3000px tall", () => {
+      expect(problemsOf(broken([["profile", "photo"], { ...portrait, subject: layer("/portrait/subject.avif", 2000), plate: layer("/portrait/plate.avif", 2000) }]))).toEqual([
+        "profile.photo.subject.height: the portrait should be at least 3000px tall",
+      ]);
+    });
+
+    it("keeps every layer the subject's size, so they line up", () => {
+      expect(problemsOf(broken([["profile", "photo"], { ...portrait, plate: layer("/portrait/plate.avif", 3300) }]))).toEqual([
+        "profile.photo.plate: every layer must be the subject's size, so they line up",
+      ]);
+    });
+
+    it("needs to know where the head sits, as a share of the height", () => {
+      expect(problemsOf(broken([["profile", "photo"], { ...portrait, headTop: 18 }]))).toHaveLength(1);
+      expect(problemsOf(broken([["profile", "photo"], { ...portrait, headTop: undefined }]))).toHaveLength(1);
+    });
+
+    it("takes images from /public only", () => {
+      expect(problemsOf(broken([["profile", "photo"], { ...portrait, plate: { ...portrait.plate, src: "https://example.com/p.png" } }]))).toHaveLength(1);
+    });
+  });
+
   it("reports every problem at once", () => {
     const problems = problemsOf(broken([["experience", 1, "end"], "2026-13"], [["profile", "email"], "not-an-email"]));
     expect(problems).toHaveLength(2);
