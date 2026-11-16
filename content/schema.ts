@@ -211,10 +211,29 @@ const Conference = z.strictObject({
   kind: Text,
   host: Text,
   city: Text,
+  /** For citations, which place a conference by city and country. */
+  country: Text,
   start: IsoDate,
   end: IsoDate,
   proceedings: Text,
 });
+
+/**
+ * A paper's concept illustration in #research (DESIGN.md §7.5): the idea drawn, never its
+ * results. The labels are the illustration's words; nothing in it is a finding.
+ */
+const Illustration = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("cold-chain"),
+    /** What to do with it, shown under it. */
+    hint: Text,
+    /** The route's stops, in order. */
+    stops: z.array(Text).min(2).max(6),
+    /** The illustrative factors a stop's "Why?" panel attributes its risk to. */
+    factors: z.array(Text).min(2).max(4),
+  }),
+  z.strictObject({ kind: z.literal("haze"), hint: Text }),
+]);
 
 const Publication = z.strictObject({
   slug: Id,
@@ -227,8 +246,11 @@ const Publication = z.strictObject({
   abstract: Text.nullable(),
   /** The status reads "published" once this exists. */
   doi: z.string().regex(/^10\.\d{4,9}\/\S+$/, 'use a bare DOI such as "10.1007/…"').nullable(),
+  /** The day the proceedings came out; add it with the DOI. Until then citations date it by its presentation. */
+  published: IsoDate.optional(),
   /** A PDF the site may host. null until the rights are confirmed. */
   pdf: PublicPdf.nullable(),
+  illustration: Illustration.optional(),
 });
 
 const Project = z.strictObject({
@@ -343,7 +365,10 @@ const Copy = z.strictObject({
   }),
   highlights: z.strictObject({ eyebrow: Text }),
   experience: SectionCopy,
-  research: SectionCopy,
+  research: SectionCopy.extend({
+    /** Under every concept illustration, so none reads as a result. */
+    caption: Text,
+  }),
   work: SectionCopy,
   skills: SectionCopy,
   credentials: SectionCopy.extend({
@@ -379,9 +404,11 @@ export type ContentInput = z.input<typeof ContentSchema>;
 export type Content = z.output<typeof ContentSchema>;
 export type Claim = z.output<typeof Claim>;
 export type Experience = z.output<typeof Experience>;
+export type Illustration = z.output<typeof Illustration>;
 export type Education = z.output<typeof Education>;
 export type Degree = z.output<typeof Degree>;
 export type Publication = z.output<typeof Publication>;
+export type Conference = z.output<typeof Conference>;
 export type Project = z.output<typeof Project>;
 export type Skill = z.output<typeof Skill>;
 export type Certificate = z.output<typeof Certificate>;

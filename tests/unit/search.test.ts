@@ -1,5 +1,8 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { GET } from "@/app/search-index.json/route";
+import { content } from "@/content";
 import { calculate, formatValue } from "@/lib/search/arithmetic";
 import { distance, normalize, prepare, rank } from "@/lib/search/match";
 import { compose, groupOf, type Item } from "@/lib/search/results";
@@ -119,10 +122,15 @@ describe("the search index", () => {
   it("links every entry to a page or a home section that exists", async () => {
     const { entries } = await served();
     const sections = new Set(SECTIONS.map((section) => section.id));
+    // Paper pages are prerendered for every paper in content.
+    expect(existsSync(path.join(process.cwd(), "app", "research", "[slug]", "page.tsx"))).toBe(true);
+    const papers = new Set(content.publications.map((paper) => `/research/${paper.slug}`));
     for (const entry of entries) {
       const section = /^\/#([\w-]+)$/.exec(entry.href)?.[1];
-      expect(section && sections.has(section as never), `${entry.id} → ${entry.href}`).toBe(true);
+      const resolves = papers.has(entry.href) || Boolean(section && sections.has(section as never));
+      expect(resolves, `${entry.id} → ${entry.href}`).toBe(true);
     }
+    expect(entries.filter((entry) => entry.href.startsWith("/research/"))).toHaveLength(content.publications.length);
   });
 
   it("serves the profile links the actions open, and never a phone number", async () => {

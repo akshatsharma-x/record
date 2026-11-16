@@ -6,7 +6,7 @@
  * Runs under plain Node for the prebuild content check: relative imports with .ts
  * extensions, `import type` for types, no path aliases.
  */
-import type { Content, Degree, Education, Path, Publication, RoleVisual } from "./schema.ts";
+import type { Conference, Content, Degree, Education, Illustration, Path, Publication, RoleVisual } from "./schema.ts";
 import { claimsOf, formatPath, resolvePattern } from "./schema.ts";
 import type { CalendarDate } from "../lib/dates.ts";
 import {
@@ -21,6 +21,8 @@ import {
   toIsoDate,
   utcDate,
 } from "../lib/dates.ts";
+import { type Citations, cite, splitName } from "../lib/cite.ts";
+import { MONTH_NAMES } from "../lib/dates.ts";
 import { degreeProgress, monthsLabel } from "../lib/glance.ts";
 import type { SectionId } from "../lib/sections.ts";
 import { SECTIONS } from "../lib/sections.ts";
@@ -76,11 +78,12 @@ export function credentialsHeadline(content: Content): string {
   return content.certificates.length > 0 ? headline : headlineWithoutCertificates;
 }
 
-/** Accepted and presented, until a DOI makes it published. */
-export function publicationStatus(paper: Publication) {
-  return paper.doi
-    ? ({ status: "published", label: "Published" } as const)
-    : ({ status: "accepted-presented", label: "Accepted and presented" } as const);
+/** "Accepted · Presented April 2026", until a DOI makes it "Published". */
+export function publicationStatus(paper: Publication, conference: Conference | undefined) {
+  if (paper.doi) return { status: "published", label: "Published" } as const;
+  const presented = conference ? parseIsoDate(conference.start) : null;
+  const when = presented ? ` ${MONTH_NAMES[presented.month - 1]} ${presented.year}` : "";
+  return { status: "accepted-presented", label: `Accepted · Presented${when}` } as const;
 }
 
 // ─── Durations and graduation ────────────────────────────────────────────────
@@ -503,7 +506,7 @@ export function edit(content: Content) {
       place: `${conference.host}, ${conference.city}`,
       dates,
       proceedings: conference.proceedings,
-      papers: papers.map((paper) => ({ title: paper.title, status: publicationStatus(paper).label })),
+      papers: papers.map((paper) => ({ title: paper.title, status: publicationStatus(paper, conference).label })),
     });
     return {
       id: conference.id,
@@ -1077,6 +1080,182 @@ export function drafts(content: Content) {
   }));
 }
 
+// ─── Research (Part 8) ───────────────────────────────────────────────────────
+
+/**
+ * Ideas content names in different words, for relating a paper to projects. Like the
+ * search vocabulary (lib/search/vocabulary.ts), it adds no facts: it only says which terms
+ * mean the same idea.
+ */
+const THEMES: readonly { name: string; terms: readonly string[] }[] = [
+  { name: "explainable AI", terms: ["XAI", "explainable", "explainability", "interpretable", "interpretability"] },
+];
+
+export interface RelatedProject {
+  slug: string;
+  name: string;
+  /** With its footnotes: a page that shows it cites them. */
+  tagline: { text: string; footnotes: number[] };
+  /** The skills and ideas the paper and the project share: why it's related. */
+  shares: string[];
+}
+
+export interface ResearchPaper {
+  slug: string;
+  href: string;
+  title: string;
+  tldr: string;
+  abstract: string | null;
+  keywords: string[];
+  status: "accepted-presented" | "published";
+  statusLabel: string;
+  /** Akshat, then the co-authors content names. */
+  authors: { name: string; self: boolean }[];
+  /** "SCI-2026 · Swinburne Vietnam, Hanoi · 28–29 April 2026 · Springer LNNS" */
+  venue: string;
+  conference: Conference;
+  doi: string | null;
+  doiUrl: string | null;
+  /** When the proceedings came out; null until content records it. */
+  published: string | null;
+  citations: Citations;
+  related: RelatedProject[];
+  illustration: Illustration | null;
+}
+
+/** "SCI-2026 · Swinburne Vietnam, Hanoi · 28–29 April 2026 · Springer LNNS" */
+export function venueLine(conference: Conference): string {
+  return [
+    conference.name,
+    `${conference.host}, ${conference.city}`,
+    formatDayRange(conference.start, conference.end, "long"),
+    conference.proceedings,
+  ].join(" · ");
+}
+
+/** The projects a paper shares skills or ideas with, most shared first. */
+export function relatedProjects(content: Content, paper: Publication): RelatedProject[] {
+  const evidence = skillEvidence(content);
+  const paperText = [paper.title, paper.tldr, ...paper.keywords].join("\n");
+  const paperSkills = evidence.filter((skill) => skill.papers.some((hit) => hit.id === paper.slug));
+  const paperThemes = THEMES.filter((theme) => theme.terms.some((term) => mentions(paperText, term)));
+  return content.projects
+    .map((project, order) => {
+      const text = [project.name, project.tagline.text, project.category, project.summary.text, ...(project.stack ?? [])].join("\n");
+      const shares = [
+        ...paperSkills.filter((skill) => skill.projects.some((hit) => hit.id === project.slug)).map((skill) => skill.name),
+        ...paperThemes.filter((theme) => theme.terms.some((term) => mentions(text, term))).map((theme) => theme.name),
+      ];
+      return { project: { slug: project.slug, name: project.name, tagline: { text: project.tagline.text, footnotes: project.tagline.footnotes }, shares }, order };
+    })
+    .filter(({ project }) => project.shares.length > 0)
+    .sort((a, b) => b.project.shares.length - a.project.shares.length || a.order - b.order)
+    .map(({ project }) => project);
+}
+
+/** Each paper as #research and its page show it. Papers without their conference are left out. */
+export function research(content: Content): ResearchPaper[] {
+  const conferences = new Map(content.conferences.map((conference) => [conference.id, conference]));
+  return content.publications.flatMap((paper) => {
+    const conference = conferences.get(paper.presentedAt);
+    if (!conference) return [];
+    const status = publicationStatus(paper, conference);
+    const names = [content.profile.name, ...(paper.coAuthors ?? [])];
+    return [
+      {
+        slug: paper.slug,
+        href: `/research/${paper.slug}`,
+        title: paper.title,
+        tldr: paper.tldr,
+        abstract: paper.abstract,
+        keywords: paper.keywords,
+        status: status.status,
+        statusLabel: status.label,
+        authors: names.map((name, i) => ({ name, self: i === 0 })),
+        venue: venueLine(conference),
+        conference,
+        doi: paper.doi,
+        doiUrl: paper.doi ? `https://doi.org/${paper.doi}` : null,
+        published: paper.published ?? null,
+        citations: cite({
+          title: paper.title,
+          authors: names.map(splitName),
+          conference,
+          keywords: paper.keywords,
+          doi: paper.doi,
+          published: paper.published,
+        }),
+        related: relatedProjects(content, paper),
+        illustration: paper.illustration ?? null,
+      },
+    ];
+  });
+}
+
+/** "2026/04/28": Google Scholar's date format. */
+const scholarDate = (iso: string) => iso.replaceAll("-", "/");
+
+/**
+ * Google Scholar's tags for a paper page. Until the proceedings are out, the date it's
+ * cited by is its presentation's.
+ */
+export function scholarMeta(paper: ResearchPaper): Record<string, string | string[]> {
+  return {
+    citation_title: paper.title,
+    citation_author: paper.authors.map(({ name }) => {
+      const { given, family } = splitName(name);
+      return given ? `${family}, ${given}` : family;
+    }),
+    citation_conference_title: paper.conference.name,
+    citation_publication_date: scholarDate(paper.published ?? paper.conference.start),
+    ...(paper.doi ? { citation_doi: paper.doi } : {}),
+  };
+}
+
+/** The paper as a schema.org ScholarlyArticle, for its page's JSON-LD. */
+export function scholarlyArticle(content: Content, paper: ResearchPaper) {
+  const { conference } = paper;
+  const sameAs = [content.profile.links.linkedin, content.profile.links.github, content.profile.links.scholar, content.profile.links.orcid].filter(
+    (link): link is string => Boolean(link),
+  );
+  return {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    name: paper.title,
+    description: paper.tldr,
+    ...(paper.abstract ? { abstract: paper.abstract } : {}),
+    keywords: paper.keywords,
+    inLanguage: "en",
+    creativeWorkStatus: paper.statusLabel,
+    author: paper.authors.map((author) => ({
+      "@type": "Person",
+      name: author.name,
+      ...(author.self && sameAs.length > 0 ? { sameAs } : {}),
+    })),
+    // Presenting it at the conference made it public; the proceedings come with the DOI.
+    publication: {
+      "@type": "PublicationEvent",
+      name: conference.name,
+      description: conference.kind,
+      startDate: conference.start,
+      endDate: conference.end,
+      location: {
+        "@type": "Place",
+        name: conference.host,
+        address: { "@type": "PostalAddress", addressLocality: conference.city, addressCountry: conference.country },
+      },
+    },
+    ...(paper.doi
+      ? {
+          identifier: { "@type": "PropertyValue", propertyID: "DOI", value: paper.doi },
+          sameAs: paper.doiUrl,
+          isPartOf: { "@type": "CreativeWorkSeries", name: conference.proceedings },
+          ...(paper.published ? { datePublished: paper.published } : {}),
+        }
+      : {}),
+  };
+}
+
 // ─── Everything at once ──────────────────────────────────────────────────────
 
 /** All derived values, for /dev/content and the build-time check. */
@@ -1088,7 +1267,10 @@ export function derive(content: Content, now: Date) {
     now: nowRole(content),
     location: publicLocation(content),
     credentialsHeadline: credentialsHeadline(content),
-    publications: content.publications.map((paper) => ({ slug: paper.slug, ...publicationStatus(paper) })),
+    publications: content.publications.map((paper) => ({
+      slug: paper.slug,
+      ...publicationStatus(paper, content.conferences.find((conference) => conference.id === paper.presentedAt)),
+    })),
     durations: roleDurations(content, now),
     graduation: graduation(content, now),
     skillEvidence: skillEvidence(content),

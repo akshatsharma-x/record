@@ -1,5 +1,3 @@
-"use client";
-
 import { type CSSProperties, useId } from "react";
 import { cx } from "@/lib/cx";
 
@@ -24,7 +22,8 @@ interface SegmentedControlProps<T extends string> {
 /**
  * A segmented control. It's a group of real radio inputs, so arrow keys, screen readers
  * and no-JavaScript all work natively. The thumb finds the checked segment with :has()
- * and slides on the snappy spring (styles/components.css). Up to six segments.
+ * and slides on the snappy spring (styles/components.css). Up to six segments. Without
+ * onValueChange it needs no script, so a Server Component can render it.
  */
 export function SegmentedControl<T extends string>({
   label,
@@ -52,10 +51,14 @@ export function SegmentedControl<T extends string>({
             value={option.value}
             disabled={option.disabled}
             {...(controlled ? { checked: value === option.value } : { defaultChecked: defaultValue === option.value })}
-            onChange={(event) => {
-              const segment = event.currentTarget.parentElement;
-              if (segment) onValueChange?.(option.value, segment);
-            }}
+            onChange={
+              onValueChange
+                ? (event) => {
+                    const segment = event.currentTarget.parentElement;
+                    if (segment) onValueChange(option.value, segment);
+                  }
+                : undefined
+            }
           />
           {option.label}
         </label>

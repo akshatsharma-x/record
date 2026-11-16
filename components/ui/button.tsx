@@ -111,10 +111,16 @@ export function Button(props: AsButton | AsLink) {
       data-force={force}
       data-status={status}
       className={classes(variant, Boolean(disabled) || busy, className)}
-      onClick={(event) => {
-        if (busy) event.preventDefault();
-        else onClick?.(event);
-      }}
+      // A handler only when there's something to do, so a Server Component can render one
+      // that a client controller wires up.
+      onClick={
+        busy || onClick
+          ? (event) => {
+              if (busy) event.preventDefault();
+              else onClick?.(event);
+            }
+          : undefined
+      }
       {...button}
     >
       <Label variant={variant} status={status}>

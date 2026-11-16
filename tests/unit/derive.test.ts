@@ -110,10 +110,11 @@ describe("credentials heading", () => {
 });
 
 describe("publication status", () => {
-  it("is accepted and presented until a DOI exists, then published", () => {
+  it("is accepted and presented, with its month, until a DOI exists, then published", () => {
     const [paper] = content.publications;
-    expect(publicationStatus(paper).status).toBe("accepted-presented");
-    expect(publicationStatus({ ...paper, doi: "10.1007/fixture" }).status).toBe("published");
+    const [conference] = content.conferences;
+    expect(publicationStatus(paper, conference)).toEqual({ status: "accepted-presented", label: "Accepted · Presented April 2026" });
+    expect(publicationStatus({ ...paper, doi: "10.1007/fixture" }, conference)).toEqual({ status: "published", label: "Published" });
   });
 });
 

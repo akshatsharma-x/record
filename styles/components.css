@@ -4005,6 +4005,803 @@
     }
   }
 
+  /* ─── Research (§7.5, Part 8) ─────────────────────────────────────────────── */
+
+  /* Controls that need JavaScript hide without it, and their fallbacks hide with it.
+     (Important, so they win over a component's own display utility.) */
+  @media (scripting: none) {
+    .needs-js {
+      display: none !important;
+    }
+  }
+
+  @media (scripting: enabled) {
+    .without-js {
+      display: none !important;
+    }
+  }
+
+  /* The lights go down (the surface controller), then "Research." in the serif italic
+     over where the papers were presented. */
+  .research {
+    padding-block: var(--spacing-section);
+  }
+
+  .research-head {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 4);
+    margin-block-end: calc(var(--spacing) * 16);
+  }
+
+  .research-title {
+    font-family: var(--font-serif);
+    font-size: var(--text-display);
+    font-style: italic;
+    font-weight: var(--font-weight-regular);
+    line-height: var(--text-display--line-height);
+    letter-spacing: var(--text-title--letter-spacing);
+    text-wrap: balance;
+  }
+
+  /* Research's serif comes in as the section approaches (the controller sets
+     data-fonts two screens ahead): until then its titles are in the system's serif, so
+     Chrome fetches no face for them at first paint. Without JavaScript they get the full
+     stack at once. */
+  @media (scripting: enabled) {
+    .research:not([data-fonts]) :is(.research-title, .chapter-title) {
+      font-family: var(--font-serif-local);
+    }
+  }
+
+  .research-venue {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    text-wrap: balance;
+  }
+
+  /* A chapter: the paper's living abstract beside its illustration. A column on phones,
+     side by side from desktop; pinned on wide, tall screens with motion (below). */
+  .chapter + .chapter {
+    margin-block-start: calc(var(--spacing) * 24);
+  }
+
+  .chapter-frame {
+    display: grid;
+    gap: calc(var(--spacing) * 10);
+    align-items: center;
+  }
+
+  @variant lg {
+    .chapter-frame {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: calc(var(--spacing) * 16);
+    }
+  }
+
+  .chapter-eyebrow {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .chapter-title {
+    font-family: var(--font-serif);
+    font-size: var(--text-title);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--text-title--line-height);
+    letter-spacing: var(--text-title--letter-spacing);
+    text-wrap: balance;
+  }
+
+  .chapter-title a {
+    border-radius: var(--radius-chip);
+  }
+
+  .chapter-title a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: var(--hairline-width);
+    text-underline-offset: var(--underline-offset);
+  }
+
+  .chapter-tldr {
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+    letter-spacing: var(--text-lead--letter-spacing);
+    text-wrap: pretty;
+  }
+
+  .chapter-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  /* "Accepted · Presented April 2026", or "Published". */
+  .status-pill {
+    display: inline-flex;
+    min-height: calc(var(--spacing) * 8);
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    padding-inline: calc(var(--spacing) * 3);
+    border: var(--hairline-width) solid var(--color-hairline);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .status-dot {
+    width: var(--status-dot);
+    height: var(--status-dot);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent);
+  }
+
+  /* The abstract card: the paper on the front, its citation on the back. The faces share
+     one cell, so flipping never resizes it; the face turning away hides at the midpoint,
+     edge-on (WebKit flattens 3D where an ancestor clips, §12 Part 6). */
+  .paper-card {
+    display: grid;
+    min-width: 0;
+    perspective: var(--paper-perspective);
+  }
+
+  .paper-face {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 5);
+    grid-area: 1 / 1;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transition:
+      rotate var(--duration-ui-long) var(--ease-in-out),
+      opacity var(--duration-instant) linear calc(var(--duration-ui-long) / 2);
+  }
+
+  .paper-face[data-face="back"] {
+    justify-content: center;
+    padding: calc(var(--spacing) * 8);
+    border-radius: var(--radius-card-l);
+    background-color: var(--color-card);
+    opacity: 0;
+    rotate: y 180deg;
+  }
+
+  .paper-card[data-flipped] .paper-face[data-face="front"] {
+    opacity: 0;
+    rotate: y -180deg;
+  }
+
+  .paper-card[data-flipped] .paper-face[data-face="back"] {
+    opacity: 1;
+    rotate: y 0deg;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .paper-face {
+      rotate: none;
+      transition: opacity var(--motion-resolve-duration) var(--ease-out);
+    }
+  }
+
+  :root[data-motion="reduce"] .paper-face {
+    rotate: none;
+    transition: opacity var(--motion-resolve-duration) var(--ease-out);
+  }
+
+  .paper-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 3);
+    margin-block-start: var(--spacing);
+  }
+
+  .paper-back-title {
+    font-size: var(--text-eyebrow);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-eyebrow--line-height);
+    border-radius: var(--radius-chip);
+  }
+
+  /* A citation: the segmented control's checked radio shows its style, with or without
+     JavaScript. BibTeX wraps rather than scrolls, in the system monospace (no font to fetch). */
+  .citations {
+    display: flex;
+    min-width: 0;
+    max-width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 4);
+  }
+
+  .citation-texts {
+    max-width: 100%;
+  }
+
+  .citation-text {
+    display: none;
+    max-width: var(--container-measure);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    text-wrap: pretty;
+  }
+
+  .citation-bibtex {
+    padding: calc(var(--spacing) * 4);
+    border-radius: var(--radius-card-s);
+    background-color: color-mix(in srgb, var(--color-fg) 6%, transparent);
+    font-family: var(--font-mono-system);
+    font-size: var(--text-footnote);
+    line-height: var(--text-body--line-height);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .citations:has(input[value="apa"]:checked) .citation-text[data-style="apa"],
+  .citations:has(input[value="ieee"]:checked) .citation-text[data-style="ieee"],
+  .citations:has(input[value="bibtex"]:checked) .citation-text[data-style="bibtex"] {
+    display: block;
+  }
+
+  /* ─── The illustrations ─── */
+
+  /* The figure is the illustrations' size container. Their own wrappers dissolve into it,
+     so the caption can sit right under the drawing, with "Step through" after it. */
+  .illustration {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 3);
+    container: illustration / inline-size;
+  }
+
+  .chain,
+  .haze {
+    display: contents;
+  }
+
+  .illustration-caption {
+    order: 1;
+  }
+
+  .illustration-steps {
+    order: 2;
+  }
+
+  /* Scoped, so it wins over the labels' own sizes further down. */
+  @variant illustration-narrow {
+    .illustration :is(.chain-label, .chain-name, .haze-label) {
+      font-size: var(--illustration-label-narrow);
+    }
+  }
+
+  .illustration-caption {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--spacing) calc(var(--spacing) * 4);
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .illustration-hint {
+    color: var(--color-fg);
+  }
+
+  .illustration-steps {
+    display: flex;
+  }
+
+  /* The cold chain. --play (0–1) draws the route and the trace; each stop comes up as the
+     route reaches it (--at), its dial's needle swinging to its illustrative risk. */
+  .chain-stage {
+    position: relative;
+  }
+
+  .chain-scene {
+    position: relative;
+    width: 100%;
+    aspect-ratio: var(--aspect);
+  }
+
+  .chain-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    font-family: var(--font-sans);
+  }
+
+  .chain-stop,
+  .chain-guide {
+    --shown: clamp(0, calc((var(--play, 1) - var(--at)) * 10 + 1), 1);
+  }
+
+  .chain-label {
+    fill: var(--color-fg-2);
+    font-size: var(--film-caption);
+  }
+
+  .chain-name {
+    fill: var(--color-fg);
+    font-size: var(--film-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .chain-safe {
+    fill: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  }
+
+  .chain-trace,
+  .chain-route {
+    fill: none;
+    stroke-dasharray: 1;
+    stroke-dashoffset: calc(1 - var(--play, 1));
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .chain-trace {
+    stroke: var(--color-fg-2);
+    stroke-width: 2.5;
+  }
+
+  .chain-route {
+    stroke: var(--color-accent);
+    stroke-width: 4;
+  }
+
+  .chain-guide {
+    opacity: var(--shown);
+    stroke: var(--color-hairline);
+    stroke-dasharray: 3 5;
+    stroke-width: 1.5;
+  }
+
+  .chain-excursion {
+    opacity: clamp(0, calc((var(--play, 1) - var(--at)) * 10), 1);
+  }
+
+  .chain-excursion-mark {
+    stroke: var(--color-accent);
+    stroke-dasharray: 4 4;
+    stroke-width: 1.5;
+  }
+
+  .chain-stop {
+    opacity: var(--shown);
+  }
+
+  .chain-node {
+    fill: var(--color-surface);
+    stroke: var(--color-accent);
+    stroke-width: 3;
+    transition: fill var(--duration-micro) var(--ease-out);
+  }
+
+  .chain-stop[data-active] .chain-node {
+    fill: var(--color-accent);
+  }
+
+  .chain-dial-track,
+  .chain-dial-fill {
+    fill: none;
+    stroke-linecap: round;
+    stroke-width: 6;
+  }
+
+  .chain-dial-track {
+    stroke: var(--color-hairline);
+  }
+
+  .chain-dial-fill {
+    stroke: var(--color-accent);
+    stroke-dasharray: calc(var(--risk) * var(--shown)) 1;
+  }
+
+  .chain-needle {
+    stroke: var(--color-fg);
+    stroke-linecap: round;
+    stroke-width: 2.5;
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    rotate: calc((var(--risk) * var(--shown) * 180 - 90) * 1deg);
+  }
+
+  .chain-hub {
+    fill: var(--color-fg);
+  }
+
+  /* Each stop's target covers its dial, node and name. */
+  .chain-hit {
+    position: absolute;
+    top: calc(var(--y) * 100%);
+    left: calc(var(--x) * 100%);
+    width: var(--target-min);
+    height: calc(var(--target-min) * 2);
+    border-radius: var(--radius-pill);
+    translate: -50% -50%;
+    cursor: pointer;
+  }
+
+  /* "Why?": beside the stop, on the side with room; under the drawing when it's narrow.
+     It stays while the pointer is on it, and Escape closes it (WCAG 1.4.13). */
+  .chain-why {
+    position: absolute;
+    z-index: 1;
+    top: calc(var(--y) * 100%);
+    left: calc(var(--x) * 100%);
+    width: var(--chain-why-width);
+    padding: calc(var(--spacing) * 4);
+    border-radius: var(--radius-card-s);
+    background-color: var(--color-card);
+    box-shadow: var(--shadow-soft);
+    opacity: 0;
+    translate: calc(var(--spacing) * 8) -50%;
+    visibility: hidden;
+    transition:
+      opacity var(--duration-micro) var(--ease-out),
+      visibility var(--duration-instant) linear var(--duration-micro);
+  }
+
+  .chain-why[data-side="left"] {
+    translate: calc(-100% - var(--spacing) * 8) -50%;
+  }
+
+  .chain-why[data-open] {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity var(--duration-micro) var(--ease-out),
+      visibility var(--duration-instant);
+  }
+
+  /* Scoped, so it wins over the side the panel takes beside a stop. */
+  @variant illustration-narrow {
+    .illustration .chain-why {
+      position: static;
+      display: none;
+      width: auto;
+      margin-block-start: calc(var(--spacing) * 3);
+      translate: none;
+    }
+
+    .illustration .chain-why[data-open] {
+      display: block;
+    }
+  }
+
+  .chain-why-title {
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .chain-why-title span {
+    color: var(--color-fg-2);
+  }
+
+  .chain-bars {
+    display: grid;
+    gap: calc(var(--spacing) * 2);
+    margin-block-start: calc(var(--spacing) * 3);
+  }
+
+  .chain-bar-row {
+    display: grid;
+    gap: var(--spacing);
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+  }
+
+  .chain-bar {
+    display: block;
+    width: calc(var(--w) * 100%);
+    height: var(--chain-bar);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent);
+    transition: width var(--duration-ui) var(--ease-out);
+  }
+
+  /* The haze: a skyline in a particle haze (canvas) over the forecast. The glow is the
+     haze without the particles: what shows before the canvas draws, and without it. */
+  .haze-scene {
+    position: relative;
+    width: 100%;
+    aspect-ratio: var(--aspect);
+    overflow: hidden;
+    border-radius: var(--radius-card-l);
+    background: linear-gradient(to top, color-mix(in srgb, var(--color-fg-3) 24%, var(--color-surface)), var(--color-surface) 80%);
+  }
+
+  .haze-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(120% 90% at 50% 100%, color-mix(in srgb, var(--color-fg-2) 45%, transparent), transparent 75%);
+    opacity: var(--density);
+    transition: opacity var(--duration-ui) var(--ease-out);
+  }
+
+  .haze-skyline,
+  .haze-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .haze-skyline {
+    fill: var(--color-surface);
+  }
+
+  /* The canvas draws in its own color. */
+  .haze-canvas {
+    color: var(--color-fg-2);
+  }
+
+  .haze-chart {
+    position: relative;
+    width: 100%;
+    aspect-ratio: var(--aspect);
+  }
+
+  /* The chart's two layers: what never changes, and what moves with the handle. */
+  .haze-chart svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    font-family: var(--font-sans);
+  }
+
+  .haze-axis {
+    stroke: var(--color-hairline);
+    stroke-width: 1.5;
+  }
+
+  .haze-past,
+  .haze-ahead {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2.5;
+  }
+
+  .haze-past {
+    stroke: var(--color-fg);
+  }
+
+  .haze-ahead {
+    stroke: var(--color-accent);
+    stroke-dasharray: 6 6;
+  }
+
+  .haze-band {
+    fill: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  }
+
+  .haze-now {
+    stroke: var(--color-fg-2);
+    stroke-dasharray: 3 4;
+    stroke-width: 1.5;
+  }
+
+  .haze-cursor {
+    stroke: var(--color-accent);
+    stroke-width: 1.5;
+  }
+
+  .haze-dot {
+    fill: var(--color-accent);
+  }
+
+  .haze-label {
+    fill: var(--color-fg-2);
+    font-size: var(--film-caption);
+  }
+
+  /* The handle spans the forecast, its thumb centered on the reach: the input is a thumb
+     wider than the forecast, so the thumb's center meets both ends. */
+  .haze-handle {
+    position: absolute;
+    top: calc(var(--axis) * 100% - var(--target-min) / 2);
+    left: calc(var(--from) * 100% - var(--target-min) / 2);
+    width: calc((var(--to) - var(--from)) * 100% + var(--target-min));
+    height: var(--target-min);
+    margin: 0;
+    border-radius: var(--radius-pill);
+    appearance: none;
+    background: none;
+    cursor: grab;
+  }
+
+  .haze-handle:active {
+    cursor: grabbing;
+  }
+
+  .haze-handle::-webkit-slider-runnable-track {
+    height: var(--target-min);
+    background: none;
+  }
+
+  .haze-handle::-webkit-slider-thumb {
+    width: var(--target-min);
+    height: var(--target-min);
+    border: 0;
+    border-radius: var(--radius-pill);
+    appearance: none;
+    background: radial-gradient(circle, var(--color-fg) 0 calc(var(--haze-knob) / 2), transparent calc(var(--haze-knob) / 2 + var(--hairline-width)));
+  }
+
+  .haze-handle::-moz-range-thumb {
+    width: var(--target-min);
+    height: var(--target-min);
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: radial-gradient(circle, var(--color-fg) 0 calc(var(--haze-knob) / 2), transparent calc(var(--haze-knob) / 2 + var(--hairline-width)));
+  }
+
+  .haze-handle::-moz-range-track {
+    background: none;
+  }
+
+  /* ─── Pinned chapters ─── */
+
+  @variant research-pinned {
+    /* data-unfit: the controller found a chapter's text taller than its stage (with a
+       large default font, say), so the chapters stay a column there. */
+    :root:not([data-motion="reduce"]) .research:not([data-unfit]) {
+      .chapter {
+        height: calc(var(--stage-height) + var(--chapter-pin));
+      }
+
+      .chapter + .chapter {
+        margin-block-start: 0;
+      }
+
+      .chapter-stage {
+        position: sticky;
+        top: 0;
+        display: grid;
+        height: var(--stage-height);
+        grid-template-rows: minmax(0, 1fr);
+        padding-block: var(--island-clearance) calc(var(--spacing) * 8);
+      }
+
+      .chapter-frame {
+        height: 100%;
+      }
+
+      .illustration-steps {
+        display: none;
+      }
+    }
+  }
+
+  /* ─── A paper's page ─── */
+
+  .paper {
+    padding-block: calc(var(--island-clearance) + var(--spacing) * 10) var(--spacing-section);
+  }
+
+  .paper-head {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 5);
+  }
+
+  .paper-back {
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
+    gap: var(--spacing);
+    border-radius: var(--radius-chip);
+    color: var(--color-accent);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .paper-back:hover {
+    text-decoration: underline;
+    text-underline-offset: var(--underline-offset);
+  }
+
+  .paper-title {
+    font-family: var(--font-serif);
+    font-size: var(--text-title);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--text-title--line-height);
+    letter-spacing: var(--text-title--letter-spacing);
+    text-wrap: balance;
+  }
+
+  .paper-authors {
+    color: var(--color-fg-2);
+    font-size: var(--text-body);
+  }
+
+  .paper-author[data-self] {
+    color: var(--color-fg);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .paper-tldr {
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+    letter-spacing: var(--text-lead--letter-spacing);
+    text-wrap: pretty;
+  }
+
+  .paper-figure {
+    margin-block: calc(var(--spacing) * 16);
+  }
+
+  .paper-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 4);
+    margin-block-start: calc(var(--spacing) * 16);
+  }
+
+  .paper-section-title {
+    font-size: var(--text-eyebrow);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-eyebrow--line-height);
+  }
+
+  .paper-abstract {
+    max-width: var(--container-measure);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    text-wrap: pretty;
+  }
+
+  .related {
+    display: grid;
+    width: 100%;
+    gap: calc(var(--spacing) * 4);
+  }
+
+  @variant md {
+    .related {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .related-card {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 2);
+    padding: calc(var(--spacing) * 6);
+    border-radius: var(--radius-card-l);
+    background-color: var(--color-card);
+  }
+
+  .related-name {
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .related-tagline {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+  }
+
+  .related-shares {
+    margin-block-start: auto;
+    padding-block-start: calc(var(--spacing) * 2);
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+  }
+
   /* ─── Search (§6.3) ───────────────────────────────────────────────────────── */
 
   /* A centered glass panel in a top-layer dialog, 640px wide, with a 24px field. */
