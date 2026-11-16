@@ -14,6 +14,8 @@ import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: content.profile.name,
+  // Pages with their own (a paper's TL;DR) override it.
+  description: content.profile.headline,
 };
 
 /**

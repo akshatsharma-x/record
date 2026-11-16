@@ -1,0 +1,323 @@
+{
+ "source": "https://schema.org/version/latest/schemaorg-current-https.jsonld",
+ "fetched": "2026-11-16",
+ "note": "The schema.org terms the paper pages use: each class with its superclasses, each property with the classes it applies to and the values it takes. Regenerate when the JSON-LD gains a term.",
+ "classes": {
+  "Boolean": [],
+  "Country": [
+   "cmns-ge:GeopoliticalEntity",
+   "AdministrativeArea",
+   "Place",
+   "Thing"
+  ],
+  "CreativeWork": [
+   "Thing"
+  ],
+  "CreativeWorkSeries": [
+   "CreativeWork",
+   "Thing",
+   "Series",
+   "Intangible"
+  ],
+  "Date": [],
+  "DateTime": [],
+  "DefinedTerm": [
+   "Intangible",
+   "Thing"
+  ],
+  "Language": [
+   "Intangible",
+   "Thing"
+  ],
+  "Number": [],
+  "Organization": [
+   "Thing"
+  ],
+  "Person": [
+   "Thing"
+  ],
+  "Place": [
+   "Thing"
+  ],
+  "PostalAddress": [
+   "ContactPoint",
+   "StructuredValue",
+   "Intangible",
+   "Thing"
+  ],
+  "PropertyValue": [
+   "StructuredValue",
+   "Intangible",
+   "Thing"
+  ],
+  "PublicationEvent": [
+   "Event",
+   "Thing"
+  ],
+  "QualitativeValue": [
+   "Enumeration",
+   "Intangible",
+   "Thing"
+  ],
+  "ScholarlyArticle": [
+   "Article",
+   "CreativeWork",
+   "Thing"
+  ],
+  "StructuredValue": [
+   "Intangible",
+   "Thing"
+  ],
+  "Text": [],
+  "TextObject": [
+   "MediaObject",
+   "CreativeWork",
+   "Thing"
+  ],
+  "URL": [
+   "Text"
+  ],
+  "VirtualLocation": [
+   "Intangible",
+   "Thing"
+  ]
+ },
+ "properties": {
+  "name": {
+   "domains": [
+    "Thing"
+   ],
+   "ranges": [
+    "Text"
+   ]
+  },
+  "description": {
+   "domains": [
+    "Thing"
+   ],
+   "ranges": [
+    "Text",
+    "TextObject"
+   ]
+  },
+  "abstract": {
+   "domains": [
+    "CreativeWork"
+   ],
+   "ranges": [
+    "Text"
+   ]
+  },
+  "keywords": {
+   "domains": [
+    "CreativeWork",
+    "Event",
+    "Organization",
+    "Place",
+    "Product"
+   ],
+   "ranges": [
+    "DefinedTerm",
+    "Text",
+    "URL"
+   ]
+  },
+  "inLanguage": {
+   "domains": [
+    "BroadcastService",
+    "CommunicateAction",
+    "CreativeWork",
+    "Event",
+    "LinkRole",
+    "PronounceableText",
+    "WriteAction"
+   ],
+   "ranges": [
+    "Language",
+    "Text"
+   ]
+  },
+  "creativeWorkStatus": {
+   "domains": [
+    "CreativeWork"
+   ],
+   "ranges": [
+    "DefinedTerm",
+    "Text"
+   ]
+  },
+  "author": {
+   "domains": [
+    "CreativeWork",
+    "Rating"
+   ],
+   "ranges": [
+    "Organization",
+    "Person"
+   ]
+  },
+  "publication": {
+   "domains": [
+    "CreativeWork"
+   ],
+   "ranges": [
+    "PublicationEvent"
+   ]
+  },
+  "startDate": {
+   "domains": [
+    "CreativeWorkSeason",
+    "CreativeWorkSeries",
+    "DatedMoneySpecification",
+    "EducationalOccupationalProgram",
+    "Event",
+    "MerchantReturnPolicySeasonalOverride",
+    "Role",
+    "Schedule"
+   ],
+   "ranges": [
+    "Date",
+    "DateTime"
+   ]
+  },
+  "endDate": {
+   "domains": [
+    "CreativeWorkSeason",
+    "CreativeWorkSeries",
+    "DatedMoneySpecification",
+    "EducationalOccupationalProgram",
+    "Event",
+    "MerchantReturnPolicySeasonalOverride",
+    "Role",
+    "Schedule"
+   ],
+   "ranges": [
+    "Date",
+    "DateTime"
+   ]
+  },
+  "location": {
+   "domains": [
+    "Action",
+    "Event",
+    "InteractionCounter",
+    "Organization"
+   ],
+   "ranges": [
+    "Place",
+    "PostalAddress",
+    "Text",
+    "VirtualLocation"
+   ]
+  },
+  "address": {
+   "domains": [
+    "GeoCoordinates",
+    "GeoShape",
+    "Organization",
+    "Person",
+    "Place"
+   ],
+   "ranges": [
+    "PostalAddress",
+    "Text"
+   ]
+  },
+  "addressLocality": {
+   "domains": [
+    "PostalAddress"
+   ],
+   "ranges": [
+    "Text"
+   ]
+  },
+  "addressCountry": {
+   "domains": [
+    "DefinedRegion",
+    "GeoCoordinates",
+    "GeoShape",
+    "PostalAddress"
+   ],
+   "ranges": [
+    "Country",
+    "Text"
+   ]
+  },
+  "sameAs": {
+   "domains": [
+    "Thing"
+   ],
+   "ranges": [
+    "URL"
+   ]
+  },
+  "identifier": {
+   "domains": [
+    "Thing"
+   ],
+   "ranges": [
+    "PropertyValue",
+    "Text",
+    "URL"
+   ]
+  },
+  "propertyID": {
+   "domains": [
+    "PropertyValue"
+   ],
+   "ranges": [
+    "Text",
+    "URL"
+   ]
+  },
+  "value": {
+   "domains": [
+    "MonetaryAmount",
+    "PropertyValue",
+    "QuantitativeValue"
+   ],
+   "ranges": [
+    "Boolean",
+    "Number",
+    "QualitativeValue",
+    "StructuredValue",
+    "Text"
+   ]
+  },
+  "isPartOf": {
+   "domains": [
+    "CreativeWork"
+   ],
+   "ranges": [
+    "CreativeWork",
+    "URL"
+   ]
+  },
+  "datePublished": {
+   "domains": [
+    "Certification",
+    "CreativeWork"
+   ],
+   "ranges": [
+    "Date",
+    "DateTime"
+   ]
+  },
+  "url": {
+   "domains": [
+    "Thing"
+   ],
+   "ranges": [
+    "URL"
+   ]
+  },
+  "headline": {
+   "domains": [
+    "CreativeWork"
+   ],
+   "ranges": [
+    "Text"
+   ]
+  }
+ }
+}

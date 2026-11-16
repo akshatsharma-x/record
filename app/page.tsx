@@ -4,6 +4,7 @@ import { Statement } from "@/components/about/statement";
 import { type EditMarks, Experience } from "@/components/experience/experience";
 import { Hero } from "@/components/hero/hero";
 import { Highlights } from "@/components/highlights/highlights";
+import { Research } from "@/components/research/research";
 import { Container, Section, Stack } from "@/components/ui/layout";
 import { Body, Display, Eyebrow, Footnote, FootnoteBackLink, FootnoteRef, Lead } from "@/components/ui/type";
 import { content } from "@/content";
@@ -22,11 +23,10 @@ const dates = (start: string, end: string) =>
  * The story (DESIGN.md §3.1), in order. Part 4 laid down its structure so the Island and
  * Search have somewhere to go: every section with its id, surface and real copy, plainly
  * set. Parts 5–12 turn each one into its signature moment (§7): the hero is Part 5's, the
- * statement, About and the highlights Part 6's.
+ * statement, About and the highlights Part 6's, the edit Part 7's and research Part 8's.
  */
 export default function Home() {
-  const { profile, copy, highlights, publications, conferences, projects, education, achievements } = content;
-  const venues = new Map(conferences.map((conference) => [conference.id, conference]));
+  const { profile, copy, highlights, projects, education, achievements } = content;
   const skills = allSkills(content);
   const categories = [...new Set(skills.map((skill) => skill.category))];
 
@@ -67,27 +67,7 @@ export default function Home() {
 
       <Experience marks={editMarks()} />
 
-      <Section id="research" name={nameOf("research")} surface="dark" aria-labelledby="research-title">
-        <Container>
-          <Stack gap={6}>
-            <Display id="research-title">{copy.research.headline}</Display>
-            {copy.research.sub ? <Lead tone="fg-2">{copy.research.sub}</Lead> : null}
-            <ul className="flex flex-col gap-3">
-              {publications.map((paper) => {
-                const venue = venues.get(paper.presentedAt);
-                return (
-                  <li key={paper.slug}>
-                    <Body serif className="font-semibold">
-                      {paper.title}
-                    </Body>
-                    {venue ? <Body tone="fg-2">{`${venue.name}, ${venue.proceedings}`}</Body> : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </Stack>
-        </Container>
-      </Section>
+      <Research />
 
       <Section id="work" name={nameOf("work")} surface="light-alt" aria-labelledby="work-title">
         <Container>

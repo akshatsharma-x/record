@@ -486,6 +486,17 @@
   /* Small caps-style labels, such as the edit's track names. */
   --tracking-caps: 0.06em;
 
+  /* Research (Part 8): each chapter pins for at most 200vh; the abstract card flips in
+     depth; the illustrations' popover, bars, knob and status dot. */
+  --chapter-pin: 160svh;
+  --paper-perspective: 1600px;
+  --chain-why-width: 15rem;
+  --chain-bar: 6px;
+  --haze-knob: 22px;
+  --status-dot: 8px;
+  /* SVG labels in a narrow illustration, in its view units (about 13px on a phone). */
+  --illustration-label-narrow: 24px;
+
   /* Durations (§5.3). Each DESIGN.md range has a short, default and long step. */
   --duration-micro-short: 150ms;
   --duration-micro: 200ms;
@@ -631,6 +642,10 @@
 /* Where the edit pins (Part 7): wide, tall screens, with JavaScript and motion. lib/edit.ts
    holds the same query (EDIT.query), and tests/unit/edit.test.ts keeps them in step. */
 @custom-variant edit-pinned (@media (min-width: 1069px) and (min-height: 760px) and (scripting: enabled) and (prefers-reduced-motion: no-preference));
+@custom-variant research-pinned (@media (min-width: 1069px) and (min-height: 760px) and (scripting: enabled) and (prefers-reduced-motion: no-preference));
+/* A narrow research illustration: its labels grow to stay legible, and the cold chain's
+   "Why?" sits under the drawing instead of beside a stop. */
+@custom-variant illustration-narrow (@container illustration (max-width: 34rem));
 
 /* When a figure in an edit visual starts counting, so it counts as the visual shows it
    (components/experience/edit-controller.tsx reads it). */
@@ -688,6 +703,9 @@
   --font-sans: -apple-system, BlinkMacSystemFont, var(--font-inter), system-ui, sans-serif;
   --font-serif: ui-serif, var(--font-newsreader), serif;
   --font-mono: ui-monospace, var(--font-jetbrains-mono), monospace;
+  /* The serif as the system has it, for research's titles until their own face comes
+     in (§12, Part 8). */
+  --font-serif-local: ui-serif, Georgia, serif;
   /* Decorative code in drawings: never worth fetching a font for. */
   --font-mono-system: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   --default-font-family: var(--font-sans);

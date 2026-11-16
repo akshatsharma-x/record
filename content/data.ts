@@ -224,6 +224,7 @@ export const data = {
       kind: "International conference",
       host: "Swinburne Vietnam",
       city: "Hanoi",
+      country: "Vietnam",
       start: "2026-04-28",
       end: "2026-04-29",
       proceedings: "Springer LNNS",
@@ -239,10 +240,18 @@ export const data = {
       tldr: "An AI framework that predicts food waste in cold-chain logistics, and explains each prediction so the waste can be prevented.",
       keywords: ["interpretable AI", "explainable ML", "food waste", "cold-chain logistics", "sustainability"],
       presentedAt: "sci-2026",
+      // Until these are in, citations list Akshat alone.
       coAuthors: null, // TODO(akshat)
       abstract: null, // TODO(akshat)
       doi: null, // TODO(akshat)
       pdf: null, // TODO(akshat): PDF rights
+      // The idea drawn, not the paper's results: the stops and factors are illustrative.
+      illustration: {
+        kind: "cold-chain",
+        hint: "Choose a stop to see why.",
+        stops: ["Farm", "Storage", "Transport", "Retail"],
+        factors: ["Temperature excursions", "Dwell time", "Distance"],
+      },
     },
     {
       slug: "pm25-forecasting",
@@ -250,10 +259,12 @@ export const data = {
       tldr: "Machine-learning models that forecast fine-particle air pollution a short time ahead, so cities can act on air quality sooner.",
       keywords: ["PM2.5", "air quality", "time-series forecasting", "machine learning", "sustainability"],
       presentedAt: "sci-2026",
+      // Until these are in, citations list Akshat alone.
       coAuthors: null, // TODO(akshat)
       abstract: null, // TODO(akshat)
       doi: null, // TODO(akshat)
       pdf: null, // TODO(akshat): PDF rights
+      illustration: { kind: "haze", hint: "Drag the handle to look ahead." },
     },
   ],
 
@@ -586,6 +597,7 @@ export const data = {
     research: {
       headline: "Research.",
       sub: "Machine learning for the food we save and the air we breathe.",
+      caption: "Illustration of the idea, not results from the paper",
     },
     work: { headline: "Work.", sub: "Built to be used. Designed to be understood." },
     skills: { headline: "The stack.", sub: "Engineered in layers." },

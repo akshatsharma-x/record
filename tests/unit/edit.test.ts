@@ -122,7 +122,7 @@ describe("the panels", () => {
     expect(panel("sci-2026")).toMatchObject({ place: "Swinburne Vietnam, Hanoi", dates: "28–29 Apr 2026", proceedings: "Springer LNNS" });
     const conference = panel("sci-2026");
     if (conference.kind !== "research") throw new Error("not research");
-    expect(conference.papers.map((paper) => paper.status)).toEqual(["Accepted and presented", "Accepted and presented"]);
+    expect(conference.papers.map((paper) => paper.status)).toEqual(["Accepted · Presented April 2026", "Accepted · Presented April 2026"]);
     expect(panel("smart-india-hackathon")).toMatchObject({ years: "2024 and 2025", detail: { footnotes: [6] } });
   });
 });
