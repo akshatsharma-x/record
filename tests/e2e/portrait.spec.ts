@@ -130,7 +130,8 @@ test("scrolling away: the subject scales toward .92 and rises slower than the na
   await open(page);
   const height = (await hero(page).boundingBox())!.height;
   await page.evaluate((y) => window.scrollTo(0, y), Math.round(height / 2));
-  await page.waitForTimeout(300);
+  // The controller reads the scroll as soon as it hydrates, which a busy dev server can delay.
+  await expect.poll(() => hero(page).evaluate((element) => Number(element.style.getPropertyValue("--hero-out")))).toBeGreaterThan(0.3);
   const subject = await hero(page).locator(".hero-subject").evaluate((element) => Number(getComputedStyle(element).scale));
   expect(subject).toBeLessThan(1);
   expect(subject).toBeGreaterThanOrEqual(0.92);

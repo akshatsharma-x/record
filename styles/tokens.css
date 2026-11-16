@@ -426,6 +426,48 @@
   --aperture-ticks: 12px;
   --wipe-feather: 72px;
 
+  /* The statement (Part 6): pinned for at most 200vh while it fills, a few words soft at
+     the fill's edge. */
+  --statement-pin: 160svh;
+  /* A pinned stage fills the small viewport, so mobile toolbars never cut it. */
+  --stage-height: 100svh;
+  /* Display size, unless the stage is too short to hold the whole statement at it. */
+  --statement-size: min(var(--text-display), 7svh);
+  --statement-soft: 3;
+
+  /* At a glance (Part 6): the bento's gap, the ring, the clock, the overlap track and the
+     depth a tile flips through. */
+  --glance-gap: 12px;
+  --glance-ring: 76px;
+  --glance-clock: 88px;
+  --glance-track: 6px;
+  --glance-perspective: 900px;
+
+  /* The highlights reel (Part 6): cards, their spacing and the pagination dots. Phones get
+     narrower dots so seven fit beside the pause control. */
+  --reel-gap: 16px;
+  --reel-peek: 48px;
+  --reel-card-max: 820px;
+  --reel-pad: 24px;
+  --reel-dot: 8px;
+  --reel-dot-active: 28px;
+  --reel-dot-target: 36px;
+  --reel-card-bg: var(--neutral-dark-card);
+
+  /* The micro-films (Part 6), drawn in a 400×320 view, so these sizes are in its units. */
+  --film-loop: 6s;
+  --film-stagger: 120ms;
+  --film-shift: 10px;
+  --film-drop: 48px;
+  --film-caption: 16px;
+  --film-number: 20px;
+  --film-title: 26px;
+  --film-hero: 44px;
+  --film-bar: 14px;
+  /* A survivor's size in the field, against its size in the cluster (2.6 / 3.4). */
+  --film-dot-field: 0.76;
+  --film-paper: rgb(255 255 255 / 0.08);
+
   /* Durations (§5.3). Each DESIGN.md range has a short, default and long step. */
   --duration-micro-short: 150ms;
   --duration-micro: 200ms;
@@ -547,6 +589,25 @@
   to {
     transform: rotate(1turn);
   }
+}
+
+/* The films' counters (styles/components.css): integers, so they count digit by digit. */
+@property --film-lo {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --film-hi {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --film-p {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
 }
 
 /* The finish wipe's radius (styles/globals.css), registered so it can animate. */

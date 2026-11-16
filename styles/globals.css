@@ -136,8 +136,20 @@
       corner-shape: squircle;
     }
 
-    /* Capsules keep round ends, and the cursor's dot, rings and circles stay circles. */
+    /* Capsules keep round ends, and the cursor's dot, rings and circles stay circles. Every
+       element with the pill radius belongs here. */
     .rounded-pill,
+    .hero-pause,
+    .hero-cue,
+    .aperture-button,
+    .reel-dots,
+    .reel-dot-mark,
+    .reel-more,
+    .reel-pause,
+    .glance-track,
+    .glance-track-bar,
+    .film-tokens,
+    .film-tokens > *,
     .segmented,
     .segmented-thumb,
     .segmented > label,

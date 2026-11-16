@@ -494,12 +494,13 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
       <Section id="highlights" title="Highlights (the reel cards)">
         <Table
           caption="Highlights"
-          head={["Card", "Sourced by", "Links to"]}
+          head={["Card", "Sourced by", "Film", "Links to"]}
           rows={content.highlights.map((highlight) => [
             <ClaimText key="text" text={highlight.text} footnotes={highlight.footnotes} />,
             highlight.footnotes.length > 0
               ? `footnote ${highlight.footnotes.join(", ")}`
               : (highlight.source ?? <span className="opacity-40">—</span>),
+            <Mono key="film">{Object.entries(highlight.film).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join("–") : value}`).join(" · ")}</Mono>,
             <Mono key="ref">
               #{highlight.ref.section}
               {highlight.ref.id ? ` · ${highlight.ref.id}` : ""}
@@ -526,7 +527,16 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
           head={["Section", "Eyebrow", "Headline", "Sub", "Other"]}
           rows={[
             ["hero", "", "(name, role and headline come from profile)", "", `CTAs: “${content.copy.hero.ctaWork}”, “${content.copy.hero.ctaHello}”`],
-            ...(["statement", "about", "experience", "research", "work", "skills", "contact"] as const).map((key) => {
+            ["statement", "", content.copy.statement.headline, "", `Gradient phrase: “${content.copy.statement.emphasis}”`],
+            [
+              "about",
+              "",
+              content.copy.about.headline,
+              "",
+              `“${content.copy.about.currently}” · bento: “${content.copy.about.glance}” · a visitor's day: ${content.copy.about.visitorDay.start}–${content.copy.about.visitorDay.end}`,
+            ],
+            ["highlights", content.copy.highlights.eyebrow, "", "", ""],
+            ...(["experience", "research", "work", "skills", "contact"] as const).map((key) => {
               const copy = content.copy[key];
               return [key, copy.eyebrow ?? "", copy.headline, copy.sub ?? "", ""];
             }),

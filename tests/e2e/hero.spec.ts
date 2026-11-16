@@ -53,7 +53,7 @@ test("the hero reads as a Lock Screen: the date, the name, the role, the line, t
   await expect(top.getByRole("heading", { level: 1 })).toHaveText("Akshat Sharma");
   await expect(top.getByText("AI & ML Engineer")).toBeVisible();
   await expect(top.getByText("I build intelligent systems — and make them clear.")).toBeVisible();
-  const chips = top.getByRole("list", { name: "At a glance" }).getByRole("link");
+  const chips = top.getByRole("list", { name: "Key facts" }).getByRole("link");
   await expect(chips).toHaveText(["Now at United Airlines", "B.Tech CSE ’27 · Manipal University Jaipur", "SCI-2026 · Springer LNNS"]);
   expect(await chips.evaluateAll((links) => links.map((link) => link.getAttribute("href")))).toEqual([
     "#experience",

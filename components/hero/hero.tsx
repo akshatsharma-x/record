@@ -72,7 +72,7 @@ function Actions() {
   const { copy } = content;
   return (
     <>
-      <ul className="hero-chips" aria-label="At a glance">
+      <ul className="hero-chips" aria-label="Key facts">
         {heroChips(content).map((chip) => (
           <li key={chip.label}>
             <Chip as="a" href={`#${chip.section}`}>
