@@ -379,13 +379,55 @@ test("the dot stays visible above a modal dialog, a popover and a tooltip", asyn
   expect(await visibility(page, spot.x, spot.y), "over the popover").toBeGreaterThanOrEqual(0.2);
   await page.keyboard.press("Escape");
 
-  await hover(page, page.getByRole("button", { name: "Search", exact: true }));
+  await hover(page, page.getByRole("button", { name: "Search", exact: true, description: "Search everything, with ⌘K" }));
   const tip = page.getByRole("tooltip", { name: "Search everything, with ⌘K" });
   await expect(tip).toBeVisible();
-  const tipSpot = await hover(page, tip, [0.92, 0.5]);
+  // Rest in the bubble's padding, past its text: over the text itself the cursor is an I-beam.
+  const tipSpot = await tip.evaluate((bubble) => {
+    const range = document.createRange();
+    range.selectNodeContents(bubble);
+    const text = range.getBoundingClientRect();
+    const box = bubble.getBoundingClientRect();
+    return { x: Math.round((text.right + box.right) / 2), y: Math.round(box.top + box.height / 2) };
+  });
+  await page.mouse.move(tipSpot.x, tipSpot.y, { steps: 2 });
   await page.waitForTimeout(250);
   await expect(tip).toBeVisible();
+  await expect(root(page)).toHaveAttribute("data-state", "default");
   expect(await visibility(page, tipSpot.x, tipSpot.y), "over the tooltip").toBeGreaterThanOrEqual(0.2);
+});
+
+test("the dot stays visible over the Island and over Search", async ({ page }) => {
+  await open(page);
+  await page.locator(".island-shell[data-measured]").waitFor();
+  const shell = (await page.locator(".island-shell").boundingBox())!;
+  await page.mouse.move(Math.round(shell.x + shell.width / 2), Math.round(shell.y + shell.height / 2), { steps: 2 });
+  await expect(page.locator(".island-toggle")).toHaveAttribute("aria-expanded", "true");
+  // Over the pill's controls the cursor is magnetic: the light ink on black.
+  await page.waitForTimeout(250);
+  await expect(root(page)).toHaveAttribute("data-state", "magnetic");
+  await expect(root(page)).toHaveAttribute("data-ink", "light");
+  // In the open Island's empty middle, the full dot must show on black.
+  await page.waitForTimeout(700);
+  const toggle = (await page.locator(".island-toggle").boundingBox())!;
+  const search = (await page.locator(".island-search").boundingBox())!;
+  const x = Math.round((toggle.x + toggle.width + search.x) / 2);
+  const y = Math.round(toggle.y + toggle.height / 2);
+  await page.mouse.move(x, y, { steps: 2 });
+  await page.waitForTimeout(250);
+  await expect(root(page)).toHaveAttribute("data-state", "default");
+  expect(await visibility(page, x, y), "over the Island").toBeGreaterThanOrEqual(0.2);
+
+  await page.mouse.move(640, 600, { steps: 2 });
+  await page.keyboard.press("Meta+k");
+  const panel = page.locator(".search-panel");
+  await expect(panel).toBeVisible();
+  await page.waitForTimeout(500);
+  const box = (await panel.boundingBox())!;
+  const [px, py] = [Math.round(box.x + box.width - 60), Math.round(box.y + box.height - 22)];
+  await page.mouse.move(px, py, { steps: 2 });
+  await page.waitForTimeout(250);
+  expect(await visibility(page, px, py), "over Search").toBeGreaterThanOrEqual(0.2);
 });
 
 test("if the browser won't re-stack the cursor, it rides inside the open dialog", async ({ page }) => {
@@ -499,15 +541,19 @@ test("if the cursor loop throws, the native cursor comes back and it's logged on
     if (message.type() === "warning" && message.text().startsWith("Cursor:")) warnings.push(message.text());
   });
   await open(page);
-  await hover(page, page.getByTestId("cursor-accuracy"));
+  const area = await hover(page, page.getByTestId("cursor-accuracy"));
   await expect(html(page)).toHaveClass(/cursor-custom/);
+  // Measure the next spot first: once the style engine is broken, Playwright's own
+  // scrolling and stability checks can't be trusted, so the pointer only moves.
+  const caption = (await page.getByRole("heading", { name: "Accuracy" }).boundingBox())!;
+  const text = { x: Math.round(caption.x + 8), y: Math.round(caption.y + caption.height / 2) };
   await page.evaluate(() => {
     window.getComputedStyle = () => {
       throw new Error("A broken style engine");
     };
   });
-  await hover(page, page.getByTestId("playground-light").getByRole("button", { name: "Primary" }));
-  await hover(page, page.getByTestId("cursor-accuracy"));
+  await page.mouse.move(text.x, text.y, { steps: 2 });
+  await page.mouse.move(area.x, area.y, { steps: 2 });
   await expect(html(page)).not.toHaveClass(/cursor-custom/);
   await expect(root(page)).toHaveCount(0);
   expect(warnings).toHaveLength(1);

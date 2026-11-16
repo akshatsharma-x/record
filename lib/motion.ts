@@ -48,6 +48,8 @@ export const durations = {
   revealLong: 900,
   /** The Counter's ceiling: a count-up never runs longer. */
   count: 1200,
+  /** §5.3 micro: the Island's name swaps with a blur-crossfade this long. */
+  swap: 180,
 } as const;
 
 export type DurationName = keyof typeof durations;
@@ -55,6 +57,8 @@ export type DurationName = keyof typeof durations;
 export const stagger = {
   /** §5.4: lines resolve 60ms apart. */
   lines: 60,
+  /** §6.3: Search results resolve 40ms apart. */
+  results: 40,
 } as const;
 
 /** §5.4 The Resolve: opacity 0→1, blur 12px→0, y 16px→0, scale .98→1. */

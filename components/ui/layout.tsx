@@ -17,17 +17,20 @@ interface BaseProps extends HTMLAttributes<HTMLElement> {
 interface SectionProps extends BaseProps {
   id: string;
   surface: SurfaceName;
+  /** What the Island calls this section while it's on screen (§6.2). */
+  name?: string;
   /** "section" is the block padding from §4.5, clamp(96px, 12vw, 180px). */
   padding?: "section" | "none";
 }
 
 /** A top-level part of the story. The surface controller crossfades between these. */
-export function Section({ id, surface, padding = "section", as: Tag = "section", className, ...rest }: SectionProps) {
+export function Section({ id, surface, name, padding = "section", as: Tag = "section", className, ...rest }: SectionProps) {
   return (
     <Tag
       id={id}
       data-section=""
       data-surface={surface}
+      data-section-name={name}
       className={cx(padding === "section" && "py-section", className)}
       {...rest}
     />

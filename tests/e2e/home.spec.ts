@@ -1,11 +1,37 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-test("the home page shows only a plain page title for now", async ({ page }) => {
+test("the home page tells the story in order, each section on its surface", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("Akshat Sharma");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Akshat Sharma");
-  expect((await page.locator("body").innerText()).trim()).toBe("Akshat Sharma");
+  const sections = await page.locator("main > [data-section]").evaluateAll((all) =>
+    all.map((section) => `${section.id}:${section.getAttribute("data-surface")}`),
+  );
+  expect(sections).toEqual([
+    "top:dark",
+    "about:light",
+    "highlights:light-alt",
+    "experience:light",
+    "research:dark",
+    "work:light-alt",
+    "skills:dark",
+    "credentials:dark",
+    "contact:light",
+  ]);
+  await expect(page.locator("footer[data-section]")).toHaveAttribute("data-surface", "light-alt");
+});
+
+test("every footnote mark links to its note, and back", async ({ page }) => {
+  await page.goto("/");
+  const marks = page.locator("a[role=doc-noteref]");
+  expect(await marks.count()).toBeGreaterThan(0);
+  for (const href of await marks.evaluateAll((all) => all.map((a) => a.getAttribute("href")))) {
+    await expect(page.locator(href!)).toHaveCount(1);
+  }
+  for (const href of await page.locator("a[role=doc-backlink]").evaluateAll((all) => all.map((a) => a.getAttribute("href")))) {
+    await expect(page.locator(href!)).toHaveCount(1);
+  }
 });
 
 test("no gap or placeholder ever renders", async ({ page }) => {

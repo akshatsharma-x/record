@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Cursor } from "@/components/cursor/cursor";
+import { Island } from "@/components/island/island";
+import { PageModes } from "@/components/page-modes/page-modes";
+import { ResumeEdition } from "@/components/print/resume-edition";
+import { Search } from "@/components/search/search";
 import { SurfaceController } from "@/components/surface/surface-controller";
 import { PreferencesSync } from "@/components/theme/preferences-sync";
 import { StageProvider } from "@/components/three/stage";
@@ -16,8 +20,8 @@ export const metadata: Metadata = {
  * The document. The head script applies the saved theme and finish before the first
  * paint (lib/preferences.ts), so <html> carries attributes React didn't render:
  * suppressHydrationWarning accepts them. Layers, bottom to top (§4.9): the surface
- * backdrop, the shared 3D stage, then the content. The cursor (§6.1) builds its own root
- * in the top layer, above everything.
+ * backdrop, the shared 3D stage, the content, then the Island (§6.2). Search (§6.3) and the
+ * cursor (§6.1) live in the top layer. The résumé edition is what prints.
  */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -35,9 +39,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <PreferencesSync />
         <SurfaceController />
+        <Island initials={content.profile.initials} />
         <StageProvider>
           <div className="content-layer">{children}</div>
         </StageProvider>
+        <PageModes />
+        <Search />
+        <ResumeEdition />
         <Cursor />
       </body>
     </html>

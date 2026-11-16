@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { Metadata } from "next";
 import { Kitchen, type TokenGroups } from "@/components/dev/kitchen/kitchen";
+import { content } from "@/content";
 import { parseCss, rootTokens } from "@/lib/css-tokens";
 
 /**
@@ -32,5 +33,5 @@ const groups: TokenGroups = {
 };
 
 export default function KitchenPage() {
-  return <Kitchen tokens={groups} />;
+  return <Kitchen tokens={groups} email={content.profile.email} />;
 }

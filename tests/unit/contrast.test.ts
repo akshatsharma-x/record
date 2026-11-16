@@ -162,6 +162,35 @@ describe("the cursor and the switch (non-text, 3:1)", () => {
   });
 });
 
+describe("the Island and Search (Part 4)", () => {
+  const black = color("--neutral-dark-bg");
+  const white = color("--neutral-light-bg");
+  const dim = color("--backdrop-dim");
+
+  it("keep the Island's text readable on black and on the current link's marker", () => {
+    const marker = over(color("--island-marker"), black);
+    for (const background of [black, marker]) {
+      expect(ratio(color("--neutral-dark-fg"), background)).toBeGreaterThanOrEqual(AA);
+      expect(ratio(color("--neutral-dark-fg-2"), background)).toBeGreaterThanOrEqual(AA);
+    }
+  });
+
+  it("tint activity icons so they stand out from the black pill (non-text, 3:1)", () => {
+    expect(ratio(color("--status-success"), black)).toBeGreaterThanOrEqual(NON_TEXT);
+    expect(ratio(color("--status-error"), black)).toBeGreaterThanOrEqual(NON_TEXT);
+    expect(ratio(over(color("--island-track"), black), black)).toBeGreaterThan(1);
+  });
+
+  it.each(["light", "dark"] as const)("keep Search's %s glass legible over a dimmed black or white page", (tone) => {
+    const glass = color(`--search-glass-${tone}`);
+    for (const page of [black, white]) {
+      const behind = over(glass, over(dim, page));
+      expect(ratio(color(`--neutral-${tone}-fg`), behind)).toBeGreaterThanOrEqual(AA);
+      expect(ratio(color(`--neutral-${tone}-fg-2`), behind)).toBeGreaterThanOrEqual(AA);
+    }
+  });
+});
+
 describe("the tests themselves", () => {
   it("compute WCAG ratios correctly", () => {
     expect(ratio([0, 0, 0, 1], [255, 255, 255, 1])).toBeCloseTo(21, 5);

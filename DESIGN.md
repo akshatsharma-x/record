@@ -21,7 +21,7 @@ The portfolio of Akshat Sharma: AI & ML engineer, B.Tech CSE '27 at Manipal Univ
 11. [Stack](#11-stack)
 12. [Decision log](#12-decision-log)
 
-- [Open conflicts](#open-conflicts): [C1](#c1-hover-only-delights) · [C3](#c3-single-key-search-shortcut) · [C5](#c5-sentence-case). C2, C4, C6 and C7 were resolved in Part 2 (§12).
+- [Open conflicts](#open-conflicts): [C1](#c1-hover-only-delights) · [C5](#c5-sentence-case). C2, C4, C6 and C7 were resolved in Part 2, and C3 in Part 4 (§12).
 
 ---
 
@@ -69,7 +69,7 @@ These apply to every part.
 4. **Motion has meaning.** Every animation explains a relationship, confirms an action or rewards intent. Loops run only inside media the visitor can pause, the periphery stays still, and everything has a reduced-motion edition (§5.7).
 5. **Respect the visitor.** Native scrolling, with no hijacking and no smooth-scroll library. No preloader or intro gate, no modal on load, no autoplaying sound, and no content that only hover reveals. *Open conflict: [C1](#c1-hover-only-delights).*
 6. **Performance is design** (§10). Animation is frame-rate independent: it's driven by time or by scroll position, never by frame count, so 60 Hz and 120 Hz ProMotion screens look identical. Animate transform and opacity; filter only sparingly.
-7. **Accessibility is design** (§10). WCAG 2.2 AA, targets of at least 44×44 pt, a full keyboard path and VoiceOver testing. *Open conflicts: [C1](#c1-hover-only-delights), [C3](#c3-single-key-search-shortcut).*
+7. **Accessibility is design** (§10). WCAG 2.2 AA, targets of at least 44×44 pt, a full keyboard path and VoiceOver testing. Single-key shortcuts can be turned off (§6.3). *Open conflict: [C1](#c1-hover-only-delights).*
 8. **Safari first.** Test macOS Safari and iOS Safari, then Chrome, then Firefox.
 9. **Tokens only.** Components contain no magic numbers: color, type, spacing, radius, duration and spring all come from tokens.
 10. **Every state is designed:** default, hover, focus-visible, pressed, disabled, loading, empty, error and success.
@@ -97,6 +97,8 @@ One long story, in this order. Surfaces are given for the light theme.
 | 10 | Footer | none | light-alt |
 
 Credentials & honors holds education, certificates and achievements. It comes right after Skills and right before Contact.
+
+Part 4 laid every section down with its id, surface and real copy, plainly set, so the Island and Search have somewhere to go. Each later part turns its section into its signature moment (§7). Until Part 6 adds the statement's dark half, About is light.
 
 *Open conflict: [C5](#c5-sentence-case) (section name).*
 
@@ -351,13 +353,29 @@ Whatever the cursor is doing, the visitor can always find it (§2 rule 3). Built
 
 ### 6.2 The Island
 
-A living black pill at the top. It is the nav, the section indicator, the scroll progress and the place where every confirmation appears.
+A living black pill at the top. It is the nav, the section indicator, the scroll progress and the place where every confirmation appears. Built in Part 4: `components/island/`, with its state in `lib/island/store.ts`.
+
+- **Shape.** Black in both themes, with a hairline at rgb(255 255 255 / .14) so it reads against black, 12px below the safe area at the top center. Collapsed, it's 36px tall (a 44px target) and holds the "AS" monogram, the current section's name and a 14px scroll-progress ring. Its width hugs the content. When the section changes, the name swaps with a 180ms blur-crossfade while the width springs on the island spring, so the pill seems to breathe.
+- **Expanded** on hover (after a 120ms intent delay), click, tap or keyboard focus. It springs into a rounded rect holding the seven section links (the current one marked), Search ⌘K, the theme toggle and an accent "Say hello" pill. Escape collapses it, and so do a click outside, focus leaving and the pointer leaving after a 300ms grace period. On phones, a tap opens a full-width sheet of 44pt rows over a dimmed page.
+- **Activities.** Other parts confirm things with `island.show({ icon, title, detail?, tone })`, where the tone is neutral, accent, success or error. The pill grows into a wider capsule for 2.2s, then returns. Activities that fire rapidly queue, and each gets its full time. The same message twice in a row extends the one showing instead of repeating, and while the Island is expanded the queue waits. Each one is announced through a visually hidden role="status".
+- **Semantics.** A `<nav aria-label="Primary">` with a disclosure button (aria-expanded, aria-controls). The links are real anchors to `/#id`, so they work without JavaScript; without it, the Island renders open at the top of the page and scrolls away. On the home page, a link travels to its section smoothly (instantly with reduced motion), updates the URL and moves focus to the section's heading. The current section's link has aria-current="true". Overview is the hero (`#top`) and stays current through About and Highlights. `scroll-padding-top` keeps every heading clear of the pill.
+- **Reduced motion:** the shell changes size at once, and the name crossfades without blur.
 
 ### 6.3 Search
 
-Opened with ⌘K or "/". Search everything, jump anywhere and run actions.
+Search everything, jump anywhere and run actions. Built in Part 4: `components/search/`, with matching in `lib/search/`.
 
-*Open conflict: [C3](#c3-single-key-search-shortcut).*
+- **Opening.** ⌘K or Ctrl K, anywhere, even while typing; "/"; or the Island's Search button. Search is a centered glass panel in a top-layer `<dialog>`, 640px wide, with a 24px field. Its glass is denser than the generic material (96% in light, 86% in dark), so secondary text clears 4.5:1 over any page. The field is always focused while Search is open, so the focus ring frames the panel.
+- **Results** are grouped as Top hit, Sections, Work (roles and projects), Research, Skills, Credentials (education, honors and certificates) and Actions. With nothing typed, it suggests the seven sections and the actions. Results resolve in 40ms apart, and the selection highlight slides between rows on the snappy spring.
+- **The index** is built from the content at build time (`content/derive.ts`) and served as `/search-index.json`, fetched the moment a visitor shows intent. Pages that don't exist yet link to their home section.
+- **Matching** is fuzzy. Every typed word must match the title, keywords, subtitle or body: exactly, as a prefix, inside a longer word (four letters or more), typed together along word boundaries ("nextjs") or with a typo (one edit from four letters, two from eight; a transposition counts as one). Skill aliases and a small vocabulary (`lib/search/vocabulary.ts`) let a word find what it means: "rag" finds Cognivault AI and United Airlines, and "llm" finds Cartographer.
+- **Keyboard.** ↑ and ↓ move, Enter opens, ⌘Enter or Ctrl Enter opens in a new tab, and Esc closes. The field is a combobox that drives a grouped listbox through aria-activedescendant, so focus stays in the field. The page behind is inert, focus returns where it was, and a live region announces the count.
+- **Arithmetic.** A small parser works out typed sums, never eval: "12*7" shows 84, and Enter copies it.
+- **Actions** (Part 13 adds more): Copy email, Open LinkedIn, Open GitHub, Toggle theme, Change finish (or a finish by name), Larger cursor, Use system cursor, Show grid (G), Focus mode (F), Print the résumé edition and Single-key shortcuts. Each confirms itself through the Island.
+  - **Show grid** lays the grid's columns over the page at the content width.
+  - **Focus mode** keeps the section being read lit and dims the rest of the page. F or Esc turns it off.
+  - **Print the résumé edition** prints a résumé typeset from the content, with no phone number. Printing any page prints it.
+- **Single-key shortcuts** ("/", G and F) never fire while typing, with a modifier or behind a modal dialog. Search can turn them off, and the choice persists, as WCAG 2.1.4 requires.
 
 ### 6.4 Focus ring
 
@@ -463,24 +481,30 @@ Append as you go, each with its reason.
 - **No native-cursor fallback during View Transitions** (Part 3). The spec allowed one if Safari froze or ghosted the cursor mid-transition. The e2e test moves the pointer during a transition in WebKit and Chromium: the dot is live at the new position, with no ghost at the old one. If a future Safari regresses, drop html.cursor-custom while html[data-view-transition] is set.
 - **Drift is net movement: the target moves up to 4px, its label up to 2px** (Part 3). The label lags its platter, so the words stay steady and readable while the highlight glides under them. Inline links don't drift at all: transforms don't apply to inline boxes, and moving words inside a paragraph would collide with their neighbors. They still get the shape, around the line under the pointer.
 - **A Switch for on/off settings** (Part 3). The cursor settings are switches (components/ui/switch.tsx): real checkboxes with role="switch". The off track carries a fg-3 hairline, so the control's edge clears 3:1 on every surface, which iOS's gray track doesn't.
+- **The home page's sections exist from Part 4** (Part 4). The Island's links and Search's results need real targets: a link can't work, with or without JavaScript, if nothing carries its id. Every section in §3.1 now renders with its id, surface and real copy (headlines, the bio, highlights, roles, papers, projects, skills, credentials and contact), with footnotes. Parts 5–12 replace each one.
+- **Overview is the hero, and stays current through About and Highlights** (Part 4). lib/sections.ts had read it provisionally as `#top`. The Island names the section under the pointer line, About or Highlights included, but marks Overview in the nav, since those two have no link of their own.
+- **C3 resolved: single-key shortcuts can be turned off** (Part 4). "/", G and F are all character-key shortcuts. They fire only outside text fields, without modifiers and outside modal dialogs, and Search's "Single-key shortcuts" action turns them off for good (localStorage). WCAG 2.1.4 accepts a way to turn them off. ⌘K and Ctrl K always work.
+- **"rag" also finds work grounded on knowledge graphs** (Part 4). The brief asks for "rag" to find United Airlines, whose content never says RAG: Cartographer generates on top of a code knowledge graph, which is GraphRAG. Rather than add a claim to the content, the search vocabulary maps "rag" to "knowledge graphs". To be confirmed with Akshat.
+- **Search has a Credentials group** (Part 4). The index has education, honors and certificates, and none of the six named groups fits them. Roles and projects share Work.
+- **Search's glass is denser than the generic material** (Part 4). The 72% glass over a dimmed page drops fg-2 to about 4:1 where the page behind is dark. Search uses 96% in light and 86% in dark, tested over a dimmed black and a dimmed white page.
+- **The focus ring frames the whole Search panel** (Part 4). Its field is always focused while Search is open, and a ring around the field alone read as a heavy box. The panel is one big field, so the §6.4 ring follows the panel's radius instead.
+- **The page's background takes part in hit-testing, and the body paints the active surface** (Part 4). Tools that read colors from the elements under a point, axe among them, couldn't see the fixed backdrop, so dark sections' text measured against white. The backdrop sits beneath everything, so it never catches a click meant for the content. Under the surface controller, the body takes the active surface's color, which also fixes Safari's overscroll showing white above a dark hero.
+- **The surface controller paints its first state in the same task** (Part 4). It used to make sections transparent and paint the backdrop a frame later. No frame ever showed the gap, but anything reading colors in between saw white behind light text.
+- **The Island listens for hover natively** (Part 4). React derives pointer enter and leave from the element the pointer came from, and skips them while that part of the page is still hydrating: a hover in the first moments after load was lost.
+- **Search links to home sections until the pages exist** (Part 4). Its index points at /work/[slug] and /research/[slug], which Parts 9 and 8 build. Until then those entries link to #work and #research, so no result leads to a 404.
+- **Search's actions run inside the gesture** (Part 4). Safari lets the clipboard be written only during the click or key press itself. The dialog closes at once, so a theme reveal or a print still sees the page, and the action runs in the same handler.
 
 ---
 
 ## Open conflicts
 
-Each entry is a pair of rules that can't both hold as written. They are deliberately left unresolved. An entry stays open until a decision changes the rules it names, and that decision and its reason go in §12. C2, C4, C6 and C7 were resolved that way in Part 2.
+Each entry is a pair of rules that can't both hold as written. They are deliberately left unresolved. An entry stays open until a decision changes the rules it names, and that decision and its reason go in §12. C2, C4, C6 and C7 were resolved that way in Part 2, and C3 in Part 4.
 
 ### C1. Hover-only delights
 
 - **§2 rule 5:** no content that only hover reveals.
 - **§8:** every section hides one delight "behind a click or a hover".
 - **Clash:** a delight behind a hover alone is content that only hover reveals. It would also be missing from the full keyboard path (§2 rule 7).
-
-### C3. Single-key Search shortcut
-
-- **§6.3:** Search opens with ⌘K or "/".
-- **§2 rule 7, §10:** WCAG 2.2 AA.
-- **Clash:** "/" is a single-character shortcut. WCAG success criterion 2.1.4 (Character Key Shortcuts, level A, so required for AA) requires such a shortcut to be possible to turn off or remap, or to be active only while its component has focus. The brief specifies no off switch or remapping, and a global "/" isn't scoped to focus.
 
 ### C5. Sentence case
 

@@ -17,7 +17,8 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
-  use: { trace: "on-first-retry" },
+  // A stuck action fails with its own name rather than running out the test's clock.
+  use: { trace: "on-first-retry", actionTimeout: 10_000 },
   projects: [
     { name: "webkit", testIgnore: /(kitchen|cursor)\.spec/, use: { ...devices["Desktop Safari"], baseURL: production } },
     { name: "mobile-safari", testIgnore: /(kitchen|cursor)\.spec/, use: { ...devices["iPhone 15"], baseURL: production } },

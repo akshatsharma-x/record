@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { useSurface } from "@/lib/stores/surface";
 import { createSurfaceController } from "@/lib/surface/controller";
@@ -12,16 +13,26 @@ import { createSurfaceController } from "@/lib/surface/controller";
 export function SurfaceController() {
   const from = useRef<HTMLDivElement>(null);
   const to = useRef<HTMLDivElement>(null);
+  const controller = useRef<ReturnType<typeof createSurfaceController> | null>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!from.current || !to.current) return;
-    const controller = createSurfaceController({
+    controller.current = createSurfaceController({
       from: from.current,
       to: to.current,
       onChange: (state) => useSurface.setState(state),
     });
-    return () => controller.destroy();
+    return () => {
+      controller.current?.destroy();
+      controller.current = null;
+    };
   }, []);
+
+  // A client-side navigation brings new sections: measure them.
+  useEffect(() => {
+    controller.current?.refresh();
+  }, [pathname]);
 
   return (
     <div className="surface-backdrop" aria-hidden="true">

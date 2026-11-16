@@ -25,6 +25,7 @@ const SETTLED = 0.001;
 
 interface Measured {
   id: string | null;
+  name: string | null;
   surface: SurfaceName;
   top: number;
   bottom: number;
@@ -78,6 +79,7 @@ export function createSurfaceController(options: {
       const surface = node.getAttribute("data-surface");
       return {
         id: node.id || null,
+        name: node.getAttribute("data-section-name"),
         surface: surface === "dark" || surface === "light-alt" ? surface : "light",
         top: rect.top + scrollY,
         bottom: rect.bottom + scrollY,
@@ -114,9 +116,10 @@ export function createSurfaceController(options: {
       surface,
       tone: toneOf(surface),
       section: active?.id ?? null,
+      name: active?.name ?? null,
       progress: Math.round(shown.progress * 1000) / 1000,
     };
-    const key = `${state.surface}|${state.tone}|${state.section}|${state.progress}`;
+    const key = `${state.surface}|${state.tone}|${state.section}|${state.name}|${state.progress}`;
     if (key !== lastReported) {
       lastReported = key;
       options.onChange(state);
@@ -149,7 +152,11 @@ export function createSurfaceController(options: {
     measure();
     updateMode();
     lastTime = 0;
-    update();
+    // Paint the surface in the same task that made the sections transparent, so nothing
+    // (a frame, a screen reader, axe) ever sees a section without its background.
+    target = blendAt(sections, window.scrollY + window.innerHeight * PROBE);
+    shown = { ...target };
+    render();
   };
 
   const resizeObserver = new ResizeObserver(() => refresh());

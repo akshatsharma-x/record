@@ -78,6 +78,18 @@
   --glass-dark-rim-top: rgb(255 255 255 / 0.14);
   --glass-dark-rim-bottom: rgb(0 0 0 / 0.32);
   --glass-filter: saturate(180%) blur(20px);
+  /* Search's panel: denser glass, so fg-2 clears 4.5:1 even over a dimmed black or white page. */
+  --search-glass-light: rgb(255 255 255 / 0.96);
+  --search-glass-dark: rgb(28 28 30 / 0.86);
+
+  /* The Island (§6.2) is black in both themes. Its hairline lets it read against black. */
+  --island-hairline: rgb(255 255 255 / 0.14);
+  --island-marker: rgb(255 255 255 / 0.14);
+  --island-track: rgb(255 255 255 / 0.24);
+
+  /* Activity tones on dark: Apple's system green and red for dark mode. */
+  --status-success: #30d158;
+  --status-error: #ff453a;
 
   /* A photographic shadow color for elevation (§4.8). */
   --shadow-ink: rgb(0 0 0 / 0.04);
@@ -136,6 +148,7 @@
     --color-glass-rim-top: var(--glass-light-rim-top);
     --color-glass-rim-bottom: var(--glass-light-rim-bottom);
     --color-glass-solid: var(--neutral-light-card);
+    --color-search-glass: var(--search-glass-light);
     --color-control-track: var(--control-light-track);
     --color-control-thumb: var(--control-light-thumb);
     color-scheme: light;
@@ -158,6 +171,7 @@
     --color-glass-rim-top: var(--glass-dark-rim-top);
     --color-glass-rim-bottom: var(--glass-dark-rim-bottom);
     --color-glass-solid: var(--neutral-dark-card);
+    --color-search-glass: var(--search-glass-dark);
     --color-control-track: var(--control-dark-track);
     --color-control-thumb: var(--control-dark-thumb);
     color-scheme: dark;
@@ -312,6 +326,44 @@
   /* Kitchen test surfaces: mid-gray is where difference-blend cursors vanish. */
   --kitchen-mid-gray: #808080;
 
+  /* The Island (§6.2): 12px below the safe area, 36px tall when collapsed. The page keeps
+     headings clear of it with scroll-padding-top. */
+  --island-top: 12px;
+  --island-height: 36px;
+  --island-activity-height: 44px;
+  --island-inset: 4px;
+  --island-monogram: 28px;
+  --island-ring: 14px;
+  --island-ring-stroke: 2px;
+  --island-radius: 28px;
+  --island-swap-blur: 4px;
+  --island-clearance: calc(env(safe-area-inset-top) + var(--island-top) + var(--island-height) + var(--island-top));
+  /* The collapsed pill is 36px, but its target is 44px: the nav's padding makes up the rest. */
+  --island-hit: calc((var(--target-min) - var(--island-height)) / 2);
+  --island-sheet-width: calc(100vw - 2 * var(--grid-gutter));
+
+  /* Search (§6.3): a 640px glass panel with a 24px field. */
+  --search-width: 640px;
+  --search-offset: 14vh;
+  --search-results: 56vh;
+  --search-panel-max: calc(100dvh - 2 * var(--search-offset));
+  /* The field's icon matches the 24px type. */
+  --search-field-icon: 1em;
+  --search-resolve-y: 6px;
+  --search-resolve-blur: 6px;
+
+  /* Page modes from Search: focus mode dims every section but the one being read. */
+  --focus-mode-dim: 0.22;
+
+  /* The print edition (§6.3, "Print the résumé edition"). */
+  --print-margin: 14mm;
+  --print-text: 9.5pt;
+  --print-small: 8.5pt;
+  --print-title: 20pt;
+  --print-heading: 10.5pt;
+  --print-gap: 6pt;
+  --print-caps-tracking: 0.06em;
+
   /* Durations (§5.3). Each DESIGN.md range has a short, default and long step. */
   --duration-micro-short: 150ms;
   --duration-micro: 200ms;
@@ -321,7 +373,11 @@
   --duration-reveal: 700ms;
   --duration-reveal-long: 900ms;
   --duration-count: 1200ms;
+  /* The Island's name swap: a blur-crossfade inside the micro range. */
+  --duration-swap: 180ms;
   --stagger-lines: 60ms;
+  /* Search results resolve in one after another. */
+  --stagger-results: 40ms;
   --scrub: 0.6s;
 
   /* How long each spring's linear() easing runs before it has settled. */
@@ -374,6 +430,11 @@
   }
 }
 
+/* The résumé edition's paper (§6.3). */
+@page {
+  margin: 14mm;
+}
+
 /* ─── 6. Reduced motion (§5.7) ────────────────────────────────────────────── */
 
 /* Nothing moves: reveals become 200ms fades, presses don't scale and cards don't tilt.
@@ -381,6 +442,10 @@
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion="full"]) {
     --motion-press-scale: 1;
+    --island-swap-blur: 0px;
+    --search-resolve-y: 0px;
+    --search-resolve-blur: 0px;
+    --stagger-results: 0ms;
     --motion-tilt: 0deg;
     --motion-resolve-blur: 0px;
     --motion-resolve-y: 0px;
@@ -394,6 +459,10 @@
 
 :root[data-motion="reduce"] {
   --motion-press-scale: 1;
+  --island-swap-blur: 0px;
+  --search-resolve-y: 0px;
+  --search-resolve-blur: 0px;
+  --stagger-results: 0ms;
   --motion-tilt: 0deg;
   --motion-resolve-blur: 0px;
   --motion-resolve-y: 0px;
@@ -483,6 +552,10 @@
   --text-body--line-height: 1.47;
   --text-body--letter-spacing: -0.022em;
   --text-body--font-weight: 400;
+  --text-search: 1.5rem;
+  --text-search--line-height: 1.25;
+  --text-search--letter-spacing: -0.015em;
+  --text-search--font-weight: 400;
   --text-caption: clamp(0.75rem, 0.7036rem + 0.1905vw, 0.875rem);
   --text-caption--line-height: 1.33;
   --text-footnote: 0.75rem;

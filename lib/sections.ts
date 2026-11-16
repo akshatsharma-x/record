@@ -1,7 +1,7 @@
 /**
  * The home page's sections in story order (DESIGN.md §3.1). `nav` marks the seven Island
- * links (§3.3). DESIGN.md doesn't say which anchor "Overview" points to; #top is the
- * provisional reading until Part 4 builds the Island.
+ * links (§3.3). Overview is the hero (#top), and the Island keeps it current through
+ * About and Highlights, which have no link of their own (§6.2).
  *
  * Runs under plain Node for the prebuild content check: no path aliases.
  */
