@@ -87,6 +87,8 @@ interface StageViewProps {
    * whether it's mostly light ("dark" ink) or mostly dark ("light" ink). Default: the tone.
    */
   ink?: "light" | "dark";
+  /** Keep showing the poster even once 3D could take over (so it never swaps in view). */
+  hold?: boolean;
 }
 
 /**
@@ -94,12 +96,12 @@ interface StageViewProps {
  * The stage sits beneath the content (§4.9), so keep the view itself transparent: an
  * opaque background on it, or on anything above it, hides the scene.
  */
-export function StageView({ scene, poster, label, className, ink }: StageViewProps) {
+export function StageView({ scene, poster, label, className, ink, hold }: StageViewProps) {
   const { active, register } = useStage();
   useEffect(() => register(), [register]);
   return (
     <div role="img" aria-label={label} data-cursor-ink={ink} className={cx("relative", className)}>
-      {active ? <StageViewport scene={scene} /> : <div className="absolute inset-0">{poster}</div>}
+      {active && !hold ? <StageViewport scene={scene} /> : <div className="absolute inset-0">{poster}</div>}
     </div>
   );
 }

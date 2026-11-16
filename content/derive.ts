@@ -23,6 +23,7 @@ import {
 } from "../lib/dates.ts";
 import { apart, type DiagramLayout, type DiagramNode, layout } from "../lib/architecture.ts";
 import { type Place, pack, sizes } from "../lib/bento.ts";
+import { type EvidenceKind, evidenceHref, evidenceTarget } from "../lib/evidence.ts";
 import { type Citations, cite, splitName } from "../lib/cite.ts";
 import { MONTH_NAMES } from "../lib/dates.ts";
 import { degreeProgress, monthsLabel } from "../lib/glance.ts";
@@ -132,7 +133,7 @@ export function allSkills(content: Content) {
   );
 }
 
-type EvidenceKind = "role" | "project" | "paper";
+
 
 /** The roles, projects and papers to search, each with its date (null when unknown). */
 function evidenceSources(content: Content) {
@@ -1043,6 +1044,108 @@ export function caseStudies(content: Content): CaseStudy[] {
       next: { slug: next.slug, href: next.href, name: next.name, category: next.category, tagline: next.tagline, preview: next.preview, screenshot: next.screenshot },
     };
   });
+}
+
+// ─── Skills (Part 10) ────────────────────────────────────────────────────────
+
+export { type EvidenceKind, evidenceHref, evidenceTarget };
+
+/** A role, project or paper that names a skill, with where to read it and where it is on the home page. */
+export interface Evidence {
+  kind: EvidenceKind;
+  id: string;
+  title: string;
+  /** Where "Used in" links: the role in the edit, the case study, the paper's page. */
+  href: string;
+  /** The element on the home page that "Show me where" lights up and jumps to. */
+  target: string;
+}
+
+export interface SkillItem {
+  id: string;
+  name: string;
+  /** With its detail: "Next.js (App Router)". */
+  label: string;
+  detail: string | null;
+  category: string;
+  core: boolean;
+  /** Its Simple Icons slug, or null for a monogram. */
+  icon: string | null;
+  monogram: string;
+  /** Roles first (in content's order), then projects, then papers. */
+  evidence: Evidence[];
+}
+
+export interface SkillLayer {
+  id: string;
+  category: string;
+  skills: SkillItem[];
+  /** "19 skills". */
+  count: string;
+}
+
+/**
+ * A skill's monogram, for the cloud when Simple Icons has no logo: a short name as it is
+ * ("SQL", "HyDE"), else a short alias ("DSA"), else a leading acronym ("REST", "AWS"), else
+ * the initials of its words, else its first two letters.
+ */
+export function monogram(name: string, aliases: readonly string[]): string {
+  if (name.length <= (name.includes("-") ? 6 : 5) && !name.includes(" ")) return name;
+  const short = aliases.find((alias) => alias.length <= 5 && !alias.includes(" "));
+  if (short) return short;
+  const words = name.split(/[\s&]+/).filter(Boolean);
+  if (/^[A-Z0-9]{2,4}$/.test(words[0])) return words[0];
+  if (words.length > 1) return words.slice(0, 3).map((word) => word[0].toUpperCase()).join("");
+  const capitals = name.match(/[A-Z]/g);
+  if (capitals && capitals.length > 1) return capitals.slice(0, 3).join("");
+  return name[0].toUpperCase() + name.slice(1, 2);
+}
+
+/**
+ * The skills section (DESIGN.md §7.7): every skill with the roles, projects and papers that
+ * name it; the chip's layers, top to bottom, as copy.skills.chip orders them; the core six;
+ * and the categories in content's order, for the specs.
+ */
+export function skillsSection(content: Content) {
+  const evidence = skillEvidence(content);
+  const iconOf = new Map(content.skills.flatMap((category) => category.skills.map((skill) => [skill.name, skill.icon ?? null])));
+  const detailOf = new Map(content.skills.flatMap((category) => category.skills.map((skill) => [skill.name, skill.detail ?? null])));
+  const items: SkillItem[] = evidence.map((skill) => ({
+    id: skill.id,
+    name: skill.name,
+    label: skill.label,
+    detail: detailOf.get(skill.name) ?? null,
+    category: skill.category,
+    core: skill.core,
+    icon: iconOf.get(skill.name) ?? null,
+    monogram: monogram(skill.name, skill.aliases),
+    evidence: [...skill.roles, ...skill.projects, ...skill.papers].map((hit) => ({
+      kind: hit.kind,
+      id: hit.id,
+      title: hit.title,
+      href: evidenceHref(hit.kind, hit.id),
+      target: evidenceTarget(hit.kind, hit.id),
+    })),
+  }));
+  const { unit } = content.copy.skills.chip;
+  const inCategory = (name: string) => items.filter((item) => item.category === name);
+  const layers: SkillLayer[] = content.copy.skills.chip.layers.map((category) => {
+    const skills = inCategory(category);
+    return { id: slugify(category), category, skills, count: `${skills.length} ${skills.length === 1 ? unit.one : unit.other}` };
+  });
+  return {
+    items,
+    layers,
+    core: items.filter((item) => item.core),
+    categories: content.skills.map((category) => ({ id: slugify(category.name), name: category.name, skills: inCategory(category.name) })),
+  };
+}
+
+/** The skills a role, project or paper names, by id, for "Show me where" to find it. */
+export function skillsOf(content: Content, kind: EvidenceKind, id: string): string[] {
+  return skillEvidence(content)
+    .filter((skill) => (kind === "role" ? skill.roles : kind === "project" ? skill.projects : skill.papers).some((hit) => hit.id === id))
+    .map((skill) => skill.id);
 }
 
 // ─── Search index (Part 4) ───────────────────────────────────────────────────

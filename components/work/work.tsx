@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
+import { Behavior } from "@/components/ui/behavior";
 import { Container, Section } from "@/components/ui/layout";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Display, Lead } from "@/components/ui/type";
@@ -7,7 +8,6 @@ import { content } from "@/content";
 import { type WorkMetric, type WorkTile, work } from "@/content/derive";
 import type { Place } from "@/lib/bento";
 import { Cover } from "./cover";
-import { WorkController } from "./work-controller";
 
 /** Footnote marks for each tile, made by the page so they're numbered in page order. */
 export type WorkMarks = Record<string, ReactNode>;
@@ -58,7 +58,7 @@ function Tile({ tile, filters, marks }: { tile: WorkTile; filters: { id: string 
   const about = `work-${tile.slug}-about`;
   const positions = filters.flatMap((filter, i) => (tile.filters.includes(filter.id) ? [i + 1] : []));
   return (
-    <li className="work-tile" data-work-tile={tile.slug} data-in={positions.join(" ")} style={places(tile, filters)}>
+    <li className="work-tile" data-work-tile={tile.slug} data-evidence-id={`project:${tile.slug}`} data-in={positions.join(" ")} style={places(tile, filters)}>
       <article className="work-card tilt" data-work-origin={tile.slug} aria-labelledby={title}>
         <Cover preview={tile.preview} screenshot={tile.screenshot} />
         <div className="work-text">
@@ -115,7 +115,7 @@ export function Work({ marks }: { marks: WorkMarks }) {
           ))}
         </ul>
       </Container>
-      <WorkController />
+      <Behavior section="work" />
     </Section>
   );
 }

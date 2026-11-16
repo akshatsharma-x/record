@@ -162,7 +162,13 @@
     .island-link,
     .island-search,
     .island-hello,
-    .island-kbd {
+    .island-kbd,
+    .island-activity-action,
+    .case-close,
+    .case-grabber,
+    .cloud-cell,
+    .skill-monogram,
+    .chip-list li {
       corner-shape: round;
     }
 

@@ -311,6 +311,8 @@ const Skill = z.strictObject({
   core: z.boolean().default(false),
   /** Other ways content or a visitor writes it. Evidence matching and search use them. */
   aliases: z.array(Text).default([]),
+  /** Its Simple Icons slug (DESIGN.md §4.10), where it has one; else it gets a monogram. */
+  icon: z.string().regex(/^[a-z0-9]+$/).optional(),
 });
 
 const SkillCategory = z.strictObject({ name: Text, skills: z.array(Skill).min(1) });
@@ -424,7 +426,24 @@ const Copy = z.strictObject({
       notes: Text,
     }),
   }),
-  skills: SectionCopy,
+  skills: SectionCopy.extend({
+    /** The chip (DESIGN.md §7.7): its layers, top to bottom, by category name, and its words. */
+    chip: z.strictObject({
+      label: Text,
+      layers: z.array(Text).min(1),
+      /** "skill" and "skills", after a layer's count. */
+      unit: z.strictObject({ one: Text, other: Text }),
+      cores: Text,
+    }),
+    core: z.strictObject({ headline: Text, usedIn: Text }),
+    /** The segmented control between the two views of every skill. */
+    views: z.strictObject({ label: Text, specs: Text, cloud: Text }),
+    /** "Show me where": the Island's jump, and what it says when nothing names a skill. */
+    showMe: z.strictObject({ jump: Text, none: Text, clear: Text }),
+    specsLink: Text,
+  }),
+  /** The full tech-specs page (/specs). */
+  specs: z.strictObject({ headline: Text, sub: Text.optional(), education: Text, coursework: Text, back: Text }),
   credentials: SectionCopy.extend({
     /** Used while there are no certificates, so the heading never counts zero (DESIGN.md §12). */
     headlineWithoutCertificates: Text,
@@ -809,6 +828,17 @@ function checkReferences(content: z.output<typeof ContentShape>, ctx: z.Refineme
       if (!skillTerms.has(name.toLowerCase())) problem(["certificates", i, "skills", j], `"${name}" isn't in the skills list`);
     });
   });
+
+  // The chip's layers are the skill categories, each exactly once.
+  const layers = content.copy.skills.chip.layers;
+  const categories = content.skills.map((category) => category.name);
+  layers.forEach((name, i) => {
+    if (!categories.includes(name)) problem(["copy", "skills", "chip", "layers", i], `"${name}" isn't a skill category`);
+  });
+  for (const name of categories) {
+    if (!layers.includes(name)) problem(["copy", "skills", "chip", "layers"], `"${name}" has no layer`);
+  }
+  unique(layers, (name) => name, ["copy", "skills", "chip", "layers"], "layer");
 
   // Draft paths name real content.
   content.drafts.forEach((pattern, i) => {

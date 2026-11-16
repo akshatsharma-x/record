@@ -52,7 +52,7 @@ function Panel({ panel, marks }: { panel: EditPanel; marks: ReactNode[] }) {
   const title = `${panel.id}-title`;
   if (panel.kind === "role") {
     return (
-      <article className="edit-panel" data-panel={panel.id} data-kind="role" aria-labelledby={title}>
+      <article className="edit-panel" data-panel={panel.id} data-kind="role" data-evidence-id={`role:${panel.id}`} aria-labelledby={title}>
         <div className="edit-panel-text">
           <p className="edit-kicker">
             {panel.dates}
@@ -145,6 +145,7 @@ function Clip({ clip, from }: { clip: EditClip; from: number }) {
       data-clip={clip.id}
       data-panel={clip.panel}
       data-track={clip.track}
+      data-evidence-clip={clip.track === "work" ? `role:${clip.panel}` : undefined}
       data-precision={clip.precision}
       data-ongoing={clip.end === null || undefined}
       tabIndex={-1}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Chip } from "@/components/ui/chip";
+import { Behavior } from "@/components/ui/behavior";
 import { Container, Section } from "@/components/ui/layout";
 import { Lead } from "@/components/ui/type";
 import { content } from "@/content";
@@ -7,8 +8,6 @@ import { type ResearchPaper, research, venueLine } from "@/content/derive";
 import { Citations } from "./citations";
 import { Illustration } from "./illustration";
 import { PaperCard } from "./paper-card";
-import { ResearchActions } from "./research-actions";
-import { ResearchController } from "./research-controller";
 import { StatusPill } from "./status-pill";
 
 const ID = "research";
@@ -16,7 +15,7 @@ const ID = "research";
 function Chapter({ paper, index, count, caption }: { paper: ResearchPaper; index: number; count: number; caption: string }) {
   const title = `${paper.slug}-title`;
   return (
-    <article className="chapter" data-chapter={paper.slug} aria-labelledby={title}>
+    <article className="chapter" data-chapter={paper.slug} data-evidence-id={`paper:${paper.slug}`} aria-labelledby={title}>
       <div className="chapter-stage">
         <Container width="wide" className="chapter-frame">
           <PaperCard
@@ -56,7 +55,7 @@ function Chapter({ paper, index, count, caption }: { paper: ResearchPaper; index
  * controller dims the page to black as the section arrives; "Research." comes up in the
  * serif italic over where the papers were presented. Then one chapter per paper, pinned
  * on wide, tall screens while its illustration plays (components/research/
- * research-controller.tsx). Phones, reduced motion and no JavaScript read it as a column,
+ * lib/research-behavior.ts, attachChapters). Phones, reduced motion and no JavaScript read it as a column,
  * each illustration on its final frame.
  */
 export function Research() {
@@ -80,8 +79,7 @@ export function Research() {
       {papers.map((paper, index) => (
         <Chapter key={paper.slug} paper={paper} index={index} count={papers.length} caption={caption} />
       ))}
-      <ResearchController />
-      <ResearchActions />
+      <Behavior section="research" />
     </Section>
   );
 }

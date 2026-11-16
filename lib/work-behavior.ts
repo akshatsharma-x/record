@@ -6,8 +6,8 @@ import { startViewTransition, supportsViewTransitions } from "./view-transition"
 const HURRY = 4;
 
 /**
- * The bento's behavior (DESIGN.md §7.6), for components/work/work-controller.tsx, which
- * loads it as the section comes near. The server renders every tile and CSS places them for
+ * The bento's behavior (DESIGN.md §7.6), loaded as the section comes near
+ * (components/ui/behavior.tsx). The server renders every tile and CSS places them for
  * the checked filter; this only adds motion and words:
  *
  * - **Filtering** reflows the grid in a View Transition, each tile gliding on the smooth

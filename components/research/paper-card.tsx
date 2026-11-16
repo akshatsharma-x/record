@@ -16,7 +16,7 @@ interface PaperCardProps {
 /**
  * A chapter's living abstract (DESIGN.md §7.5): the paper on the front, its citation on
  * the back. Cite flips the card, Done or Escape flips it back, and focus goes with it
- * (./research-actions.tsx). The faces share one grid cell, so the card never changes size.
+ * (lib/research-behavior.ts, attachActions). The faces share one grid cell, so the card never changes size.
  * Without JavaScript, Cite links to the paper's page, where the citations are inline.
  */
 export function PaperCard({ title, tldr, href, read, cite, children }: PaperCardProps) {
@@ -53,7 +53,7 @@ export function PaperCard({ title, tldr, href, read, cite, children }: PaperCard
   );
 }
 
-/** Share (./research-actions.tsx): the share sheet, or the link copied. Hidden without JavaScript. */
+/** Share (lib/research-behavior.ts, attachActions): the share sheet, or the link copied. Hidden without JavaScript. */
 export function ShareButton({ title, text, href }: { title: string; text: string; href: string }) {
   return (
     <Button variant="secondary" className="needs-js" data-share={href} data-share-title={title} data-share-text={text}>

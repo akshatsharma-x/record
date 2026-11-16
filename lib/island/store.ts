@@ -19,6 +19,10 @@ export interface Activity {
   title: string;
   detail?: string;
   tone?: ActivityTone;
+  /** A link the activity offers, such as "Show me where"'s jump (DESIGN.md §7.7). */
+  action?: { label: string; href: string };
+  /** Stays until dismissed rather than for 2.2s: an activity that lasts as long as a mode. */
+  persist?: boolean;
 }
 
 export interface QueuedActivity extends Activity {
@@ -44,7 +48,7 @@ let nextKey = 1;
 function schedule() {
   clearTimeout(timer);
   const { expanded, current } = useIsland.getState();
-  if (!expanded && current) timer = setTimeout(advance, ACTIVITY_MS);
+  if (!expanded && current && !current.persist) timer = setTimeout(advance, ACTIVITY_MS);
 }
 
 function advance() {
@@ -73,6 +77,12 @@ export const island = {
     }
     useIsland.setState({ current: item });
     schedule();
+  },
+  /** Ends an activity that persists (or any with this title), showing the next one. */
+  dismiss(title: string) {
+    const { current, queue } = useIsland.getState();
+    if (current?.title === title) advance();
+    else useIsland.setState({ queue: queue.filter((item) => item.title !== title) });
   },
 };
 

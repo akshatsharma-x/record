@@ -73,6 +73,13 @@ async function open(page: Page, path = "/") {
   await page.waitForLoadState("networkidle");
 }
 
+/** Research's behavior loads as the section (or a paper's page) comes near: bring it near. */
+async function ready(page: Page) {
+  const root = page.locator("[data-research-ready], #research, #paper").first();
+  await root.evaluate((element) => element.scrollIntoView({ block: "start" }));
+  await expect(page.locator("#research[data-research-ready], #paper[data-research-ready]").first()).toBeAttached();
+}
+
 test.describe("pinned, on a wide, tall screen", () => {
   test.use({ viewport: PINNED });
   test.skip(({ isMobile }) => isMobile, "Phones get the column");
@@ -311,6 +318,7 @@ test.describe("with reduced motion", () => {
 
   test("doesn't pin, and the haze is drawn as stills", async ({ page }) => {
     await open(page);
+    await ready(page);
     await expectColumn(page);
     await expect(page.locator("#research .haze-canvas").first()).toHaveAttribute("data-still", "");
   });
