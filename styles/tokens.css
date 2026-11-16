@@ -497,6 +497,33 @@
   /* SVG labels in a narrow illustration, in its view units (about 13px on a phone). */
   --illustration-label-narrow: 24px;
 
+  /* Work (Part 9): the bento's tiles and their previews, the case-study sheet and the page
+     behind it, and the architecture diagrams. Preview sizes are in the previews' view units. */
+  --work-title: clamp(1.3125rem, 1.0982rem + 0.5357vw, 1.75rem);
+  --work-metric: clamp(2.25rem, 1.6rem + 1.6vw, 3.25rem);
+  --work-metric-compact: 2rem;
+  --work-tile-phone: 4 / 5;
+  --work-film: 3.6s;
+  --work-step: 110ms;
+  --pv-label: 17px;
+  --pv-line: 2px;
+  --pv-line-strong: 3px;
+  --pv-travel: 18px;
+  --case-top: max(env(safe-area-inset-top), 10px);
+  --case-top-wide: 24px;
+  --case-page-scale: 0.94;
+  --case-desk: var(--neutral-dark-bg);
+  --case-grabber-width: 36px;
+  --case-grabber-height: 5px;
+  --case-hero-aspect: 4 / 3;
+  --case-hero-aspect-wide: 2 / 1;
+  --case-facts-gap: 40px;
+  --diagram-line: 1.5px;
+  --diagram-radius: 14px;
+  --diagram-label: 15px;
+  --diagram-detail: 12px;
+  --diagram-arrow: 7px;
+
   /* Durations (§5.3). Each DESIGN.md range has a short, default and long step. */
   --duration-micro-short: 150ms;
   --duration-micro: 200ms;
@@ -646,6 +673,10 @@
 /* A narrow research illustration: its labels grow to stay legible, and the cold chain's
    "Why?" sits under the drawing instead of beside a stop. */
 @custom-variant illustration-narrow (@container illustration (max-width: 34rem));
+/* A work tile wide enough to set its words beside its preview, and one short enough to set
+   them smaller (components/work/work.tsx). */
+@custom-variant tile-wide (@container work-tile (aspect-ratio > 1.6));
+@custom-variant tile-compact (@container work-tile (height < 26rem));
 
 /* When a figure in an edit visual starts counting, so it counts as the visual shows it
    (components/experience/edit-controller.tsx reads it). */
@@ -653,6 +684,14 @@
   syntax: "<time>";
   inherits: true;
   initial-value: 0s;
+}
+
+/* How much of a case study's architecture is drawn, 0 to 1, driven by its scroll into view
+   (styles/components.css). Registered so it animates; inherited, so each box reads it. */
+@property --draw {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
 }
 
 /* The finish wipe's radius (styles/globals.css), registered so it can animate. */

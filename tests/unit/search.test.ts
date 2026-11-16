@@ -122,15 +122,20 @@ describe("the search index", () => {
   it("links every entry to a page or a home section that exists", async () => {
     const { entries } = await served();
     const sections = new Set(SECTIONS.map((section) => section.id));
-    // Paper pages are prerendered for every paper in content.
+    // Paper pages and case studies are prerendered for every paper and project in content.
     expect(existsSync(path.join(process.cwd(), "app", "research", "[slug]", "page.tsx"))).toBe(true);
-    const papers = new Set(content.publications.map((paper) => `/research/${paper.slug}`));
+    expect(existsSync(path.join(process.cwd(), "app", "work", "[slug]", "page.tsx"))).toBe(true);
+    const pages = new Set([
+      ...content.publications.map((paper) => `/research/${paper.slug}`),
+      ...content.projects.map((project) => `/work/${project.slug}`),
+    ]);
     for (const entry of entries) {
       const section = /^\/#([\w-]+)$/.exec(entry.href)?.[1];
-      const resolves = papers.has(entry.href) || Boolean(section && sections.has(section as never));
+      const resolves = pages.has(entry.href) || Boolean(section && sections.has(section as never));
       expect(resolves, `${entry.id} → ${entry.href}`).toBe(true);
     }
     expect(entries.filter((entry) => entry.href.startsWith("/research/"))).toHaveLength(content.publications.length);
+    expect(entries.filter((entry) => entry.href.startsWith("/work/"))).toHaveLength(content.projects.length);
   });
 
   it("serves the profile links the actions open, and never a phone number", async () => {

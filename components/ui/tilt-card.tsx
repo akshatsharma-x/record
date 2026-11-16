@@ -2,8 +2,7 @@
 
 import { type ElementType, type HTMLAttributes, type ReactNode, useEffect, useRef } from "react";
 import { cx } from "@/lib/cx";
-import { depth } from "@/lib/motion";
-import { prefersReducedMotion } from "@/lib/reduced-motion";
+import { attachTilt } from "@/lib/tilt";
 
 interface TiltCardProps extends HTMLAttributes<HTMLElement> {
   as?: ElementType;
@@ -12,53 +11,14 @@ interface TiltCardProps extends HTMLAttributes<HTMLElement> {
 
 /**
  * Depth on hover (DESIGN.md §6.6): the card tilts toward the pointer, at most 6°, under a
- * specular highlight that follows it, like a tvOS poster. It springs back when the pointer
- * leaves. Pointer only: off for touch and for reduced motion. Updates are batched into one
- * frame, and only transforms change, so nothing repaints.
+ * specular highlight that follows it, like a tvOS poster (lib/tilt.ts). Pointer only: off
+ * for touch and for reduced motion.
  */
 export function TiltCard({ as: Tag = "div", className, children, ...rest }: TiltCardProps) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const card = ref.current;
-    if (!card) return;
-    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
-    let frame = 0;
-    let pointer: { x: number; y: number } | null = null;
-
-    const apply = () => {
-      frame = 0;
-      if (!pointer) return;
-      card.style.setProperty("--tilt-rx", `${(-pointer.y * depth.tilt).toFixed(2)}deg`);
-      card.style.setProperty("--tilt-ry", `${(pointer.x * depth.tilt).toFixed(2)}deg`);
-      card.style.setProperty("--spec-x", `${(pointer.x * depth.specularTravel).toFixed(1)}%`);
-      card.style.setProperty("--spec-y", `${(pointer.y * depth.specularTravel).toFixed(1)}%`);
-    };
-
-    const onMove = (event: PointerEvent) => {
-      if (event.pointerType === "touch" || !finePointer.matches || prefersReducedMotion()) return;
-      const rect = card.getBoundingClientRect();
-      pointer = {
-        x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        y: ((event.clientY - rect.top) / rect.height) * 2 - 1,
-      };
-      card.setAttribute("data-tilting", "");
-      if (!frame) frame = requestAnimationFrame(apply);
-    };
-
-    const onLeave = () => {
-      pointer = null;
-      card.removeAttribute("data-tilting");
-      for (const name of ["--tilt-rx", "--tilt-ry", "--spec-x", "--spec-y"]) card.style.removeProperty(name);
-    };
-
-    card.addEventListener("pointermove", onMove);
-    card.addEventListener("pointerleave", onLeave);
-    return () => {
-      cancelAnimationFrame(frame);
-      card.removeEventListener("pointermove", onMove);
-      card.removeEventListener("pointerleave", onLeave);
-    };
+    if (ref.current) return attachTilt(ref.current);
   }, []);
 
   return (

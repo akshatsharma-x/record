@@ -295,6 +295,28 @@ export const data = {
       role: null, // TODO(akshat)
       links: null, // TODO(akshat): repo and live links
       screenshots: null, // TODO(akshat)
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      outcome: { text: "Automated summarization, evaluated with Ragas." },
+      preview: { kind: "agents", labels: { query: "Query", agents: "A2A", hypothetical: "HyDE", neighbors: "FAISS", summary: "Summary" } },
+      architecture: {
+        nodes: [
+          { id: "query", label: "Query" },
+          { id: "orchestrator", label: "Intent orchestrator", from: "orchestrator routes automatable sub-tasks by intent" },
+          { id: "agents", label: "A2A agents", from: "Multi-agent RAG with A2A communication" },
+          { id: "retrieval", label: "FAISS + HyDE", detail: "retrieval" },
+          { id: "vision", label: "Gemini Vision", detail: "PDF extraction", from: "Gemini Vision extracts structured data from PDFs" },
+          { id: "summary", label: "Summary", from: "automated summarization" },
+          { id: "ragas", label: "Ragas", detail: "evaluation", from: "evaluated with Ragas" },
+        ],
+        edges: [
+          ["query", "orchestrator"],
+          ["orchestrator", "agents"],
+          ["agents", "retrieval"],
+          ["retrieval", "vision"],
+          ["vision", "summary"],
+          ["summary", "ragas", "dashed"],
+        ],
+      },
     },
     {
       slug: "quizmuj",
@@ -309,6 +331,26 @@ export const data = {
       role: null, // TODO(akshat)
       links: null, // TODO(akshat): repo and live links
       screenshots: null, // TODO(akshat)
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      outcome: { text: "Real-time exams with proctoring, secure session handling and data integrity." },
+      preview: { kind: "exam-room", labels: { room: "Live Exam Room", alert: "Tab switch", proctor: "Proctoring" } },
+      architecture: {
+        nodes: [
+          { id: "roles", label: "Roles", from: "Role-based" },
+          { id: "api", label: "Express API", from: "Express" },
+          { id: "db", label: "MongoDB" },
+          { id: "room", label: "Live Exam Room", detail: "Socket.io" },
+          { id: "proctor", label: "Proctor events", detail: "tab-switch tracking", from: "proctoring such as browser tab-switch tracking" },
+          { id: "csv", label: "CSV bulk upload" },
+          { id: "export", label: "Analytics export", from: "analytics API for exporting results" },
+          { id: "docker", label: "Docker" },
+        ],
+        edges: [
+          ["roles", "api"],
+          ["api", "db"],
+          ["room", "proctor"],
+        ],
+      },
     },
     {
       slug: "resume-screening",
@@ -323,6 +365,29 @@ export const data = {
       role: null, // TODO(akshat)
       links: null, // TODO(akshat): repo and live links
       screenshots: null, // TODO(akshat)
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      outcome: { text: "Automated classification and data extraction, with an XAI dashboard of PCA visualizations." },
+      preview: { kind: "lanes", labels: { left: "TF-IDF", right: "BERT", ranked: "Candidate matching", scatter: "PCA" } },
+      architecture: {
+        nodes: [
+          { id: "resumes", label: "Resumes", from: "Resume Screening" },
+          { id: "extraction", label: "Extraction", from: "data extraction" },
+          { id: "tfidf", label: "TF-IDF" },
+          { id: "bert", label: "BERT" },
+          { id: "ensemble", label: "Weighted ensemble", from: "optimized weighted ensemble" },
+          { id: "ranking", label: "Ranking", from: "candidate matching" },
+          { id: "dashboard", label: "XAI dashboard", detail: "PCA", from: "XAI dashboard with PCA visualizations" },
+        ],
+        edges: [
+          ["resumes", "extraction"],
+          ["extraction", "tfidf"],
+          ["extraction", "bert"],
+          ["tfidf", "ensemble"],
+          ["bert", "ensemble"],
+          ["ensemble", "ranking"],
+          ["ranking", "dashboard"],
+        ],
+      },
     },
     {
       slug: "churn-prediction",
@@ -338,6 +403,32 @@ export const data = {
       role: null, // TODO(akshat)
       links: null, // TODO(akshat): repo and live links
       screenshots: null, // TODO(akshat)
+      metrics: [
+        { value: 97, label: "accuracy", footnotes: [5] },
+        { value: 0.98, label: "ROC-AUC", footnotes: [5] },
+      ],
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      outcome: { text: "Feature-importance analysis of churn drivers to inform retention strategy." },
+      preview: { kind: "roc", auc: 0.98, accuracy: 97 },
+      architecture: {
+        nodes: [
+          { id: "data", label: "Data" },
+          { id: "smote", label: "SMOTE" },
+          { id: "learners", label: "Base learners", from: "Stacking ensemble" },
+          { id: "meta", label: "Meta-learner", from: "Stacking ensemble" },
+          { id: "scores", label: "97% · 0.98", detail: "accuracy · ROC-AUC", from: "97% accuracy and 0.98 ROC-AUC", footnotes: [5] },
+          { id: "importance", label: "Feature importance", from: "feature-importance analysis" },
+          { id: "retention", label: "Retention insights", from: "inform retention strategy" },
+        ],
+        edges: [
+          ["data", "smote"],
+          ["smote", "learners"],
+          ["learners", "meta"],
+          ["meta", "scores"],
+          ["scores", "importance"],
+          ["importance", "retention"],
+        ],
+      },
     },
     {
       slug: "wcag-analyzer",
@@ -352,6 +443,24 @@ export const data = {
       role: null, // TODO(akshat)
       links: null, // TODO(akshat): repo and live links
       screenshots: null, // TODO(akshat)
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      outcome: { text: "Accessibility issues scored, with suggested fixes and a written report." },
+      preview: { kind: "scan", labels: { issues: "Issues", score: "Score" } },
+      architecture: {
+        nodes: [
+          { id: "url", label: "URL" },
+          { id: "crawler", label: "Headless crawler", from: "headless DOM crawler" },
+          { id: "rules", label: "WCAG 2.1 rules", from: "WCAG 2.1 compliance tool" },
+          { id: "score", label: "Score and fixes", from: "scores them, suggests fixes" },
+          { id: "report", label: "Report", from: "writes reports" },
+        ],
+        edges: [
+          ["url", "crawler"],
+          ["crawler", "rules"],
+          ["rules", "score"],
+          ["score", "report"],
+        ],
+      },
     },
   ],
 
@@ -599,7 +708,27 @@ export const data = {
       sub: "Machine learning for the food we save and the air we breathe.",
       caption: "Illustration of the idea, not results from the paper",
     },
-    work: { headline: "Work.", sub: "Built to be used. Designed to be understood." },
+    work: {
+      headline: "Work.",
+      sub: "Built to be used. Designed to be understood.",
+      filterLabel: "Show projects",
+      filters: [
+        { id: "all", label: "All", categories: ["AI system", "Full-stack", "NLP", "Machine learning", "Accessibility"] },
+        { id: "ai", label: "AI", categories: ["AI system", "NLP"] },
+        { id: "full-stack", label: "Full-stack", categories: ["Full-stack"] },
+        { id: "ml", label: "ML", categories: ["Machine learning", "NLP"] },
+        { id: "accessibility", label: "Accessibility", categories: ["Accessibility"] },
+      ],
+      caseStudy: {
+        chapters: { problem: "The problem.", approach: "The approach.", outcome: "The outcome.", built: "Built with." },
+        facts: { year: "Year", role: "Role", stack: "Stack" },
+        architecture: "How it fits together",
+        links: { repo: "Code", live: "Live site" },
+        next: "Next project",
+        back: "Work",
+        notes: "Notes",
+      },
+    },
     skills: { headline: "The stack.", sub: "Engineered in layers." },
     credentials: {
       headline: "Credentials.",
@@ -611,5 +740,5 @@ export const data = {
   },
 
   // TODO(akshat): approve these drafts, then remove each path once its copy is final.
-  drafts: ["profile.role", "profile.headline", "profile.bio", "publications.*.tldr", "copy"],
+  drafts: ["profile.role", "profile.headline", "profile.bio", "publications.*.tldr", "projects.*.outcome", "copy"],
 } satisfies ContentInput;

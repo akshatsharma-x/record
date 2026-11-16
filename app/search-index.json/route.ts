@@ -1,6 +1,5 @@
 import { content } from "@/content";
 import { searchIndex } from "@/content/derive";
-import { liveHref } from "@/lib/search/routes";
 import type { SearchPayload } from "@/lib/search/types";
 
 /**
@@ -10,7 +9,7 @@ import type { SearchPayload } from "@/lib/search/types";
 export function GET() {
   const { email, links } = content.profile;
   const payload: SearchPayload = {
-    entries: searchIndex(content).map((entry) => ({ ...entry, href: liveHref(entry.href) })),
+    entries: searchIndex(content),
     profile: { email, linkedin: links.linkedin, github: links.github },
   };
   return Response.json(payload);

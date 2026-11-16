@@ -432,8 +432,10 @@ describe("warnings", () => {
 describe("gaps and drafts", () => {
   it("lists every null field", () => {
     const list = gaps(content);
-    expect(list).toHaveLength(41);
+    expect(list).toHaveLength(46);
     expect(list).toContain("profile.location.cityConfirmed");
+    // Each case study's first chapter waits for its problem.
+    expect(list).toContain("projects[cognivault-ai].problem");
     expect(list).toContain("projects[wcag-analyzer].stack");
     expect(list).toContain("footnotes[4].source");
   });

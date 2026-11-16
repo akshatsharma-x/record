@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { type ComponentType, createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { cx } from "@/lib/cx";
-import { detectTier, type Tier } from "@/lib/tier";
+import type { Tier } from "@/lib/tier";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 
 /**
@@ -42,10 +42,13 @@ export function StageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!wanted) return;
     let alive = true;
+    // The tier's GPU classification loads with the first 3D view, not with the page.
     const detect = () =>
-      void detectTier(reducedMotion).then((next) => {
-        if (alive) setTier(next);
-      });
+      void import("@/lib/tier")
+        .then(({ detectTier }) => detectTier(reducedMotion))
+        .then((next) => {
+          if (alive) setTier(next);
+        });
     detect();
     window.addEventListener(TIER_CHANGE_EVENT, detect);
     return () => {

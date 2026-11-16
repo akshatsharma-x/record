@@ -22,10 +22,11 @@ export const metadata: Metadata = {
  * The document. The head script applies the saved theme and finish before the first
  * paint (lib/preferences.ts), so <html> carries attributes React didn't render:
  * suppressHydrationWarning accepts them. Layers, bottom to top (§4.9): the surface
- * backdrop, the shared 3D stage, the content, then the Island (§6.2). Search (§6.3) and the
- * cursor (§6.1) live in the top layer. The résumé edition is what prints.
+ * backdrop, the shared 3D stage, the content, then the Island (§6.2). Search (§6.3), a
+ * case study opened over the page (the modal slot, §7.6) and the cursor (§6.1) live in the
+ * top layer. The résumé edition is what prints.
  */
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <StageProvider>
           <div className="content-layer">{children}</div>
         </StageProvider>
+        {modal}
         <PageModes />
         <Search />
         <ResumeEdition />
