@@ -118,6 +118,36 @@ describe("content schema", () => {
     });
   });
 
+  describe("the highlights' films", () => {
+    it("draw only figures their footnotes state", () => {
+      expect(problemsOf(broken([["highlights", 1, "film", "cost"], [0.08, 0.12]]))).toEqual([
+        "highlights[pennies-a-run].film: 0.12 isn't stated by the notes this highlight cites",
+      ]);
+      expect(problemsOf(broken([["highlights", 4, "film", "from"], 200]))).toEqual([
+        "highlights[sih-top-50].film: 200 isn't stated by the notes this highlight cites",
+      ]);
+      // Dots are drawn one by one, so a film can't ask for thousands.
+      expect(problemsOf(broken([["highlights", 4, "film", "from"], 3000])).join()).toMatch(/400/);
+    });
+
+    it("count papers at a real conference", () => {
+      expect(problemsOf(broken([["highlights", 2, "film", "conference"], "nope"]))).toEqual([
+        'highlights[two-papers].film.conference: no conference with id "nope"',
+      ]);
+    });
+
+    it("are required, one of the known kinds", () => {
+      expect(problemsOf(broken([["highlights", 0, "film"], { kind: "spiral" }]))).toHaveLength(1);
+      expect(problemsOf(broken([["highlights", 0, "film"], undefined]))).toHaveLength(1);
+    });
+  });
+
+  it("puts the statement's gradient phrase in the statement, once", () => {
+    expect(problemsOf(broken([["copy", "statement", "emphasis"], "the murky kind"]))).toEqual([
+      "copy.statement.emphasis: must appear in the headline exactly once",
+    ]);
+  });
+
   it("reports every problem at once", () => {
     const problems = problemsOf(broken([["experience", 1, "end"], "2026-13"], [["profile", "email"], "not-an-email"]));
     expect(problems).toHaveLength(2);

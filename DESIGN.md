@@ -14,7 +14,7 @@ The portfolio of Akshat Sharma: AI & ML engineer, B.Tech CSE '27 at Manipal Univ
 4. [Tokens](#4-tokens): [Neutrals](#41-neutrals) · [Surfaces](#42-surfaces) · [Finishes](#43-finishes) · [Type](#44-type) · [Space and layout](#45-space-and-layout) · [Radii](#46-radii) · [Materials](#47-materials) · [Elevation](#48-elevation) · [Layers](#49-layers) · [Icons](#410-icons)
 5. [Motion](#5-motion): [Curves](#51-curves) · [Springs](#52-springs) · [Durations](#53-durations) · [The Resolve](#54-the-resolve) · [Scroll scenes](#55-scroll-scenes) · [Motion on intent](#56-motion-on-intent) · [Reduced motion edition](#57-reduced-motion-edition)
 6. [Interaction](#6-interaction): [The cursor](#61-the-cursor) · [The Island](#62-the-island) · [Search](#63-search) · [Focus ring](#64-focus-ring) · [Pressed state](#65-pressed-state) · [Depth on hover](#66-depth-on-hover)
-7. [Signature moments](#7-signature-moments): [The hero](#71-the-hero)
+7. [Signature moments](#7-signature-moments): [The hero](#71-the-hero) · [The statement and About](#72-the-statement-and-about) · [The highlights](#73-the-highlights)
 8. [Surprises](#8-surprises)
 9. [Voice](#9-voice)
 10. [Budgets](#10-budgets)
@@ -86,7 +86,7 @@ One long story, in this order. Surfaces are given for the light theme.
 | # | Section | id | Surface |
 |---:|---|---|---|
 | 1 | Hero | `#top` | dark |
-| 2 | Statement → About + At a glance | `#about` | dark → light |
+| 2 | Statement → About + At a glance | `#statement` → `#about` | dark → light |
 | 3 | Highlights reel | `#highlights` | light-alt |
 | 4 | Experience | `#experience` | light |
 | 5 | Research & Publications | `#research` | dark (the lights go down) |
@@ -98,7 +98,7 @@ One long story, in this order. Surfaces are given for the light theme.
 
 Credentials & honors holds education, certificates and achievements. It comes right after Skills and right before Contact.
 
-Part 4 laid every section down with its id, surface and real copy, plainly set, so the Island and Search have somewhere to go. Each later part turns its section into its signature moment (§7). Until Part 6 adds the statement's dark half, About is light.
+Part 4 laid every section down with its id, surface and real copy, plainly set, so the Island and Search have somewhere to go. Each later part turns its section into its signature moment (§7). The statement is About's opening scene: its own dark section (`#statement`, `data-section-for="about"`), which the Island names About. Links to `#about` land past its pin (§5.5).
 
 *Open conflict: [C5](#c5-sentence-case) (section name).*
 
@@ -420,6 +420,31 @@ Built in Part 5 (`components/hero/`, logic in `lib/hero.ts`). Two editions, one 
 
 **Portrait edition.** Layers, back to front: the background plate (blurred like bokeh, and past its 3:4 frame a heavier blur of itself), the name in white, Akshat cut out, then the UI. The arrival is a focus pull: pre-blurred copies of the plate (24px) and the subject (12px) fade off the settled ones (8px and sharp), so no blur animates on a full-screen layer (§5.4). The pointer moves the layers in depth on the smooth spring (plate ±8px, name ±4px, subject ±12px); on phones a tilt does, where it needs no permission. Scrolling away, the subject scales to .92 and rises slower than the name, which fades upward as the light dims. The ƒ button opens the aperture dial, ƒ1.4 to ƒ16 in full stops, which sets the plate's blur live (24px to 2px; ƒ4 is 8px) for the session. On phones the first screen is the Lock Screen (the date, the name behind the head, the role and headline); the chips, links and finishes follow on the dark floor. The photo's `headTop` places the name and the phone frame, so the head covers only the foot of the letters.
 
+### 7.2 The statement and About
+
+Built in Part 6 (`components/about/`, logic in `lib/statement.ts` and `lib/glance.ts`).
+
+**The statement.** `content.copy.statement` at display size, centered in the measure, pinned on the dark surface for 160svh. As the visitor scrolls, each word fills from fg-3 to fg in reading order, a few words soft at the front: one number, `--fill`, follows the scroll exactly and CSS turns it into every word's color. "the clear kind" (`copy.statement.emphasis`) is the section's one gradient phrase; its fg-3 ink clears to show the gradient. The fill takes the first 80% of the pin, then the full statement holds and the lights come up into About. It's real text: without JavaScript, and with reduced motion, it reads fully filled with no pin.
+
+**About.** On a light surface: "Hi, I'm Akshat." and the bio on the left, ending on a quiet Currently line (building, researching, reading) that leaves out what's empty. On the right, At a glance: a 12-column bento whose rows are square, with tiles spanning 4, 8 or 12 (two to a row on phones). Each tile animates once on its first reveal, then rests.
+
+| Tile | Shows | On click |
+|---|---|---|
+| Now | The current role and org, "since June 2026" and its length in months | |
+| Studying | The degree and university, and a ring of progress to the graduation month | Flips to the days left |
+| Research | The papers, counted, and their venue | |
+| Experience | The internships, counted | |
+| Work | The projects, counted | |
+| Local time | Akshat's clock face and time, and working hours | Switches 12- and 24-hour time and shows the overlap with the visitor's day (`copy.about.visitorDay`) on a 24-hour track |
+
+The static facts are in the HTML; what depends on today (the length, the progress, the clock and the overlap) fills in after hydration, in a tile whose size never changes.
+
+### 7.3 The highlights
+
+Built in Part 6 (`components/highlights/`, logic in `lib/reel.ts`). "The highlights." over a reel: a full-bleed, horizontal scroll-snap gallery of dark cards, 4:5 on phones and 16:10 from tablets up, one per `content.highlights` entry. Each card plays a micro-film of SVG and CSS, no video: two pulses fan out into six documents; a cost counter settles at $0.08–0.11 while a token bar compresses 22–25%; two sheets settle under SCI-2026; an ROC curve draws to an AUC of 0.98; 300 dots condense to 50; a ring fills to 90%+; a week of bars rises to 2,500+. Each highlight's `film` says which, and the schema checks that every figure it draws is stated by the notes it cites; the films label figures in the footnotes' own words.
+
+Only the card in view plays, while the reel is on screen and the tab is visible. One control at the bottom right pauses the whole reel for the session (WCAG 2.2.2), and the current card's dot stretches into a bar that fills with its film. Swipes and trackpads scroll it natively, a mouse drags it (the cursor shows its drag state), and the arrow keys, Home and End move between cards from the one tab stop. Each card's + opens a sheet with the full fact, its footnote and a link to its section. With reduced motion every card rests on its final frame.
+
 ---
 
 ## 8. Surprises
@@ -520,6 +545,20 @@ Append as you go, each with its reason.
 - **The scroll cue rests for good** (Part 5). The first scroll is remembered in localStorage, and the head script sets html[data-scrolled], so the cue never breathes on a return visit.
 - **Button is server-safe** (Part 5). An inert link renders with no href and no handler, and a live one passes onClick only when given: Server Components can't pass functions to next/link. The link style draws its own ›, so the hero trims the one in `copy.hero.ctaHello`.
 - **LCP is measured under DevTools throttling** (Part 5). On localhost, Lighthouse's simulated mode reports 2.7s for the typographic hero and 3.0s for the portrait, because it counts every request that finished before the first frame as a dependency of the paint: about 160 KB of async framework JavaScript, and the 129 KB serif face for the research titles below the fold. With the same mobile profile under real throttling (DevTools: 562ms request latency, 1.47 Mbps, 4× CPU), LCP equals FCP at 1.42s (typographic) and 1.49–1.58s (portrait, the subject), and CLS is 0. Performance scores 0.96 and 0.94 simulated, 1.0 with DevTools. Re-check with PageSpeed Insights once deployed. To be confirmed with Akshat. Follow-up: Chrome downloads the serif on every visit for the research titles; loading it as the section approaches would take it out of the first paint's window.
+- **The statement is About's opening scene** (Part 6). It's a dark section of its own, `#statement` with `data-section-for="about"`, before About's light one, so the surface controller can crossfade between them. The controller reports it as About, so the Island names it About and keeps Overview current. Links and Search land on `#about`, past the pin, which is how §5.5 lets a pinned scene be skipped; the keyboard skips it too, since it holds nothing focusable.
+- **The statement's fill maps the scroll exactly, with no scrub** (Part 6). §5.5's .6 scrub softens mouse wheels, but trackpads and touch already scroll smoothly, and smoothing made the words trail the page; the brief asks for exact tracking. The e2e test scrolls through the pin a frame at a time in WebKit and finds the fill on the scroll position in every frame.
+- **The statement's size is capped by the stage** (Part 6). At display size in the 680px measure it ran ten lines and overflowed a 900px screen, hiding its end for the whole pin. It's display size unless the stage is too short, then 7svh, which holds all of it (eight lines at 1440×900). The pin is 160svh, under §7's 200vh; the fill takes 80% of it and the full statement holds for the rest.
+- **Without JavaScript the statement reads filled, with no pin** (Part 6). It's readable unfilled too (fg-3 on black passes AA), but a long, still, gray scroll reads as broken; this matches the reduced-motion edition.
+- **The bento's live values render in the browser** (Part 6), like the date line: the HTML holds the facts, and the role's length, the degree's progress, the clock and the overlap fill in after hydration from `lib/glance.ts`, so `content` never ships to the client. Times are written in en-US on the server and while hydrating, then in the visitor's locale: Lighthouse caught a hydration mismatch where an en-IN browser wrote "10:00 am". The e2e suite now hydrates the page in en-IN, de-DE and ja-JP and expects no error.
+- **The visitor's day is content** (Part 6). The overlap compares Akshat's hours with a visitor's 09:00–17:00 (`copy.about.visitorDay`), so even those numbers come from content.
+- **The bento keeps fixed shapes from square rows** (Part 6). Rows are as tall as a 6-span tile is wide on phones and a 4-span tile from tablets up, so tiles are squares, 2:1 and 3:1, per §4.5. Phones keep two small tiles to a row instead of stacking every tile.
+- **The flipping tiles swap faces at the midpoint** (Part 6). backface-visibility alone showed the back face mirrored in WebKit, which flattens 3D under the tile's clipping. Each face's opacity switches when it's edge-on.
+- **The hero's chips are "Key facts"** (Part 6). Their list was named "At a glance", which the bento's heading now is; two lists with one name read as one to a screen reader.
+- **Highlight films are content, and checked** (Part 6). Each highlight's `film` names its kind and the figures it draws, and the schema fails the build if a figure isn't stated by the notes the highlight cites. The films use the footnotes' own words ("300+", "2,500+", "$0.08–0.11"), and they invent nothing: the cost counts up from $0.00 (the uncompressed cost isn't in the résumé), the bars are a week at the stated daily count, and the ROC curve's area is exactly the AUC.
+- **Films are server-rendered SVG and CSS, resting on their final frame** (Part 6). They cost no JavaScript, and they animate only on the playing card, so a paused, off-screen or reduced-motion card shows its final frame. Staggered parts fade out at the end of their own loops, so nothing flashes when a loop restarts. The 300-dot field is one patterned shape with the 50 survivors drawn on top, which took 50 KB off the page.
+- **The reel's cards are dark** (Part 6), like Apple's highlights, with the dark tone set on each card, so the films draw in the on-dark accent on any surface.
+- **The reel's pagination dots are 36×44 on phones** (Part 6). Seven 44-wide targets and the pause control don't fit at 390px. They're above WCAG 2.5.8's 24px, and swipes, the arrow keys and each card's + reach every card too. From tablets up they're 44×44.
+- **Performance after Part 6** (Part 6). The new sections add 9 KB of HTML (gzip) and 7 KB of JavaScript: first-load JS is 162.6 KB, under the 170 KB budget. Under DevTools throttling performance is 0.99, LCP 1.5s and CLS 0; on localhost the simulated score fell from 0.96 to 0.94, for the reasons in the entry above. Best practices and accessibility stay at 1.0.
 
 ---
 

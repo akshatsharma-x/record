@@ -15,6 +15,7 @@
 import { z } from "zod";
 import { findPhoneNumbers } from "../lib/privacy.ts";
 import { SECTION_IDS } from "../lib/sections.ts";
+import { valuesIn } from "./numbers.ts";
 
 // ─── Primitives ──────────────────────────────────────────────────────────────
 
@@ -239,6 +240,35 @@ const Achievement = z.strictObject({
   detail: Claim.optional(),
 });
 
+const Count = z.number().int().positive();
+const Share = z.number().gt(0).lte(100);
+/** Two ends, low first: $0.08–0.11 is [0.08, 0.11]. */
+const Range = z
+  .tuple([z.number().nonnegative(), z.number().nonnegative()])
+  .refine(([low, high]) => low <= high, "put the low end first");
+
+/**
+ * The micro-film a highlight plays in the reel (DESIGN.md §7, Part 6). Each figure it draws
+ * must be stated by the notes the highlight cites, so the film never shows a number the
+ * footnotes don't back.
+ */
+const Film = z.discriminatedUnion("kind", [
+  /** Pulses fan out into documents: so many calls, so many outputs. */
+  z.strictObject({ kind: z.literal("fan-out"), from: Count.max(4), to: Count.max(12) }),
+  /** A cost counter settles on a range while a token bar compresses. */
+  z.strictObject({ kind: z.literal("cost"), cost: Range, compression: Range }),
+  /** Sheets settle under a conference: the papers presented there, counted from content. */
+  z.strictObject({ kind: z.literal("papers"), conference: Id }),
+  /** An ROC curve draws to its AUC. */
+  z.strictObject({ kind: z.literal("roc"), auc: z.number().gt(0.5).lte(1) }),
+  /** A field of dots condenses to the few that made it. */
+  z.strictObject({ kind: z.literal("condense"), from: Count.max(400), to: Count }),
+  /** A ring fills to a share. */
+  z.strictObject({ kind: z.literal("ring"), percent: Share }),
+  /** Days of bars rise to a daily count. */
+  z.strictObject({ kind: z.literal("bars"), value: Count }),
+]);
+
 const Highlight = z.strictObject({
   id: Id,
   text: Text,
@@ -247,6 +277,7 @@ const Highlight = z.strictObject({
   source: Text.optional(),
   /** Where the full fact lives: a home section and, optionally, the entity in it. */
   ref: z.strictObject({ section: z.enum(SECTION_IDS), id: Id.optional() }),
+  film: Film,
 });
 
 const Footnote = z.strictObject({
@@ -265,8 +296,21 @@ const SectionCopy = z.strictObject({
 const Copy = z.strictObject({
   /** The hero's name, role and headline come from profile; its date line is live (Part 5). */
   hero: z.strictObject({ ctaWork: Text, ctaHello: Text }),
-  statement: SectionCopy,
-  about: SectionCopy,
+  statement: z.strictObject({
+    headline: Text,
+    /** The section's one gradient phrase (DESIGN.md §4.4). It must appear in the headline once. */
+    emphasis: Text,
+  }),
+  about: z.strictObject({
+    headline: Text,
+    /** Labels the quiet line of what Akshat is building, researching and reading. */
+    currently: Text,
+    /** The bento's heading. */
+    glance: Text,
+    /** The local-time tile shows how Akshat's working hours overlap a visitor's working day. */
+    visitorDay: z.strictObject({ start: Time, end: Time }),
+  }),
+  highlights: z.strictObject({ eyebrow: Text }),
   experience: SectionCopy,
   research: SectionCopy,
   work: SectionCopy,
@@ -312,6 +356,7 @@ export type Skill = z.output<typeof Skill>;
 export type Certificate = z.output<typeof Certificate>;
 export type Achievement = z.output<typeof Achievement>;
 export type Highlight = z.output<typeof Highlight>;
+export type Film = z.output<typeof Film>;
 export type Portrait = z.output<typeof Portrait>;
 
 // ─── Claims ──────────────────────────────────────────────────────────────────
@@ -363,6 +408,27 @@ export function resolvePattern(root: unknown, pattern: string): { path: Path; va
     });
   }
   return matches;
+}
+
+// ─── Films ───────────────────────────────────────────────────────────────────
+
+/** Every figure a film draws. Counts it derives from content (papers) aren't listed. */
+export function filmFigures(film: z.output<typeof Film>): number[] {
+  switch (film.kind) {
+    case "fan-out":
+    case "condense":
+      return [film.from, film.to];
+    case "cost":
+      return [...film.cost, ...film.compression];
+    case "roc":
+      return [film.auc];
+    case "ring":
+      return [film.percent];
+    case "bars":
+      return [film.value];
+    case "papers":
+      return [];
+  }
 }
 
 // ─── Cross-references ────────────────────────────────────────────────────────
@@ -451,6 +517,34 @@ function checkReferences(content: z.output<typeof ContentShape>, ctx: z.Refineme
       problem(["highlights", i, "ref", "id"], `nothing with id "${id}" in #${section}`);
     }
   });
+
+  // A film draws only figures its highlight's notes state, and its papers exist.
+  const notes = new Map(content.footnotes.map((footnote) => [footnote.id, footnote]));
+  content.highlights.forEach((highlight, i) => {
+    const { film } = highlight;
+    if (film.kind === "papers") {
+      if (!conferences.has(film.conference)) problem(["highlights", i, "film", "conference"], `no conference with id "${film.conference}"`);
+      else if (!content.publications.some((paper) => paper.presentedAt === film.conference)) {
+        problem(["highlights", i, "film", "conference"], `no paper was presented at "${film.conference}"`);
+      }
+      return;
+    }
+    // A missing footnote is reported above; its figures can't be checked without it.
+    if (highlight.footnotes.some((n) => !notes.has(n))) return;
+    const cited = [
+      highlight.text,
+      highlight.source ?? "",
+      ...highlight.footnotes.flatMap((n) => [notes.get(n)?.note ?? "", notes.get(n)?.source ?? ""]),
+    ].join(" ");
+    const stated = valuesIn(cited);
+    for (const figure of filmFigures(film)) {
+      if (!stated.includes(figure)) problem(["highlights", i, "film"], `${figure} isn't stated by the notes this highlight cites`);
+    }
+  });
+
+  // The statement's gradient phrase is in the statement, once.
+  const { headline, emphasis } = content.copy.statement;
+  if (headline.split(emphasis).length !== 2) problem(["copy", "statement", "emphasis"], "must appear in the headline exactly once");
 
   // Skill names and aliases are unambiguous, and certificates name real skills.
   const skillTerms = new Map<string, string>();

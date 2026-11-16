@@ -452,49 +452,57 @@ export const data = {
     },
   ],
 
-  // The reel cards (Part 6).
+  // The reel cards (Part 6). Each film draws only figures its footnotes state; the
+  // schema checks them.
   highlights: [
     {
       id: "cartographer",
       text: "Six documents. Two calls.",
       footnotes: [1],
       ref: { section: "experience", id: "united-airlines" },
+      film: { kind: "fan-out", from: 2, to: 6 },
     },
     {
       id: "pennies-a-run",
       text: "Pennies a run.",
       footnotes: [2],
       ref: { section: "experience", id: "united-airlines" },
+      film: { kind: "cost", cost: [0.08, 0.11], compression: [22, 25] },
     },
     {
       id: "two-papers",
       text: "Two papers. One conference.",
       source: "SCI-2026, Springer LNNS",
       ref: { section: "research" },
+      film: { kind: "papers", conference: "sci-2026" },
     },
     {
       id: "churn-accuracy",
       text: "97% accurate.",
       footnotes: [5],
       ref: { section: "work", id: "churn-prediction" },
+      film: { kind: "roc", auc: 0.98 },
     },
     {
       id: "sih-top-50",
       text: "Top 50 of 300+.",
       footnotes: [6],
       ref: { section: "credentials", id: "smart-india-hackathon" },
+      film: { kind: "condense", from: 300, to: 50 },
     },
     {
       id: "test-coverage",
       text: "90%+ coverage.",
       footnotes: [4],
       ref: { section: "experience", id: "truechip" },
+      film: { kind: "ring", percent: 90 },
     },
     {
       id: "daily-users",
       text: "2,500+ daily users.",
       footnotes: [3],
       ref: { section: "experience", id: "walkingtree" },
+      film: { kind: "bars", value: 2500 },
     },
   ],
 
@@ -536,8 +544,16 @@ export const data = {
     statement: {
       headline:
         "Intelligent systems are everywhere. Clear ones are rare. I build the clear kind — LLM pipelines that document code, models that explain their predictions, and software that works for everyone.",
+      emphasis: "the clear kind",
     },
-    about: { headline: "Hi, I'm Akshat." },
+    about: {
+      headline: "Hi, I'm Akshat.",
+      currently: "Currently",
+      glance: "At a glance",
+      // A visitor's working day, for the local-time tile's overlap with Akshat's hours.
+      visitorDay: { start: "09:00", end: "17:00" },
+    },
+    highlights: { eyebrow: "The highlights." },
     experience: {
       headline: "Experience.",
       sub: "Four internships. One through-line: making complex systems clear.",

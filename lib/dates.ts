@@ -72,14 +72,14 @@ export function toIsoDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-/** "2026-06" → "Jun 2026" */
-export function formatYearMonth(value: string, locale = "en-US"): string {
-  const { year, month } = parseYearMonth(value);
+/** "2026-06" → "Jun 2026", or "June 2026" with the long month */
+export function formatYearMonth(value: string, locale = "en-US", month: "short" | "long" = "short"): string {
+  const { year, month: m } = parseYearMonth(value);
   return new Intl.DateTimeFormat(locale, {
-    month: "short",
+    month,
     year: "numeric",
     timeZone: "UTC",
-  }).format(utcDate(year, month));
+  }).format(utcDate(year, m));
 }
 
 /** "2026-04-28" → "28 Apr 2026" */

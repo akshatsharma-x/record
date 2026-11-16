@@ -1888,6 +1888,1226 @@
     opacity: 0;
   }
 
+  /* ─── The statement (§7, Part 6) ──────────────────────────────────────────── */
+
+  /* Pinned on the dark surface for --statement-pin while it fills. --fill (0–1) comes from
+     components/about/statement-controller.tsx; each word fills as the fill front passes
+     its index, a few words soft at the edge. */
+  .statement {
+    --fill: 0;
+    position: relative;
+    height: calc(var(--stage-height) + var(--statement-pin));
+  }
+
+  .statement-stage {
+    position: sticky;
+    top: 0;
+    display: grid;
+    min-height: var(--stage-height);
+    align-items: center;
+    padding-block: var(--island-clearance) calc(var(--spacing) * 12);
+  }
+
+  /* Display size in the measure, capped so the whole statement fits the pinned stage. */
+  .statement-text {
+    max-width: var(--container-measure);
+    margin-inline: auto;
+    font-size: var(--statement-size);
+    font-weight: var(--text-display--font-weight);
+    line-height: var(--text-display--line-height);
+    letter-spacing: var(--text-display--letter-spacing);
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .statement-word {
+    --w: clamp(0, (var(--fill) * (var(--n) + var(--statement-soft)) - var(--i)) / var(--statement-soft), 1);
+    color: color-mix(in oklab, var(--color-fg) calc(var(--w) * 100%), var(--color-fg-3));
+  }
+
+  /* The one gradient phrase (§4.4): the gradient shows through as the fg-3 ink clears. */
+  .statement-emphasis {
+    background-image: linear-gradient(var(--gradient-angle), var(--color-accent), var(--color-accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .statement-emphasis .statement-word {
+    color: color-mix(in oklab, transparent calc(var(--w) * 100%), var(--color-fg-3));
+  }
+
+  /* Without JavaScript, and with reduced motion, it reads fully filled, with no pin. */
+  @media (scripting: none) {
+    .statement {
+      height: auto;
+    }
+
+    .statement-stage {
+      position: static;
+      min-height: 0;
+      padding-block: var(--spacing-section);
+    }
+
+    .statement-word {
+      --w: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .statement {
+      height: auto;
+    }
+
+    :root:not([data-motion="full"]) .statement-stage {
+      position: static;
+      min-height: 0;
+      padding-block: var(--spacing-section);
+    }
+
+    :root:not([data-motion="full"]) .statement-word {
+      --w: 1;
+    }
+  }
+
+  :root[data-motion="reduce"] .statement {
+    height: auto;
+  }
+
+  :root[data-motion="reduce"] .statement-stage {
+    position: static;
+    min-height: 0;
+    padding-block: var(--spacing-section);
+  }
+
+  :root[data-motion="reduce"] .statement-word {
+    --w: 1;
+  }
+
+  /* ─── About and At a glance (§7, Part 6) ─────────────────────────────────── */
+
+  .about-grid {
+    display: grid;
+    gap: calc(var(--spacing) * 16);
+  }
+
+  .about-bio {
+    display: flex;
+    max-width: var(--container-measure);
+    flex-direction: column;
+    gap: calc(var(--spacing) * 6);
+  }
+
+  .about-currently {
+    color: var(--color-fg-2);
+  }
+
+  .about-currently-label {
+    margin-inline-end: calc(var(--spacing) * 2);
+    color: var(--color-fg);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .about-currently-sep {
+    margin-inline: calc(var(--spacing) * 2);
+  }
+
+  .about-currently-link {
+    color: var(--color-fg);
+    text-decoration: underline;
+    text-underline-offset: var(--underline-offset);
+  }
+
+  @variant lg {
+    .about-grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: start;
+      gap: var(--grid-gutter);
+    }
+
+    .about-bio {
+      grid-column: 1 / span 5;
+    }
+
+    .glance {
+      grid-column: 6 / span 7;
+    }
+  }
+
+  /* A 12-column bento (§4.5) whose rows are as tall as a 6-span tile is wide on phones and a
+     4-span tile from tablets up, so every tile keeps a fixed shape: squares, 2:1 and 3:1. */
+  .glance {
+    container-type: inline-size;
+  }
+
+  .glance-title {
+    margin-block-end: calc(var(--spacing) * 4);
+  }
+
+  .glance-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-auto-rows: calc((100cqi - var(--glance-gap)) / 2);
+    gap: var(--glance-gap);
+  }
+
+  .glance-tile {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: var(--spacing);
+    padding: calc(var(--spacing) * 5);
+    overflow: hidden;
+    border-radius: var(--radius-card-l);
+    background-color: var(--color-card);
+    grid-column: span var(--span-phone);
+  }
+
+  @variant md {
+    .glance-grid {
+      grid-auto-rows: calc((100cqi - 2 * var(--glance-gap)) / 3);
+    }
+
+    .glance-tile {
+      grid-column: span var(--span);
+    }
+  }
+
+  .glance-label {
+    margin-block-end: auto;
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .glance-value {
+    font-size: var(--text-lead);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-lead--line-height);
+    letter-spacing: var(--text-lead--letter-spacing);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .glance-figure {
+    font-size: var(--text-title);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-title--line-height);
+    letter-spacing: var(--text-title--letter-spacing);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .glance-detail {
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .glance-meta {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .glance-label,
+  .glance-value,
+  .glance-figure,
+  .glance-detail,
+  .glance-meta {
+    display: block;
+  }
+
+  /* Tiles that do something when clicked: the whole tile is the button. */
+  .glance-tile:has(.glance-flip) {
+    padding: 0;
+  }
+
+  .glance-flip {
+    position: relative;
+    display: grid;
+    width: 100%;
+    height: 100%;
+    padding: calc(var(--spacing) * 5);
+    border-radius: inherit;
+    color: inherit;
+    text-align: start;
+    perspective: var(--glance-perspective);
+    cursor: pointer;
+  }
+
+  .glance-face {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: var(--spacing);
+    grid-area: 1 / 1;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    /* The face away from the visitor is hidden at the flip's midpoint, when it's edge-on:
+       backface-visibility alone fails where an ancestor clips (WebKit flattens 3D there). */
+    transition:
+      rotate var(--duration-ui-long) var(--ease-in-out),
+      opacity var(--duration-instant) linear calc(var(--duration-ui-long) / 2);
+  }
+
+  .glance-face[data-face="back"] {
+    opacity: 0;
+    rotate: y 180deg;
+  }
+
+  .glance-flip[data-flipped] .glance-face[data-face="front"] {
+    opacity: 0;
+  }
+
+  .glance-flip[data-flipped] .glance-face[data-face="back"] {
+    opacity: 1;
+  }
+
+  .glance-flip[data-flipped] .glance-face[data-face="front"] {
+    rotate: y -180deg;
+  }
+
+  .glance-flip[data-flipped] .glance-face[data-face="back"] {
+    rotate: y 0deg;
+  }
+
+  /* The ring: the degree's progress, drawn from 12 o'clock on its first reveal. */
+  .glance-ring {
+    position: relative;
+    display: grid;
+    width: var(--glance-ring);
+    height: var(--glance-ring);
+    margin-block: auto calc(var(--spacing) * 2);
+    place-items: center;
+  }
+
+  .glance-ring > svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    rotate: -90deg;
+  }
+
+  .glance-ring-track,
+  .glance-ring-arc {
+    fill: none;
+    stroke-width: 4;
+  }
+
+  .glance-ring-track {
+    stroke: var(--color-hairline);
+  }
+
+  .glance-ring-arc {
+    stroke: var(--color-accent);
+    stroke-dasharray: var(--ring) 100;
+    stroke-linecap: round;
+    transition: stroke-dasharray var(--duration-reveal-long) var(--ease-out);
+  }
+
+  .glance-tile[data-armed]:not([data-revealed]) .glance-ring-arc {
+    stroke-dasharray: 0 100;
+  }
+
+  .glance-ring-label {
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Local time: the clock beside the time, and the overlap once asked. */
+  .glance-time {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    gap: calc(var(--spacing) * 5);
+  }
+
+  .glance-time-text {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--spacing);
+  }
+
+  .glance-time-text .glance-label {
+    margin-block-end: 0;
+  }
+
+  .glance-zone {
+    color: var(--color-fg-2);
+    font-weight: var(--font-weight-regular);
+  }
+
+  .glance-clock {
+    display: block;
+    width: var(--glance-clock);
+    height: var(--glance-clock);
+    flex: none;
+  }
+
+  .glance-clock > svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .glance-clock-face {
+    fill: var(--color-surface);
+    stroke: var(--color-hairline);
+  }
+
+  .glance-clock-tick {
+    stroke: var(--color-fg-3);
+    stroke-linecap: round;
+  }
+
+  .glance-clock-hand {
+    stroke: var(--color-fg);
+    stroke-linecap: round;
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+    transition: rotate var(--duration-reveal-long) var(--ease-out);
+  }
+
+  .glance-clock-hand[data-hand="hour"] {
+    rotate: var(--hour);
+    stroke-width: 2.5;
+  }
+
+  .glance-clock-hand[data-hand="minute"] {
+    rotate: var(--minute);
+    stroke-width: 1.5;
+  }
+
+  .glance-clock-pin {
+    fill: var(--color-accent);
+  }
+
+  /* On its first reveal the hands sweep from 12 to the time. */
+  .glance-tile[data-armed]:not([data-revealed]) .glance-clock-hand {
+    rotate: 0deg;
+  }
+
+  .glance-overlap {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 2);
+    margin-block-start: calc(var(--spacing) * 2);
+  }
+
+  .glance-track {
+    position: relative;
+    display: block;
+    height: var(--glance-track);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-hairline);
+  }
+
+  .glance-track-bar {
+    position: absolute;
+    inset-block: 0;
+    left: calc(var(--from) * 100%);
+    width: calc((var(--to) - var(--from)) * 100%);
+    border-radius: var(--radius-pill);
+  }
+
+  .glance-track-bar[data-kind="theirs"] {
+    background-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  }
+
+  .glance-track-bar[data-kind="yours"] {
+    background-color: color-mix(in srgb, var(--color-fg-3) 45%, transparent);
+  }
+
+  .glance-track-bar[data-kind="shared"] {
+    background-color: var(--color-accent);
+  }
+
+  /* Reduced motion: tiles flip by crossfading, and nothing draws or sweeps in. */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .glance-face {
+      rotate: none;
+      transition: opacity var(--motion-resolve-duration) var(--ease-out);
+    }
+
+    :root:not([data-motion="full"]) :is(.glance-ring-arc, .glance-clock-hand) {
+      transition: none;
+    }
+  }
+
+  :root[data-motion="reduce"] .glance-face {
+    rotate: none;
+    transition: opacity var(--motion-resolve-duration) var(--ease-out);
+  }
+
+  :root[data-motion="reduce"] :is(.glance-ring-arc, .glance-clock-hand) {
+    transition: none;
+  }
+
+  /* ─── The highlights reel (§7, Part 6) ─────────────────────────────────────── */
+
+  .highlights-title {
+    margin-block-end: calc(var(--spacing) * 8);
+  }
+
+  /* Full bleed, with the first card on the wide container's edge. */
+  .reel {
+    --reel-inset: max(var(--grid-gutter), calc((100% - var(--container-wide)) / 2));
+    position: relative;
+  }
+
+  .reel-track {
+    display: flex;
+    gap: var(--reel-gap);
+    padding-block: calc(var(--spacing) * 2);
+    padding-inline: var(--reel-inset);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--reel-inset);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .reel-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .reel-track[data-dragging] {
+    scroll-snap-type: none;
+    user-select: none;
+  }
+
+  .reel-card {
+    position: relative;
+    display: grid;
+    width: calc(100% - var(--reel-peek));
+    flex: none;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: calc(var(--spacing) * 4);
+    padding: var(--reel-pad);
+    overflow: hidden;
+    border-radius: var(--radius-card-l);
+    background-color: var(--reel-card-bg);
+    color: var(--color-fg);
+    aspect-ratio: var(--aspect-portrait);
+    scroll-snap-align: start;
+  }
+
+  @variant md {
+    .reel-card {
+      width: min(calc(100% - var(--reel-peek)), var(--reel-card-max));
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      grid-template-rows: minmax(0, 1fr);
+      aspect-ratio: var(--aspect-wide);
+    }
+  }
+
+  .reel-text {
+    max-width: 14ch;
+    font-size: var(--text-title);
+    font-weight: var(--text-title--font-weight);
+    line-height: var(--text-title--line-height);
+    letter-spacing: var(--text-title--letter-spacing);
+    text-wrap: balance;
+  }
+
+  .reel-film {
+    display: grid;
+    min-height: 0;
+    place-items: center;
+  }
+
+  .reel-film > .film {
+    width: 100%;
+    height: 100%;
+  }
+
+  .reel-more {
+    position: absolute;
+    right: var(--reel-pad);
+    bottom: var(--reel-pad);
+    display: grid;
+    width: var(--target-min);
+    height: var(--target-min);
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-control-track);
+    color: var(--color-fg);
+  }
+
+  .reel-controls {
+    position: relative;
+    display: flex;
+    min-height: var(--target-min);
+    align-items: center;
+    justify-content: center;
+    margin-block-start: calc(var(--spacing) * 6);
+    padding-inline: var(--reel-inset);
+  }
+
+  .reel-dots {
+    display: flex;
+    padding-inline: calc(var(--spacing) * 1);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-control-track);
+  }
+
+  .reel-dot {
+    display: grid;
+    width: var(--reel-dot-target);
+    height: var(--target-min);
+    place-items: center;
+  }
+
+  @variant md {
+    .reel-dot {
+      width: var(--target-min);
+    }
+  }
+
+  .reel-dot-mark {
+    position: relative;
+    display: block;
+    width: var(--reel-dot);
+    height: var(--reel-dot);
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-fg-3);
+    transition: width var(--duration-ui) var(--ease-out);
+  }
+
+  /* The current card's dot stretches into a bar that fills while its film plays. */
+  .reel-dot[aria-current] .reel-dot-mark {
+    width: var(--reel-dot-active);
+  }
+
+  .reel-dot[aria-current] .reel-dot-mark::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: var(--color-fg);
+    transform-origin: left center;
+  }
+
+  .reel[data-reel-playing] .reel-dot[aria-current] .reel-dot-mark::after {
+    animation: reel-progress var(--film-loop) linear infinite;
+  }
+
+  @keyframes reel-progress {
+    from {
+      scale: 0 1;
+    }
+  }
+
+  .reel-pause {
+    position: absolute;
+    right: var(--reel-inset);
+    display: grid;
+    width: var(--target-min);
+    height: var(--target-min);
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-control-track);
+    color: var(--color-fg);
+  }
+
+  .reel-sheet {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 3);
+  }
+
+  /* ─── The micro-films ─── */
+
+  /* Each film rests on its final frame; it animates only while its card plays. Staggered
+     parts fade out at the end of their own loop, so nothing flashes when the loop restarts. */
+  .film {
+    overflow: visible;
+    font-family: var(--font-sans);
+  }
+
+  .film-caption {
+    fill: var(--color-fg-2);
+    color: var(--color-fg-2);
+    font-size: var(--film-caption);
+  }
+
+  .film-number {
+    fill: var(--color-fg);
+    color: var(--color-fg);
+    font-size: var(--film-number);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .film-number-large {
+    font-size: var(--film-hero);
+  }
+
+  .film-html {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--spacing) * 3);
+  }
+
+  .film-html .film-caption {
+    font-size: var(--text-caption);
+  }
+
+  .film-html .film-number {
+    font-size: var(--text-body);
+  }
+
+  .film-shelf,
+  .film-axis {
+    fill: none;
+    stroke: var(--color-fg-3);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  [data-playing] .film :is(.film-pulse, .film-doc, .film-sheet, .film-bar) {
+    transform-box: fill-box;
+  }
+
+  /* Fan-out: two pulses, their links drawing to six documents. */
+  .film-link {
+    fill: none;
+    stroke: color-mix(in srgb, var(--color-accent) 65%, transparent);
+    stroke-width: 2;
+    stroke-dasharray: 1;
+  }
+
+  .film-pulse-core {
+    fill: var(--color-accent);
+  }
+
+  .film-pulse-ring {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 2;
+    opacity: 0;
+  }
+
+  .film-doc-sheet {
+    fill: var(--film-paper);
+    stroke: var(--color-hairline);
+  }
+
+  .film-doc-line {
+    stroke: var(--color-fg-3);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+
+  [data-playing] .film-pulse {
+    transform-origin: center;
+    animation: film-pop var(--film-loop) var(--ease-out) calc(var(--k) * var(--film-stagger)) infinite backwards;
+  }
+
+  [data-playing] .film-pulse-ring {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: film-ring var(--film-loop) var(--ease-out) infinite;
+  }
+
+  [data-playing] .film-link {
+    animation: film-draw var(--film-loop) var(--ease-in-out) calc(var(--k) * var(--film-stagger)) infinite backwards;
+  }
+
+  [data-playing] .film-doc {
+    animation: film-arrive var(--film-loop) var(--ease-out) calc(var(--k) * var(--film-stagger)) infinite backwards;
+  }
+
+  @keyframes film-pop {
+    0%,
+    4% {
+      opacity: 0;
+      scale: 0;
+    }
+
+    14%,
+    90% {
+      opacity: 1;
+      scale: 1;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes film-ring {
+    0%,
+    10% {
+      opacity: 0;
+      scale: 1;
+    }
+
+    14% {
+      opacity: 0.7;
+    }
+
+    36%,
+    100% {
+      opacity: 0;
+      scale: 2.4;
+    }
+  }
+
+  @keyframes film-draw {
+    0%,
+    16% {
+      stroke-dashoffset: 1;
+    }
+
+    44%,
+    90% {
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+
+    100% {
+      opacity: 0;
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes film-arrive {
+    0%,
+    30% {
+      opacity: 0;
+      translate: calc(var(--film-shift) * -1) 0;
+    }
+
+    46%,
+    90% {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes film-fade-in {
+    0%,
+    40% {
+      opacity: 0;
+    }
+
+    56%,
+    90% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+
+  [data-playing] .film-caption {
+    animation: film-fade-in var(--film-loop) var(--ease-out) infinite;
+  }
+
+  /* Cost: the counter counts to the range while the token bar compresses. */
+  .film-cost-counter {
+    --film-lo: var(--lo-final);
+    --film-hi: var(--hi-final);
+    counter-reset: lo var(--film-lo) hi var(--film-hi);
+    font-size: var(--text-title);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-title--line-height);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .film-cost-counter::after {
+    content: "$0." counter(lo, decimal-leading-zero) "–0." counter(hi, decimal-leading-zero);
+  }
+
+  .film-tokens {
+    position: relative;
+    display: block;
+    width: 80%;
+    height: var(--film-bar);
+    margin-block-start: calc(var(--spacing) * 4);
+    border-radius: var(--radius-pill);
+  }
+
+  .film-tokens > * {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    border-radius: inherit;
+  }
+
+  .film-tokens-full {
+    width: 100%;
+    background-color: color-mix(in srgb, var(--color-fg-3) 30%, transparent);
+  }
+
+  .film-tokens-kept {
+    width: calc(var(--keep-low) * 100%);
+    background-color: var(--color-accent);
+    transform-origin: left center;
+  }
+
+  .film-tokens-band {
+    left: calc(var(--keep-low) * 100%);
+    width: calc((var(--keep-high) - var(--keep-low)) * 100%);
+    border-radius: 0;
+    background-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+  }
+
+  [data-playing] .film-cost-counter {
+    animation: film-count var(--film-loop) var(--ease-out) infinite;
+  }
+
+  [data-playing] .film-tokens-kept {
+    animation: film-compress var(--film-loop) var(--ease-in-out) infinite;
+  }
+
+  [data-playing] .film-tokens-band {
+    animation: film-fade-in var(--film-loop) var(--ease-out) infinite;
+  }
+
+  @keyframes film-count {
+    0%,
+    8% {
+      --film-lo: 0;
+      --film-hi: 0;
+    }
+
+    46%,
+    100% {
+      --film-lo: var(--lo-final);
+      --film-hi: var(--hi-final);
+    }
+  }
+
+  @keyframes film-compress {
+    0%,
+    12% {
+      scale: calc(1 / var(--keep-low)) 1;
+    }
+
+    48%,
+    100% {
+      scale: 1 1;
+    }
+  }
+
+  /* Papers: the sheets drop and settle under the conference. */
+  .film-venue {
+    fill: var(--color-fg);
+    font-size: var(--film-title);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .film-sheet {
+    rotate: var(--tilt);
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+  }
+
+  .film-sheet-page {
+    fill: var(--film-paper);
+    stroke: var(--color-hairline);
+  }
+
+  .film-sheet-line {
+    stroke: var(--color-fg-3);
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+
+  .film-sheet-line[data-title] {
+    stroke: var(--color-fg-2);
+    stroke-width: 6;
+  }
+
+  [data-playing] .film-sheet {
+    animation: film-settle var(--film-loop) var(--ease-out) calc(var(--k) * var(--film-stagger) * 2) infinite backwards;
+  }
+
+  [data-playing] .film-venue {
+    animation: film-fade-in var(--film-loop) var(--ease-out) infinite;
+  }
+
+  @keyframes film-settle {
+    0%,
+    8% {
+      opacity: 0;
+      rotate: calc(var(--tilt) * 3);
+      translate: 0 calc(var(--film-drop) * -1);
+    }
+
+    34%,
+    90% {
+      opacity: 1;
+      rotate: var(--tilt);
+      translate: 0 0;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* ROC: the curve draws to its AUC and the area under it fills. */
+  .film-chance {
+    fill: none;
+    stroke: var(--color-fg-3);
+    stroke-dasharray: 4 6;
+    stroke-width: 1.5;
+  }
+
+  .film-roc-curve {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+  }
+
+  .film-roc-area {
+    fill: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  }
+
+  [data-playing] .film-roc-curve {
+    animation: film-draw var(--film-loop) var(--ease-in-out) infinite;
+  }
+
+  [data-playing] .film-roc-area {
+    animation: film-fade-in var(--film-loop) var(--ease-out) infinite;
+  }
+
+  /* Condense: the field of dots thins to the few, and they gather. */
+  .film-dot {
+    fill: var(--color-fg-3);
+  }
+
+  .film-dot[data-keep] {
+    fill: var(--color-accent);
+  }
+
+  .film-field,
+  .film-field-label {
+    opacity: 0;
+  }
+
+  [data-playing] .film-field {
+    animation: film-thin var(--film-loop) var(--ease-out) infinite;
+  }
+
+  [data-playing] .film-dot[data-keep] {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: film-gather var(--film-loop) var(--ease-in-out) infinite;
+  }
+
+  [data-playing] .film-field-label {
+    animation: film-thin var(--film-loop) var(--ease-out) infinite;
+  }
+
+  [data-playing] .film-cluster-label {
+    animation: film-fade-in var(--film-loop) var(--ease-out) infinite;
+  }
+
+  @keyframes film-thin {
+    0% {
+      opacity: 0;
+    }
+
+    8%,
+    28% {
+      opacity: 1;
+    }
+
+    44%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* In the field the survivors match the patterned dots, so nothing gives them away early. */
+  @keyframes film-gather {
+    0% {
+      fill: var(--color-fg-3);
+      opacity: 0;
+      scale: var(--film-dot-field);
+      translate: var(--fx) var(--fy);
+    }
+
+    8%,
+    32% {
+      fill: var(--color-fg-3);
+      opacity: 1;
+      scale: var(--film-dot-field);
+      translate: var(--fx) var(--fy);
+    }
+
+    42% {
+      fill: var(--color-accent);
+    }
+
+    66%,
+    90% {
+      opacity: 1;
+      scale: 1;
+      translate: 0 0;
+    }
+
+    100% {
+      opacity: 0;
+      translate: 0 0;
+    }
+  }
+
+  /* Ring: the coverage fills, its share counting up. */
+  .film-html[data-film="ring"] {
+    display: grid;
+    grid-template-rows: auto auto;
+    align-content: center;
+    justify-items: center;
+  }
+
+  .film-ring,
+  .film-ring-label {
+    grid-area: 1 / 1;
+  }
+
+  .film-ring {
+    width: min(100%, var(--glance-clock) * 2.4);
+    aspect-ratio: 1;
+    rotate: -90deg;
+  }
+
+  .film-ring-track,
+  .film-ring-arc {
+    fill: none;
+    stroke-width: 16;
+  }
+
+  .film-ring-track {
+    stroke: color-mix(in srgb, var(--color-fg-3) 30%, transparent);
+  }
+
+  .film-ring-arc {
+    stroke: var(--color-accent);
+    stroke-dasharray: var(--to) 100;
+    stroke-linecap: round;
+  }
+
+  .film-ring-label {
+    --film-p: var(--to);
+    align-self: center;
+    counter-reset: p var(--film-p);
+    font-size: var(--text-title);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .film-ring-label::after {
+    content: counter(p) var(--suffix);
+  }
+
+  [data-playing] .film-ring-arc {
+    animation: film-ring-fill var(--film-loop) var(--ease-out) infinite;
+  }
+
+  [data-playing] .film-ring-label {
+    animation: film-ring-count var(--film-loop) var(--ease-out) infinite;
+  }
+
+  @keyframes film-ring-fill {
+    0%,
+    8% {
+      stroke-dasharray: 0 100;
+    }
+
+    58%,
+    90% {
+      opacity: 1;
+      stroke-dasharray: var(--to) 100;
+    }
+
+    100% {
+      opacity: 0;
+      stroke-dasharray: var(--to) 100;
+    }
+  }
+
+  @keyframes film-ring-count {
+    0%,
+    8% {
+      --film-p: 0;
+    }
+
+    58%,
+    100% {
+      --film-p: var(--to);
+    }
+  }
+
+  /* Bars: a week of days rises to the daily count. */
+  .film-bar {
+    fill: var(--color-accent);
+    transform-origin: 50% 100%;
+  }
+
+  .film-target {
+    stroke: var(--color-fg-2);
+    stroke-dasharray: 6 6;
+    stroke-width: 2;
+  }
+
+  [data-playing] .film-bar {
+    animation: film-rise var(--film-loop) var(--ease-out) calc(var(--k) * var(--film-stagger)) infinite backwards;
+  }
+
+  [data-playing] .film-target {
+    animation: film-fade-in var(--film-loop) var(--ease-out) infinite;
+  }
+
+  @keyframes film-rise {
+    0%,
+    6% {
+      scale: 1 0;
+    }
+
+    36%,
+    90% {
+      opacity: 1;
+      scale: 1 1;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* Reduced motion: every film rests on its final frame. */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .reel [data-playing] * {
+      animation: none !important;
+    }
+  }
+
+  :root[data-motion="reduce"] .reel [data-playing] * {
+    animation: none !important;
+  }
+
   /* ─── Search (§6.3) ───────────────────────────────────────────────────────── */
 
   /* A centered glass panel in a top-layer dialog, 640px wide, with a 24px field. */

@@ -4,7 +4,9 @@
  * and come up. Text tokens switch at the crossfade's midpoint, when the background is
  * closer to the next surface than to the last.
  *
- * - Sections are top-level elements with data-section and data-surface.
+ * - Sections are top-level elements with data-section and data-surface. A scene that opens
+ *   another section says so with data-section-for (the statement opens About), and is
+ *   reported as that section.
  * - The backdrop is two fixed layers: "from" shows the current surface and "to" fades in
  *   the next one. Only opacity changes, so the compositor does the work (§2 rule 6).
  * - Progress follows scroll position, smoothed against elapsed time like a GSAP scrub,
@@ -78,7 +80,7 @@ export function createSurfaceController(options: {
       const rect = node.getBoundingClientRect();
       const surface = node.getAttribute("data-surface");
       return {
-        id: node.id || null,
+        id: node.getAttribute("data-section-for") || node.id || null,
         name: node.getAttribute("data-section-name"),
         surface: surface === "dark" || surface === "light-alt" ? surface : "light",
         top: rect.top + scrollY,

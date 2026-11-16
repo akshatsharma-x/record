@@ -1,7 +1,10 @@
 import { Fragment } from "react";
+import { About } from "@/components/about/about";
+import { Statement } from "@/components/about/statement";
 import { Hero } from "@/components/hero/hero";
+import { Highlights } from "@/components/highlights/highlights";
 import { Container, Section, Stack } from "@/components/ui/layout";
-import { Body, Display, Eyebrow, Footnote, FootnoteBackLink, FootnoteRef, Lead, Title } from "@/components/ui/type";
+import { Body, Display, Eyebrow, Footnote, FootnoteBackLink, FootnoteRef, Lead } from "@/components/ui/type";
 import { content } from "@/content";
 import { allSkills, credentialsHeadline } from "@/content/derive";
 import type { Claim } from "@/content/schema";
@@ -17,7 +20,8 @@ const dates = (start: string, end: string) =>
 /**
  * The story (DESIGN.md §3.1), in order. Part 4 laid down its structure so the Island and
  * Search have somewhere to go: every section with its id, surface and real copy, plainly
- * set. Parts 5–12 turn each one into its signature moment (§7); the hero is Part 5's.
+ * set. Parts 5–12 turn each one into its signature moment (§7): the hero is Part 5's, the
+ * statement, About and the highlights Part 6's.
  */
 export default function Home() {
   const { profile, copy, highlights, experience, publications, conferences, projects, education, achievements } = content;
@@ -42,37 +46,9 @@ export default function Home() {
     <>
       <Hero photo={portraitFor(profile.photo)} />
 
-      <Section id="about" name={nameOf("about")} surface="light" aria-labelledby="about-title">
-        <Container width="measure">
-          <Stack gap={6}>
-            <Eyebrow tone="fg-2">{nameOf("about")}</Eyebrow>
-            <Display id="about-title">{copy.about.headline}</Display>
-            {profile.bio.map((paragraph) => (
-              <Body key={paragraph.text}>{cite(paragraph)}</Body>
-            ))}
-          </Stack>
-        </Container>
-      </Section>
-
-      <Section id="highlights" name={nameOf("highlights")} surface="light-alt" aria-labelledby="highlights-title">
-        <Container>
-          <Stack gap={6}>
-            <Title as="h2" id="highlights-title">
-              {nameOf("highlights")}
-            </Title>
-            <ul className="flex flex-col gap-3">
-              {highlights.map((highlight) => (
-                <li key={highlight.id}>
-                  <Lead as="p">
-                    {cite(highlight)}
-                    {highlight.source ? <span className="text-fg-2"> {highlight.source}</span> : null}
-                  </Lead>
-                </li>
-              ))}
-            </ul>
-          </Stack>
-        </Container>
-      </Section>
+      <Statement />
+      <About bio={profile.bio.map((paragraph) => cite(paragraph))} />
+      <Highlights texts={highlights.map((highlight) => cite(highlight))} />
 
       <Section id="experience" name={nameOf("experience")} surface="light" aria-labelledby="experience-title">
         <Container>

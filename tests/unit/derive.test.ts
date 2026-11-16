@@ -7,8 +7,10 @@ import {
   compareTable,
   counts,
   credentialsHeadline,
+  currently,
   drafts,
   gaps,
+  glance,
   graduation,
   heroChips,
   initialism,
@@ -17,9 +19,11 @@ import {
   numbersIn,
   publicationStatus,
   publicLocation,
+  reel,
   roleDurations,
   searchIndex,
   skillEvidence,
+  statementWords,
   timeline,
   warnings,
 } from "@/content/derive";
@@ -285,6 +289,90 @@ describe("the hero", () => {
     expect(clockPlace(content)).toEqual({ label: "IST", timeZone: "Asia/Kolkata" });
     const confirmed = parseContent({ ...data, profile: { ...data.profile, location: { ...data.profile.location, cityConfirmed: true } } });
     expect(clockPlace(confirmed)).toEqual({ label: "in Jaipur", timeZone: "Asia/Kolkata" });
+  });
+});
+
+describe("the statement", () => {
+  it("is every word of the copy, in order, with the one gradient phrase marked", () => {
+    const words = statementWords(content);
+    expect(words.map((word, i) => `${i > 0 && word.space ? " " : ""}${word.text}`).join("")).toBe(content.copy.statement.headline);
+    expect(words.filter((word) => word.emphasis).map((word) => word.text)).toEqual(["the", "clear", "kind"]);
+  });
+
+  it("splits a word the phrase ends inside, so its punctuation keeps no gradient", () => {
+    const copy = { ...data.copy, statement: { headline: "I build the clear kind.", emphasis: "clear kind" } };
+    const words = statementWords(parseContent({ ...data, copy }));
+    expect(words.slice(-2)).toEqual([
+      { text: "kind", emphasis: true, space: true },
+      { text: ".", emphasis: false, space: false },
+    ]);
+  });
+});
+
+describe("About", () => {
+  it("says what Akshat is building and researching, and hides what's empty", () => {
+    expect(currently(content)).toEqual([
+      { kind: "building", text: "Cartographer", href: "#experience" },
+      { kind: "researching", text: "interpretable ML for sustainability" },
+    ]);
+    const reading = parseContent({ ...data, currentFocus: { ...data.currentFocus, reading: "LLMs in production" } });
+    expect(currently(reading).at(-1)).toEqual({ kind: "reading", text: "LLMs in production" });
+  });
+
+  it("gives the bento its facts, every count from content", () => {
+    const facts = glance(content);
+    expect(facts.now).toEqual({ org: "United Airlines", role: "AI & ML Intern (Generative AI)", since: "2026-06", sinceLabel: "June 2026" });
+    expect(facts.studying).toMatchObject({ degree: "B.Tech", field: "CSE", institution: "Manipal University Jaipur", endLabel: "July 2027" });
+    expect(facts.research).toEqual({ papers: 2, venues: [{ name: "SCI-2026", proceedings: "Springer LNNS" }] });
+    expect(facts.experience.internships).toBe(counts(content).internships);
+    expect(facts.work.projects).toBe(counts(content).projects);
+    expect(facts.time).toEqual({
+      timeZone: "Asia/Kolkata",
+      zoneLabel: "IST",
+      hours: { start: "10:00", end: "18:00" },
+      visitorDay: { start: "09:00", end: "17:00" },
+    });
+  });
+});
+
+describe("the highlights reel", () => {
+  const items = new Map(reel(content).map((item) => [item.id, item]));
+
+  it("has a card for every highlight, each linked to its section", () => {
+    expect([...items.keys()]).toEqual(content.highlights.map((highlight) => highlight.id));
+    expect(items.get("cartographer")).toMatchObject({ section: "experience", sectionName: "Experience", footnotes: [1] });
+    expect(items.get("sih-top-50")).toMatchObject({ section: "credentials", sectionName: "Credentials" });
+  });
+
+  it("labels every film's figures exactly as its footnotes state them", () => {
+    expect(items.get("cartographer")!.film).toEqual({ kind: "fan-out", from: 2, to: 6, fromLabel: "2", toLabel: "6" });
+    expect(items.get("pennies-a-run")!.film).toEqual({
+      kind: "cost",
+      cents: [8, 11],
+      costLabel: "$0.08–0.11",
+      compression: [22, 25],
+      compressionLabel: "22–25%",
+    });
+    expect(items.get("churn-accuracy")!.film).toEqual({ kind: "roc", auc: 0.98, aucLabel: "0.98" });
+    expect(items.get("sih-top-50")!.film).toEqual({ kind: "condense", from: 300, to: 50, fromLabel: "300+", toLabel: "50" });
+    expect(items.get("test-coverage")!.film).toEqual({ kind: "ring", percent: 90, label: "90%+" });
+    expect(items.get("daily-users")!.film).toEqual({ kind: "bars", value: 2500, label: "2,500+" });
+  });
+
+  it("counts the papers from content, and gives their titles as the full fact", () => {
+    const papers = items.get("two-papers")!;
+    expect(papers.film).toEqual({ kind: "papers", count: 2, venue: "SCI-2026" });
+    expect(papers.fact).toEqual(content.publications.map((paper) => paper.title));
+    expect(papers.sources).toEqual(["SCI-2026, Springer LNNS"]);
+  });
+
+  it("gives each footnoted card its notes and their sources", () => {
+    expect(items.get("pennies-a-run")).toMatchObject({
+      fact: [content.footnotes.find((note) => note.id === 2)!.note],
+      sources: ["United Airlines, 2026."],
+    });
+    // Footnote 5's source is still a gap, so it lists none.
+    expect(items.get("churn-accuracy")!.sources).toEqual([]);
   });
 });
 

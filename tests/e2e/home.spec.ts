@@ -10,6 +10,7 @@ test("the home page tells the story in order, each section on its surface", asyn
   );
   expect(sections).toEqual([
     "top:dark",
+    "statement:dark",
     "about:light",
     "highlights:light-alt",
     "experience:light",
@@ -33,6 +34,27 @@ test("every footnote mark links to its note, and back", async ({ page }) => {
     await expect(page.locator(href!)).toHaveCount(1);
   }
 });
+
+for (const locale of ["en-IN", "de-DE", "ja-JP"]) {
+  test.describe(`in ${locale}`, () => {
+    test.use({ locale });
+
+    test("hydrates without a mismatch or any other error", async ({ page }) => {
+      // The HTML is written one fixed way; a visitor's locale may only change it after hydration.
+      const errors: string[] = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      page.on("console", (message) => {
+        if (message.type() === "error") errors.push(message.text());
+      });
+      await page.goto("/");
+      await page.waitForLoadState("networkidle");
+      await page.locator("#about").scrollIntoViewIfNeeded();
+      await page.locator("#highlights").scrollIntoViewIfNeeded();
+      await page.waitForTimeout(500);
+      expect(errors).toEqual([]);
+    });
+  });
+}
 
 test("no gap or placeholder ever renders", async ({ page }) => {
   await page.goto("/");

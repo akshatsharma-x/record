@@ -11,18 +11,18 @@ import { claimsOf, formatPath, resolvePattern } from "./schema.ts";
 import type { CalendarDate } from "../lib/dates.ts";
 import {
   calendarDateIn,
-  daysBetween,
   endOfMonthExclusive,
   formatYearMonth,
-  monthIndex,
   monthsInclusive,
   parseIsoDate,
   parseYearMonth,
   toIsoDate,
   utcDate,
 } from "../lib/dates.ts";
+import { degreeProgress, monthsLabel } from "../lib/glance.ts";
 import type { SectionId } from "../lib/sections.ts";
 import { SECTIONS } from "../lib/sections.ts";
+import { numbersIn, valuesIn } from "./numbers.ts";
 
 // ─── Basics ──────────────────────────────────────────────────────────────────
 
@@ -93,40 +93,20 @@ export function roleDurations(content: Content, now: Date) {
   });
 }
 
-function monthsLabel(months: number): string {
-  const years = Math.floor(months / 12);
-  const rest = months % 12;
-  const parts: string[] = [];
-  if (years > 0) parts.push(`${years} ${years === 1 ? "year" : "years"}`);
-  if (rest > 0 || years === 0) parts.push(`${rest} ${rest === 1 ? "month" : "months"}`);
-  return parts.join(" ");
-}
-
 /**
  * Degree progress from the first day of the start month to the first day of the
  * graduation month, measured against today. Content knows the month, not the day.
+ * The At-a-glance tile computes the same thing in the browser (lib/glance.ts).
  */
 export function graduation(content: Content, now: Date) {
   const degree = content.education.find(isDegree);
   if (!degree) return null;
-  const today = todayFor(content, now);
-  const todayDate = utcDate(today.year, today.month, today.day);
-  const start = parseYearMonth(degree.start);
-  const end = parseYearMonth(degree.end);
-  const startDate = utcDate(start.year, start.month);
-  const endDate = utcDate(end.year, end.month);
-  const progress = clamp(daysBetween(startDate, todayDate) / daysBetween(startDate, endDate), 0, 1);
   return {
     id: degree.id,
     institution: degree.institution,
     start: degree.start,
     end: degree.end,
-    progress,
-    /** Rounded down, so it never overstates. */
-    percent: Math.floor(progress * 100),
-    monthsRemaining: Math.max(0, monthIndex(end) - monthIndex(today)),
-    daysToGraduationMonth: Math.max(0, daysBetween(todayDate, endDate)),
-    graduated: todayDate >= endDate,
+    ...degreeProgress(degree.start, degree.end, content.profile.location.timeZone, now),
   };
 }
 
@@ -440,6 +420,185 @@ export function clockPlace(content: Content): { label: string; timeZone: string 
   return { label: location.city ? `in ${location.city}` : location.timeZoneLabel, timeZone: location.timeZone };
 }
 
+// ─── The statement, About and the highlights (Part 6) ────────────────────────
+
+export interface StatementWord {
+  text: string;
+  /** Part of the gradient phrase. */
+  emphasis: boolean;
+  /** Whether a space comes before it. A word the phrase's edge splits ("kind.") has none. */
+  space: boolean;
+}
+
+/** The statement in reading order, a word at a time, with its gradient phrase marked. */
+export function statementWords(content: Content): StatementWord[] {
+  const { headline, emphasis } = content.copy.statement;
+  const from = headline.indexOf(emphasis);
+  const to = from + emphasis.length;
+  const words: StatementWord[] = [];
+  for (const match of headline.matchAll(/\S+/g)) {
+    const start = match.index;
+    const end = start + match[0].length;
+    // Split a word where the phrase begins or ends inside it.
+    const cuts = [start, ...[from, to].filter((cut) => cut > start && cut < end), end];
+    for (let i = 0; i < cuts.length - 1; i++) {
+      words.push({
+        text: headline.slice(cuts[i], cuts[i + 1]),
+        emphasis: cuts[i] >= from && cuts[i + 1] <= to,
+        space: i === 0 && start > 0,
+      });
+    }
+  }
+  return words;
+}
+
+/** Lowercases a phrase's first letter to follow a verb, unless it starts with an acronym ("ML"). */
+function afterVerb(text: string): string {
+  const first = text.split(/\s/, 1)[0];
+  return /^[A-Z][a-z]/.test(first) ? text[0].toLowerCase() + text.slice(1) : text;
+}
+
+export interface CurrentItem {
+  kind: "building" | "researching" | "reading";
+  text: string;
+  /** Where to read more, for what Akshat is building. */
+  href?: string;
+}
+
+/** The quiet "Currently" line: building, researching, reading. Empty items stay hidden. */
+export function currently(content: Content): CurrentItem[] {
+  const { building, researching, reading } = content.currentFocus;
+  const items: CurrentItem[] = [{ kind: "building", text: building.name, href: "#experience" }];
+  if (researching) items.push({ kind: "researching", text: afterVerb(researching) });
+  if (reading) items.push({ kind: "reading", text: afterVerb(reading) });
+  return items;
+}
+
+/**
+ * The At-a-glance bento's facts. What depends on today (the role's length, degree
+ * progress, Akshat's clock and its overlap with the visitor's day) is computed in the
+ * browser from these, with lib/glance.ts.
+ */
+export function glance(content: Content) {
+  const role = nowRole(content);
+  const degree = content.education.find(isDegree) ?? null;
+  const total = counts(content);
+  const venues = [...new Set(content.publications.map((paper) => paper.presentedAt))]
+    .map((id) => content.conferences.find((conference) => conference.id === id))
+    .filter((conference) => conference !== undefined)
+    .map((conference) => ({ name: conference.name, proceedings: conference.proceedings }));
+  const location = publicLocation(content);
+  return {
+    now: { org: role.org, role: role.role, since: role.since, sinceLabel: formatYearMonth(role.since, "en-US", "long") },
+    studying: degree && {
+      degree: degree.degree,
+      field: initialism(degree.field),
+      institution: degree.institution,
+      start: degree.start,
+      end: degree.end,
+      endLabel: formatYearMonth(degree.end, "en-US", "long"),
+    },
+    research: { papers: total.papers, venues },
+    experience: { internships: total.internships },
+    work: { projects: total.projects },
+    time: {
+      timeZone: location.timeZone,
+      zoneLabel: location.timeZoneLabel,
+      hours: content.profile.workingHours,
+      visitorDay: content.copy.about.visitorDay,
+    },
+  };
+}
+
+export type Glance = ReturnType<typeof glance>;
+
+/**
+ * The exact words a note uses for a figure ("300+", "2,500+", "$0.08–0.11"), so a film
+ * labels it the way the footnote states it.
+ */
+function statedAs(cited: string, values: readonly number[]): string {
+  const token = numbersIn(cited).find((candidate) => values.every((value) => valuesIn(candidate).includes(value)));
+  if (!token) throw new Error(`no note states ${values.join(" and ")}`);
+  return token;
+}
+
+export type ReelFilm =
+  | { kind: "fan-out"; from: number; to: number; fromLabel: string; toLabel: string }
+  | { kind: "cost"; cents: [number, number]; costLabel: string; compression: [number, number]; compressionLabel: string }
+  | { kind: "papers"; count: number; venue: string }
+  | { kind: "roc"; auc: number; aucLabel: string }
+  | { kind: "condense"; from: number; to: number; fromLabel: string; toLabel: string }
+  | { kind: "ring"; percent: number; label: string }
+  | { kind: "bars"; value: number; label: string };
+
+export interface ReelItem {
+  id: string;
+  text: string;
+  footnotes: number[];
+  /** The full fact, for the card's sheet: the notes it cites, or the papers it counts. */
+  fact: string[];
+  /** Where the fact comes from: each footnote's source, or the highlight's own. */
+  sources: string[];
+  section: SectionId;
+  sectionName: string;
+  film: ReelFilm;
+}
+
+/** The highlights reel (DESIGN.md §7): each card's fact, its sources, its section and its film. */
+export function reel(content: Content): ReelItem[] {
+  const notes = new Map(content.footnotes.map((footnote) => [footnote.id, footnote]));
+  return content.highlights.map((highlight) => {
+    const cited = highlight.footnotes.map((n) => notes.get(n)).filter((note) => note !== undefined);
+    const stated = [highlight.text, highlight.source ?? "", ...cited.flatMap((note) => [note.note, note.source ?? ""])].join(" ");
+    const sources = [...cited.map((note) => note.source).filter((source): source is string => Boolean(source)), ...(highlight.source ? [highlight.source] : [])];
+    const section = SECTIONS.find((entry) => entry.id === highlight.ref.section)!;
+    const { film } = highlight;
+    let fact = cited.map((note) => note.note);
+    let resolved: ReelFilm;
+    switch (film.kind) {
+      case "fan-out":
+      case "condense":
+        resolved = { kind: film.kind, from: film.from, to: film.to, fromLabel: statedAs(stated, [film.from]), toLabel: statedAs(stated, [film.to]) };
+        break;
+      case "cost":
+        resolved = {
+          kind: "cost",
+          cents: [Math.round(film.cost[0] * 100), Math.round(film.cost[1] * 100)],
+          costLabel: statedAs(stated, film.cost),
+          compression: film.compression,
+          compressionLabel: statedAs(stated, film.compression),
+        };
+        break;
+      case "papers": {
+        const papers = content.publications.filter((paper) => paper.presentedAt === film.conference);
+        const venue = content.conferences.find((conference) => conference.id === film.conference)!;
+        resolved = { kind: "papers", count: papers.length, venue: venue.name };
+        if (fact.length === 0) fact = papers.map((paper) => paper.title);
+        break;
+      }
+      case "roc":
+        resolved = { kind: "roc", auc: film.auc, aucLabel: statedAs(stated, [film.auc]) };
+        break;
+      case "ring":
+        resolved = { kind: "ring", percent: film.percent, label: statedAs(stated, [film.percent]) };
+        break;
+      case "bars":
+        resolved = { kind: "bars", value: film.value, label: statedAs(stated, [film.value]) };
+        break;
+    }
+    return {
+      id: highlight.id,
+      text: highlight.text,
+      footnotes: highlight.footnotes,
+      fact,
+      sources,
+      section: section.id,
+      sectionName: section.name,
+      film: resolved,
+    };
+  });
+}
+
 // ─── Search index (Part 4) ───────────────────────────────────────────────────
 
 export type SearchKind = "section" | "role" | "work" | "paper" | "skill" | "education" | "honor" | "certificate";
@@ -584,32 +743,7 @@ export interface ContentWarning {
   message: string;
 }
 
-/**
- * Names and versions that contain digits but state no claim. A new one shows up as a
- * "number without a footnote" warning; add it here if it isn't a claim.
- */
-export const NAMES_WITH_DIGITS = [
-  "GPT-4.1",
-  "Claude Sonnet 4.5",
-  "Gemini 1.5",
-  "Next.js 16",
-  "SHA-256",
-  "WCAG 2.1",
-  "PM2.5",
-  "SCI-2026",
-  "Fortune 500",
-  "HTML5",
-  "A2A",
-];
-
-/** The numbers in a text that need a footnote: everything except names, versions and years. */
-export function numbersIn(text: string): string[] {
-  let rest = text;
-  for (const name of NAMES_WITH_DIGITS) rest = rest.split(name).join(" ");
-  // Years and year ranges ("2027", "2025–26"), but not "2,500" or "2025.5".
-  rest = rest.replace(/(?<!\d|\d[.,])(?:19|20)\d{2}(?:–\d{2})?(?!\d|[.,]\d|[%+])/g, " ");
-  return (rest.match(/[$~]?\d[\d.,/–-]*[%+]?/g) ?? []).map((n) => n.replace(/[.,–-]+$/, ""));
-}
+export { NAMES_WITH_DIGITS, numbersIn } from "./numbers.ts";
 
 /** Warnings don't fail the build. They list what Akshat should look at. */
 export function warnings(content: Content): ContentWarning[] {
@@ -698,10 +832,6 @@ export type Derived = ReturnType<typeof derive>;
 
 function isDegree(entry: Education): entry is Degree {
   return entry.kind === "degree";
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
 }
 
 function range(from: number, to: number): number[] {
