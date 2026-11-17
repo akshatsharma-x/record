@@ -1148,6 +1148,187 @@ export function skillsOf(content: Content, kind: EvidenceKind, id: string): stri
     .map((skill) => skill.id);
 }
 
+// ─── Credentials (Part 11) ───────────────────────────────────────────────────
+
+/** A field on a pass's face, as a wallet pass sets it: a small label over its value. */
+export interface PassField {
+  label: string;
+  value: string;
+  /** IDs are set in mono. */
+  mono: boolean;
+  footnotes: number[];
+}
+
+/** When a certificate expires, as far as content knows; the browser can only make it "Expired". */
+export interface PassExpiry {
+  /** "Expires", or "Expired" once its month has passed. */
+  label: string;
+  /** "Mar 2029", or "Never". */
+  value: string;
+  /** Its month, for the browser to check against today; null when it never expires. */
+  expires: string | null;
+  expired: boolean;
+}
+
+/** What a pass's back shows, in order. */
+export type PassSection =
+  | { kind: "list"; label: string; items: string[] }
+  | { kind: "text"; label: string; text: string; footnotes: number[] }
+  | { kind: "link"; label: string; href: string; text: string }
+  | { kind: "expiry"; expiry: PassExpiry };
+
+export interface Pass {
+  id: string;
+  kind: "education" | "certificate";
+  /** "Education" or "Certificate". */
+  label: string;
+  title: string;
+  subtitle: string;
+  fields: PassField[];
+  /** The public page that verifies it: its QR code points here. */
+  verifyUrl: string | null;
+  /** Its color: the issuer's tone from content, else one of the finish's. */
+  tone: string | null;
+  expiry: PassExpiry | null;
+  back: PassSection[];
+}
+
+/**
+ * The latest month content knows has begun (as the edit's scale does): the roles' starts
+ * and ends and the conferences'. An expiry before it has certainly passed.
+ */
+function knownMonth(content: Content): string {
+  const months = [
+    ...content.experience.flatMap((role) => [role.start, ...(role.end === "present" ? [] : [role.end])]),
+    ...content.conferences.map((conference) => conference.end.slice(0, 7)),
+  ];
+  return months.sort().at(-1) ?? "0000-01";
+}
+
+/** A certificate's expiry, honestly: "Expired" only once content knows its month has passed. */
+export function expiryOf(content: Content, expires: string | "never" | null): PassExpiry | null {
+  const words = content.copy.credentials.wallet;
+  if (expires === null) return null;
+  if (expires === "never") return { label: words.expires, value: words.never, expires: null, expired: false };
+  const expired = expires < knownMonth(content);
+  return { label: expired ? words.expired : words.expires, value: formatYearMonth(expires), expires, expired };
+}
+
+/**
+ * The wallet (DESIGN.md §7.8): Education first, always, then a pass per certificate, in
+ * content's order. A certificate added to content is a pass, with no code change.
+ */
+export function wallet(content: Content): { headline: string; passes: Pass[] } {
+  const words = content.copy.credentials.wallet;
+  const degree = content.education.find((entry): entry is Degree => entry.kind === "degree");
+  const schools = content.education.filter((entry) => entry.kind === "school");
+  const passes: Pass[] = [];
+  if (degree) {
+    passes.push({
+      id: degree.id,
+      kind: "education",
+      label: words.education,
+      title: degree.institution,
+      subtitle: `${degree.degree}, ${degree.field}`,
+      fields: [
+        { label: words.classOf, value: String(parseYearMonth(degree.end).year), mono: false, footnotes: [] },
+        { label: words.grade, value: degree.grade.text, mono: false, footnotes: degree.grade.footnotes },
+      ],
+      verifyUrl: null,
+      tone: null,
+      expiry: null,
+      back: [
+        ...(degree.coursework.length > 0 ? [{ kind: "list" as const, label: words.coursework, items: degree.coursework }] : []),
+        ...schools.map((school) => ({
+          kind: "text" as const,
+          label: school.level,
+          text: `${school.grade.text}, ${school.year}`,
+          footnotes: school.grade.footnotes,
+        })),
+      ],
+    });
+  }
+  const skills = allSkills(content);
+  for (const certificate of content.certificates) {
+    const expiry = expiryOf(content, certificate.expires);
+    // Skills covered, named as the skills list names them.
+    const covered = certificate.skills.map(
+      (name) =>
+        skills.find((skill) => [skill.name, ...skill.aliases].some((term) => term.toLowerCase() === name.toLowerCase()))?.name ?? name,
+    );
+    passes.push({
+      id: certificate.id,
+      kind: "certificate",
+      label: words.certificate,
+      title: certificate.title,
+      subtitle: certificate.issuer,
+      fields: [
+        { label: words.issued, value: formatYearMonth(certificate.issued), mono: false, footnotes: [] },
+        ...(certificate.credentialId ? [{ label: words.credentialId, value: certificate.credentialId, mono: true, footnotes: [] }] : []),
+      ],
+      verifyUrl: certificate.verifyUrl,
+      tone: certificate.tone ?? null,
+      expiry,
+      back: [
+        ...(covered.length > 0 ? [{ kind: "list" as const, label: words.skills, items: covered }] : []),
+        ...(certificate.proves ? [{ kind: "text" as const, label: words.proves, text: certificate.proves, footnotes: [] }] : []),
+        ...(certificate.verifyUrl
+          ? [{ kind: "link" as const, label: words.verify, href: certificate.verifyUrl, text: verifyText(certificate.verifyUrl) }]
+          : []),
+        ...(expiry ? [{ kind: "expiry" as const, expiry }] : []),
+      ],
+    });
+  }
+  return { headline: credentialsHeadline(content), passes };
+}
+
+/** A verify link's words: its host and path, without the scheme or a trailing slash. */
+function verifyText(url: string): string {
+  const { host, pathname } = new URL(url);
+  return `${host.replace(/^www\./, "")}${pathname === "/" ? "" : pathname.replace(/\/$/, "")}`;
+}
+
+export interface Medal {
+  id: string;
+  shape: "circle" | "hexagon" | "rounded-square" | "shield";
+  title: string;
+  org: string | null;
+  /** "2024 · 2025". */
+  years: string;
+  /** Engraved on its face: its name ("Smart India Hackathon"), then its line ("2024 · 2025 · top 50 of 300+"). */
+  face: string;
+  line: string;
+  /** Engraved on its back: its detail, else who gave it and when. */
+  back: string;
+  /** Under it, in words: its detail with its notes, else who gave it. */
+  description: { text: string; footnotes: number[] } | null;
+}
+
+/**
+ * The medals (DESIGN.md §7.8): one per achievement, in the order they were won (by their
+ * latest year), each engraved with its face, its years and its line.
+ */
+export function medals(content: Content): Medal[] {
+  return [...content.achievements]
+    .sort((a, b) => Math.max(...a.years) - Math.max(...b.years) || Math.min(...a.years) - Math.min(...b.years))
+    .map((achievement) => {
+      const years = achievement.years.join(" · ");
+      const org = achievement.org ?? null;
+      const detail = achievement.detail ? { text: achievement.detail.text, footnotes: achievement.detail.footnotes } : null;
+      return {
+        id: achievement.id,
+        shape: achievement.medal.shape,
+        title: achievement.title,
+        org,
+        years,
+        face: achievement.medal.face,
+        line: [years, achievement.medal.line].filter(Boolean).join(" · "),
+        back: detail?.text ?? [org, years].filter(Boolean).join(" · "),
+        description: detail ?? (org ? { text: org, footnotes: [] } : null),
+      };
+    });
+}
+
 // ─── Search index (Part 4) ───────────────────────────────────────────────────
 
 export type SearchKind = "section" | "role" | "work" | "paper" | "skill" | "education" | "honor" | "certificate";

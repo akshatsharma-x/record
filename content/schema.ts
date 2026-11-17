@@ -317,10 +317,15 @@ const Skill = z.strictObject({
 
 const SkillCategory = z.strictObject({ name: Text, skills: z.array(Skill).min(1) });
 
+/** A pass's own color: an issuer's tasteful tone, never its logo. White text must read on it. */
+const Tone = z.string().regex(/^#[0-9a-f]{6}$/i, "a #rrggbb color");
+
 const Certificate = z.strictObject({
   id: Id,
   title: Text,
   issuer: Text,
+  /** Its pass's color (DESIGN.md §7.8); without one, it takes one from the finish. */
+  tone: Tone.optional(),
   issued: YearMonth,
   /** "never" when it doesn't expire. */
   expires: z.union([YearMonth, z.literal("never")]).nullable(),
@@ -331,12 +336,19 @@ const Certificate = z.strictObject({
   proves: Text.nullable(),
 });
 
+const MedalShape = z.enum(["circle", "hexagon", "rounded-square", "shield"]);
+
 const Achievement = z.strictObject({
   id: Id,
   title: Text,
   org: Text.optional(),
   years: z.array(Year).min(1),
   detail: Claim.optional(),
+  /**
+   * Its medal (DESIGN.md §7.8): a minted shape of its own, and the words on its face,
+   * engraved as "face — years · line". The line's figures must be the detail's.
+   */
+  medal: z.strictObject({ shape: MedalShape, face: Text, line: Text.optional() }),
 });
 
 /**
@@ -448,6 +460,26 @@ const Copy = z.strictObject({
     /** Used while there are no certificates, so the heading never counts zero (DESIGN.md §12). */
     headlineWithoutCertificates: Text,
     honors: Text,
+    /** The wallet's words around each pass's own (DESIGN.md §7.8). */
+    wallet: z.strictObject({
+      label: Text,
+      education: Text,
+      certificate: Text,
+      classOf: Text,
+      grade: Text,
+      issued: Text,
+      credentialId: Text,
+      skills: Text,
+      proves: Text,
+      verify: Text,
+      expires: Text,
+      expired: Text,
+      never: Text,
+      coursework: Text,
+      flip: Text,
+      scan: Text,
+    }),
+    medals: z.strictObject({ label: Text, flip: Text, medal: Text }),
   }),
   contact: SectionCopy,
   footer: z.strictObject({ credit: Text }),
@@ -592,6 +624,16 @@ const FRAMING_WORDS = new Set(["query", "data"]);
  * four letters or more counts as used when the text has a word that starts the same way
  * (its first five letters, or all of a shorter word): "Summary" is "summarization"'s.
  */
+/** The contrast of white text on a #rrggbb color (WCAG 2's relative luminance). */
+export function contrastWithWhite(hex: string): number {
+  const channel = (offset: number) => {
+    const c = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+  return 1.05 / (luminance + 0.05);
+}
+
 export function ungroundedWords(phrase: string, text: string): string[] {
   const words = new Set(text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []);
   const stems = [...words].map((word) => word.slice(0, 5));
@@ -827,6 +869,24 @@ function checkReferences(content: z.output<typeof ContentShape>, ctx: z.Refineme
     certificate.skills.forEach((name, j) => {
       if (!skillTerms.has(name.toLowerCase())) problem(["certificates", i, "skills", j], `"${name}" isn't in the skills list`);
     });
+  });
+
+  // Each medal is minted in a shape of its own, and its line states only what its detail does.
+  unique(content.achievements, (achievement) => achievement.medal.shape, ["achievements"], "medal shape");
+  content.achievements.forEach((achievement, i) => {
+    const line = achievement.medal.line;
+    if (!line) return;
+    const stated = new Set(valuesIn(achievement.detail?.text ?? ""));
+    for (const value of valuesIn(line)) {
+      if (!stated.has(value)) problem(["achievements", i, "medal", "line"], `${value} isn't in this achievement's detail`);
+    }
+  });
+
+  // White text must read on a pass's own color (WCAG AA, 4.5:1).
+  content.certificates.forEach((certificate, i) => {
+    if (certificate.tone && contrastWithWhite(certificate.tone) < 4.5) {
+      problem(["certificates", i, "tone"], `white text on ${certificate.tone} is ${contrastWithWhite(certificate.tone).toFixed(2)}:1, under 4.5:1`);
+    }
   });
 
   // The chip's layers are the skill categories, each exactly once.

@@ -536,6 +536,59 @@
   --core-icon: 40px;
   --specs-term: 13rem;
 
+  /* Credentials (Part 11): the wallet's passes (3:2, white type on their tone), how much
+     of each shows in the stack and how far one lifts; the medals' metal, enamel and cuts,
+     as the stills draw them and the 3D medals read them. */
+  --pass-aspect: 3 / 2;
+  --pass-ratio: 1.5;
+  --pass-gap: 20px;
+  --pass-lift: 12px;
+  --pass-lift-front: 4px;
+  --pass-perspective: 1600px;
+  --pass-padding: 6cqi;
+  --pass-title: max(1.0625rem, 4.8cqi);
+  --pass-value: max(0.9375rem, 3.6cqi);
+  --pass-label: max(0.6875rem, 2.3cqi);
+  --pass-small: max(0.75rem, 2.8cqi);
+  --pass-angle: 135deg;
+  --pass-ink: #ffffff;
+  --pass-rim: rgb(255 255 255 / 0.2);
+  --pass-sheen: rgb(255 255 255 / 0.16);
+  --pass-sheen-clear: rgb(255 255 255 / 0);
+  --pass-graphite: #3a3a3c;
+  --pass-shade: #000000;
+  --pass-shadow: 0 1px 2px rgb(0 0 0 / 0.32), 0 16px 36px rgb(0 0 0 / 0.42);
+  --pass-shadow-lifted: 0 2px 4px rgb(0 0 0 / 0.34), 0 24px 48px rgb(0 0 0 / 0.5);
+  --pass-qr: max(4.5rem, 21cqi);
+  --pass-qr-paper: #ffffff;
+  --pass-qr-ink: #000000;
+  --pass-icon: 22px;
+  --wallet-width: 30rem;
+  --medal-size: 8.5rem;
+  --medal-aspect: 1;
+  --medal-size-wide: 11rem;
+  --medal-perspective: 900px;
+  --medal-metal: #d4d7dc;
+  --medal-metal-hi: #f6f7f9;
+  --medal-metal-mid: #b5b9c1;
+  --medal-metal-lo: #80858f;
+  --medal-inlay: #f1f2f5;
+  --medal-etch: #474b54;
+  --medal-light: rgb(255 255 255 / 0.85);
+  --medal-light-clear: rgb(255 255 255 / 0);
+  --medal-dark: rgb(0 0 0 / 0.45);
+  --medal-dark-clear: rgb(0 0 0 / 0);
+  --medal-grain: rgb(255 255 255 / 0.12);
+  --medal-gloss: rgb(255 255 255 / 0.32);
+  --medal-shadow: rgb(0 0 0 / 0.55);
+  --medal-drop-y: 10px;
+  --medal-drop-blur: 14px;
+  /* In the stills' view units (240 across). */
+  --medal-cut: 0.9px;
+  --medal-bevel: 5px;
+  --medal-step: 2.5px;
+  --medal-rule: 1.6px;
+
   /* Work (Part 9): the bento's tiles and their previews, the case-study sheet and the page
      behind it, and the architecture diagrams. Preview sizes are in the previews' view units. */
   --work-title: clamp(1.3125rem, 1.0982rem + 0.5357vw, 1.75rem);

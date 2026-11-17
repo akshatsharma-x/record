@@ -13,11 +13,13 @@ const BEHAVIORS = {
   skills: () => import("@/lib/skills-behavior").then((module) => module.attachSkills),
   research: () => import("@/lib/research-behavior").then((module) => module.attachResearch),
   paper: () => import("@/lib/research-behavior").then((module) => module.attachResearch),
+  credentials: () => import("@/lib/credentials-behavior").then((module) => module.attachCredentials),
 } satisfies Record<string, () => Promise<(root: HTMLElement) => () => void>>;
 
-export function Behavior({ section }: { section: keyof typeof BEHAVIORS }) {
+/** `id` is the element it attaches to, when that isn't the section's own (the kitchen's fixtures). */
+export function Behavior({ section, id = section }: { section: keyof typeof BEHAVIORS; id?: string }) {
   useEffect(() => {
-    const root = document.getElementById(section);
+    const root = document.getElementById(id);
     if (!root) return;
     let alive = true;
     let detach: (() => void) | null = null;
@@ -43,7 +45,7 @@ export function Behavior({ section }: { section: keyof typeof BEHAVIORS }) {
       observer?.disconnect();
       detach?.();
     };
-  }, [section]);
+  }, [section, id]);
 
   return null;
 }

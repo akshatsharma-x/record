@@ -221,6 +221,29 @@ describe("the hero (Part 5)", () => {
   });
 });
 
+describe("the wallet's passes (Part 11)", () => {
+  const white = color("--pass-ink");
+  const shade = color("--pass-shade");
+  const graphite = color("--pass-graphite");
+
+  it.each(FINISHES)("keep white type readable on every tone the finish gives a pass ($name)", ({ id }) => {
+    const accent = color(`--finish-${id}-on-light`);
+    const second = color(`--finish-${id}-2-on-light`);
+    // Each tone's gradient, end to end (styles/components.css, .pass[data-tone]).
+    const stops = [accent, second, mix(second, shade, 0.64), mix(accent, shade, 0.78), mix(accent, shade, 0.52)];
+    for (const stop of stops) expect(ratio(white, stop)).toBeGreaterThanOrEqual(AA);
+  });
+
+  it("keep white type readable on graphite, the finish-free tone", () => {
+    expect(ratio(white, graphite)).toBeGreaterThanOrEqual(AA);
+    expect(ratio(white, mix(graphite, shade, 0.55))).toBeGreaterThanOrEqual(AA);
+  });
+
+  it("draw QR codes dark on white, as scanners expect", () => {
+    expect(ratio(color("--pass-qr-ink"), color("--pass-qr-paper"))).toBeCloseTo(21, 5);
+  });
+});
+
 describe("the tests themselves", () => {
   it("compute WCAG ratios correctly", () => {
     expect(ratio([0, 0, 0, 1], [255, 255, 255, 1])).toBeCloseTo(21, 5);

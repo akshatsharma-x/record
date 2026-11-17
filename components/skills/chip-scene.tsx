@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { assembledTop, CHIP, coreCells, explodedTop, explodedView, LAYERS, PHASES, phase, sceneProgress } from "@/lib/chip";
 import { chipState, onChip, setChip } from "@/lib/chip-state";
 import { scrub } from "@/lib/motion";
+import { css, token } from "@/components/three/token";
 
 /**
  * The chip in 3D (DESIGN.md §7.7), procedural, with nothing downloaded: six slabs, from the
@@ -26,19 +27,6 @@ const SIDES = 512;
 const SETTLE = { scroll: scrub / 4, slide: 0.09 } as const;
 /** The cores' ripple: how long it lasts, how far apart the rings light, how sharp each flash is. */
 const RIPPLE = { length: 1.8, ring: 0.16, width: 0.16, rest: 1, peak: 3.4 } as const;
-
-/** A color token as three.js reads it. Safari reports color-mix() results as color(srgb …). */
-function token(name: string): THREE.Color {
-  const probe = document.createElement("span");
-  probe.style.color = `var(${name})`;
-  document.documentElement.append(probe);
-  const value = getComputedStyle(probe).color;
-  probe.remove();
-  const srgb = /color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)/.exec(value);
-  return srgb ? new THREE.Color().setRGB(Number(srgb[1]), Number(srgb[2]), Number(srgb[3]), THREE.SRGBColorSpace) : new THREE.Color(value);
-}
-
-const css = (color: THREE.Color) => `#${color.getHexString()}`;
 
 interface Palette {
   accent: THREE.Color;

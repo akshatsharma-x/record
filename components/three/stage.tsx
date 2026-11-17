@@ -71,12 +71,14 @@ export function StageProvider({ children }: { children: ReactNode }) {
   );
 }
 
-interface StageViewProps {
+interface StageViewProps<P extends object> {
   /**
    * The scene, lazy-loaded so three.js stays out of the main bundle. Create it once at
    * module level: `const Cube = dynamic(() => import("./test-cube"), { ssr: false })`.
    */
-  scene: ComponentType;
+  scene: ComponentType<P>;
+  /** What the scene is given, when one scene draws several things (each medal, say). */
+  sceneProps?: P;
   /** What LOW and OFF tiers, reduced motion and no-JavaScript visitors see. */
   poster: ReactNode;
   /** What the scene shows, for screen readers. */
@@ -96,12 +98,16 @@ interface StageViewProps {
  * The stage sits beneath the content (§4.9), so keep the view itself transparent: an
  * opaque background on it, or on anything above it, hides the scene.
  */
-export function StageView({ scene, poster, label, className, ink, hold }: StageViewProps) {
+export function StageView<P extends object>({ scene, sceneProps, poster, label, className, ink, hold }: StageViewProps<P>) {
   const { active, register } = useStage();
   useEffect(() => register(), [register]);
   return (
     <div role="img" aria-label={label} data-cursor-ink={ink} className={cx("relative", className)}>
-      {active && !hold ? <StageViewport scene={scene} /> : <div className="absolute inset-0">{poster}</div>}
+      {active && !hold ? (
+        <StageViewport scene={scene as ComponentType<object>} sceneProps={sceneProps} />
+      ) : (
+        <div className="absolute inset-0">{poster}</div>
+      )}
     </div>
   );
 }
