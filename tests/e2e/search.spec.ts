@@ -33,7 +33,8 @@ test.describe("on a keyboard", () => {
   test("opens with ⌘K, Ctrl K and /, closes with Esc, and returns focus", async ({ page }) => {
     await page.goto("/");
     await ready(page);
-    const email = page.locator("#contact a[href^='mailto:']");
+    // Something focused to come back to: the dock's Email (Part 12).
+    const email = page.locator('#contact .dock-item[data-app="email"]');
     await email.focus();
     for (const keys of ["Meta+k", "Control+k", "/"]) {
       await page.keyboard.press(keys);

@@ -7554,6 +7554,590 @@
     stroke: var(--medal-light);
   }
 
+  /* ─── Contact (§7.9, Part 12) ─────────────────────────────────────────────── */
+
+  .contact-body {
+    display: grid;
+    gap: calc(var(--spacing) * 16);
+  }
+
+  @variant lg {
+    .contact-body {
+      grid-template-columns: minmax(0, 1fr) minmax(0, var(--thread-width));
+      column-gap: calc(var(--grid-gutter) * 3);
+      align-items: start;
+    }
+  }
+
+  .contact-close {
+    display: grid;
+    justify-items: start;
+    gap: calc(var(--spacing) * 6);
+  }
+
+  .contact-availability {
+    max-width: var(--container-measure);
+  }
+
+  /* Two live lines, filled in after hydration: their height is kept from the start. */
+  .contact-clock {
+    display: grid;
+    min-height: calc(var(--text-lead) * var(--text-lead--line-height) * 2);
+    gap: calc(var(--spacing) * 1);
+    color: var(--color-fg-2);
+    font-size: var(--text-lead);
+    letter-spacing: var(--text-lead--letter-spacing);
+    line-height: var(--text-lead--line-height);
+  }
+
+  .contact-clock-line:first-child {
+    color: var(--color-fg);
+  }
+
+  /* The dock: a glass shelf of tiles. Magnified, the tiles grow up from their base and
+     spread (lib/dock.ts); there's room above them, so they never cover the line above. */
+  .dock {
+    --dock-size: var(--dock-tile);
+    position: relative;
+    display: inline-flex;
+    /* Room above for a magnified tile and its name. */
+    margin-block-start: calc(var(--dock-size) * var(--dock-rise) + var(--spacing) * 8);
+    padding: var(--dock-padding);
+  }
+
+  @variant md {
+    .dock {
+      --dock-size: var(--dock-tile-wide);
+    }
+  }
+
+  .dock-glass {
+    --dock-left: 0;
+    --dock-right: 0;
+    position: absolute;
+    inset: 0 var(--dock-right) 0 var(--dock-left);
+    border-radius: var(--radius-card-s);
+    background-color: var(--color-glass);
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
+    box-shadow:
+      inset 0 var(--hairline-width) 0 var(--color-glass-rim-top),
+      inset 0 calc(-1 * var(--hairline-width)) 0 var(--color-glass-rim-bottom),
+      inset 0 0 0 var(--hairline-width) var(--color-hairline),
+      var(--shadow-soft);
+
+    @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+      background-color: var(--color-glass-solid);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
+    @media (forced-colors: active) {
+      border: var(--hairline-width) solid CanvasText;
+    }
+  }
+
+  .dock-items {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    gap: var(--dock-gap);
+  }
+
+  .dock-item {
+    position: relative;
+    display: grid;
+    width: var(--dock-size);
+    height: var(--dock-size);
+    place-items: center;
+    border-radius: var(--radius-control);
+    transform-origin: 50% 100%;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .dock-tile {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    border-radius: inherit;
+    box-shadow:
+      inset 0 var(--hairline-width) 0 var(--dock-tile-rim),
+      var(--dock-tile-shadow);
+    color: var(--on-accent);
+  }
+
+  .dock-item[data-app="email"] .dock-tile {
+    background: linear-gradient(180deg, var(--accent-on-dark), var(--accent-on-light));
+  }
+
+  .dock-item[data-app="linkedin"] .dock-tile {
+    background: color-mix(in srgb, var(--dock-plain-dark) calc(var(--tone-dark) * 100%), var(--dock-plain-light));
+    color: var(--color-accent);
+  }
+
+  .dock-item[data-app="github"] .dock-tile {
+    background: linear-gradient(180deg, var(--dock-graphite), var(--dock-graphite-deep));
+  }
+
+  .dock-item[data-app="resume"] .dock-tile {
+    background: color-mix(in srgb, var(--dock-plain-dark) calc(var(--tone-dark) * 100%), var(--dock-plain-light));
+    color: var(--color-fg);
+  }
+
+  .dock-glyph {
+    width: var(--dock-glyph);
+    height: var(--dock-glyph);
+  }
+
+  .dock-logo {
+    fill: currentcolor;
+  }
+
+  .dock-monogram::before {
+    content: attr(data-letters);
+  }
+
+  .dock-monogram {
+    font-size: var(--dock-monogram);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--text-title--letter-spacing);
+    line-height: 1;
+  }
+
+  /* Its name, as a dock's: above the tile on hover and on keyboard focus, gone on Escape. */
+  .dock-label {
+    position: absolute;
+    bottom: calc(100% + var(--spacing) * 3);
+    left: 50%;
+    padding: calc(var(--spacing) * 1) calc(var(--spacing) * 2.5);
+    border-radius: var(--radius-chip);
+    background-color: var(--color-glass-solid);
+    box-shadow:
+      inset 0 0 0 var(--hairline-width) var(--color-hairline),
+      var(--shadow-soft);
+    color: var(--color-fg);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-caption--line-height);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    translate: -50% calc(var(--spacing) * 1);
+    transition:
+      opacity var(--duration-micro) var(--ease-out),
+      translate var(--duration-micro) var(--ease-out);
+  }
+
+  .dock-item:focus-visible .dock-label,
+  .dock-item[data-force~="hover"] .dock-label {
+    opacity: 1;
+    translate: -50% 0;
+  }
+
+  @media (hover: hover) {
+    .dock-item:hover .dock-label {
+      opacity: 1;
+      translate: -50% 0;
+    }
+  }
+
+  .dock[data-quiet] .dock-label {
+    opacity: 0;
+  }
+
+  /* The dot under what it opened, as a dock marks a running app. */
+  .dock-dot {
+    position: absolute;
+    bottom: calc(var(--dock-padding) * -0.7);
+    left: 50%;
+    width: var(--dock-dot);
+    height: var(--dock-dot);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-fg-2);
+    opacity: 0;
+    translate: -50% 0;
+    transition: opacity var(--duration-ui) var(--ease-out);
+  }
+
+  .dock-item[data-open] .dock-dot {
+    opacity: 1;
+  }
+
+  /* The launch bounce: up, down, a smaller up, and still. */
+  .dock-item[data-launch] .dock-tile {
+    animation: dock-bounce var(--dock-bounce) var(--ease-out);
+  }
+
+  @keyframes dock-bounce {
+    0%,
+    50%,
+    100% {
+      translate: 0 0;
+    }
+
+    22% {
+      translate: 0 var(--dock-bounce-height);
+    }
+
+    72% {
+      translate: 0 var(--dock-bounce-again);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .dock-item[data-launch] .dock-tile {
+      animation: none;
+    }
+  }
+
+  :root[data-motion="reduce"] .dock-item[data-launch] .dock-tile {
+    animation: none;
+  }
+
+  /* The thread: Akshat's bubble on the left in gray, the visitor's on the right in the
+     accent, as a message thread sets them; the composer is the visitor's next bubble. */
+  .thread {
+    display: grid;
+    gap: calc(var(--spacing) * 3);
+  }
+
+  .thread-messages {
+    display: grid;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .bubble {
+    max-width: var(--bubble-max);
+    padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 4);
+    border-radius: var(--bubble-radius);
+    font-size: var(--text-body);
+    letter-spacing: var(--text-body--letter-spacing);
+    line-height: var(--text-body--line-height);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .bubble[data-from="akshat"] {
+    justify-self: start;
+    border-end-start-radius: var(--bubble-tail);
+    background-color: color-mix(in srgb, var(--bubble-them-dark) calc(var(--tone-dark) * 100%), var(--bubble-them-light));
+    color: var(--color-fg);
+  }
+
+  .bubble[data-from="you"] {
+    justify-self: end;
+    border-end-end-radius: var(--bubble-tail);
+    background-color: var(--color-accent-fill);
+    color: var(--color-on-accent);
+  }
+
+  .receipt {
+    justify-self: end;
+    margin-block-start: calc(var(--spacing) * -1);
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-caption--line-height);
+    opacity: 0;
+    transition: opacity var(--duration-ui) var(--ease-out);
+  }
+
+  .receipt[data-shown] {
+    opacity: 1;
+  }
+
+  /* The composer: a draft bubble, on the card, until it's sent. */
+  .composer {
+    display: grid;
+    justify-self: end;
+    width: 100%;
+    gap: calc(var(--spacing) * 4);
+    padding: calc(var(--spacing) * 5);
+    border-radius: var(--bubble-radius);
+    border-end-end-radius: var(--bubble-tail);
+    background-color: var(--color-card);
+    box-shadow:
+      inset 0 0 0 var(--hairline-width) var(--color-hairline),
+      var(--shadow-soft);
+  }
+
+  .composer-row {
+    display: grid;
+    gap: calc(var(--spacing) * 4);
+  }
+
+  @variant md {
+    .composer-row {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+
+  .composer-field {
+    display: grid;
+    align-content: start;
+    gap: calc(var(--spacing) * 1.5);
+  }
+
+  .composer-label {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .composer-input {
+    width: 100%;
+    min-height: var(--target-min);
+    padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 3);
+    border-radius: var(--radius-control);
+    background-color: var(--color-control-track);
+    color: var(--color-fg);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    transition: box-shadow var(--duration-micro) var(--ease-out);
+  }
+
+  .composer-message {
+    min-height: calc(var(--text-body) * var(--text-body--line-height) * 4 + var(--spacing) * 5);
+    resize: vertical;
+  }
+
+  .composer-input[aria-invalid="true"] {
+    box-shadow: inset 0 0 0 var(--focus-ring-width) var(--color-error);
+  }
+
+  .composer-error,
+  .composer-problem {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 1.5);
+    color: var(--color-error);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .composer-error svg,
+  .composer-problem svg {
+    flex: none;
+    width: var(--icon-size);
+    height: var(--icon-size);
+  }
+
+  .composer-error[hidden],
+  .composer-problem[hidden],
+  .composer-fallback[hidden] {
+    display: none;
+  }
+
+  /* Out of sight and out of reach: the honeypot. */
+  .composer-trap {
+    position: absolute;
+    width: var(--hairline-width);
+    height: var(--hairline-width);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .composer-actions {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 4);
+  }
+
+  .composer-status {
+    display: grid;
+    min-width: 0;
+    gap: calc(var(--spacing) * 1.5);
+  }
+
+  .composer-fallback {
+    color: var(--color-accent);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: underline;
+    text-underline-offset: var(--underline-offset);
+  }
+
+  /* Send: the accent's round arrow; while it sends, a spinner. */
+  .composer-send {
+    position: relative;
+    display: grid;
+    flex: none;
+    width: var(--target-min);
+    height: var(--target-min);
+    place-items: center;
+    margin-inline-start: auto;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+  }
+
+  .composer-send::before {
+    position: absolute;
+    width: var(--composer-send);
+    height: var(--composer-send);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent-fill);
+    content: "";
+    transition: background-color var(--duration-micro) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .composer-send:hover::before {
+      background-color: var(--color-accent-fill-hover);
+    }
+  }
+
+  .composer-send-icon,
+  .composer-send-spinner {
+    position: relative;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    color: var(--color-on-accent);
+  }
+
+  .composer-send-spinner,
+  .composer-send[data-status="loading"] .composer-send-icon {
+    display: none;
+  }
+
+  .composer-send[data-status="loading"] .composer-send-spinner {
+    display: block;
+    animation: var(--animate-spin);
+  }
+
+  .composer-send[aria-disabled="true"] {
+    cursor: progress;
+  }
+
+  /* Without JavaScript the form can't check or send: the mail app is offered instead. */
+  .composer-nojs {
+    display: none;
+  }
+
+  @media (scripting: none) {
+    .composer {
+      display: none;
+    }
+
+    .composer-nojs {
+      display: block;
+      justify-self: end;
+      color: var(--color-accent);
+      font-weight: var(--font-weight-semibold);
+      text-decoration: underline;
+      text-underline-offset: var(--underline-offset);
+    }
+  }
+
+  /* A note's ↩: each a whole target, side by side, so none takes another's tap. */
+  .footnote-back {
+    display: inline-block;
+    min-width: var(--target-min);
+    text-align: center;
+  }
+
+  .footnote-back-count {
+    font-size: var(--text-footnote);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ─── The footer (§7.9, Part 12) ──────────────────────────────────────────── */
+
+  .footer-body {
+    display: grid;
+    gap: calc(var(--spacing) * 12);
+  }
+
+  .footer-title {
+    margin-block-end: calc(var(--spacing) * 4);
+    color: var(--color-fg);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-caps);
+    line-height: var(--text-caption--line-height);
+    text-transform: uppercase;
+  }
+
+  .footer-note-list {
+    display: grid;
+    max-width: var(--container-measure);
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .footer-note-number {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Landing on a note from its mark: the note says it's the one. */
+  .footer-note:target {
+    border-radius: var(--radius-chip);
+    outline: var(--focus-ring-width) solid var(--color-selection);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .footer-columns {
+    display: grid;
+    gap: calc(var(--spacing) * 12);
+    padding-block-start: calc(var(--spacing) * 10);
+    border-block-start: var(--hairline-width) solid var(--color-hairline);
+  }
+
+  @variant md {
+    .footer-columns {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    }
+  }
+
+  .footer-map-list {
+    display: grid;
+    gap: calc(var(--spacing) * 1);
+  }
+
+  .footer-link {
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
+    color: var(--color-fg-2);
+    font-size: var(--text-body);
+    transition: color var(--duration-micro) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .footer-link:hover {
+      color: var(--color-fg);
+    }
+  }
+
+  .footer-settings {
+    display: grid;
+    justify-items: start;
+    gap: calc(var(--spacing) * 6);
+  }
+
+  /* Its space, kept while the settings load. */
+  .footer-settings[data-loading] {
+    min-height: calc(var(--target-min) * 4 + var(--spacing) * 18);
+  }
+
+  .footer-cursor {
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .footer-fine {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2) calc(var(--spacing) * 6);
+    padding-block-start: calc(var(--spacing) * 8);
+    border-block-start: var(--hairline-width) solid var(--color-hairline);
+    color: var(--color-fg-2);
+    font-size: var(--text-footnote);
+    line-height: var(--text-footnote--line-height);
+  }
+
   /* ─── Search (§6.3) ───────────────────────────────────────────────────────── */
 
   /* A centered glass panel in a top-layer dialog, 640px wide, with a 24px field. */

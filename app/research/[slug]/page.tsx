@@ -162,7 +162,7 @@ export default async function PaperPage({ params }: PageProps<"/research/[slug]"
                       {note.id}. {note.note}
                       {note.source ? ` ${note.source}` : null}
                       {Array.from({ length: mentions.get(note.id) ?? 0 }, (_, index) => (
-                        <FootnoteBackLink key={index} n={note.id} occurrence={index + 1} />
+                        <FootnoteBackLink key={index} n={note.id} occurrence={index + 1} total={mentions.get(note.id) ?? 0} />
                       ))}
                     </Footnote>
                   </li>

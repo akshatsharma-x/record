@@ -1,33 +1,31 @@
-import { Fragment } from "react";
 import { About } from "@/components/about/about";
+import { Contact } from "@/components/contact/contact";
 import { Credentials } from "@/components/credentials/credentials";
 import { backKey, fieldKey, type PassMarks } from "@/components/credentials/pass";
 import { Statement } from "@/components/about/statement";
 import { type EditMarks, Experience } from "@/components/experience/experience";
+import { Footer } from "@/components/footer/footer";
 import { Hero } from "@/components/hero/hero";
 import { Highlights } from "@/components/highlights/highlights";
 import { Research } from "@/components/research/research";
 import { Skills } from "@/components/skills/skills";
 import { Work, type WorkMarks } from "@/components/work/work";
-import { Container, Section, Stack } from "@/components/ui/layout";
-import { Display, Eyebrow, Footnote, FootnoteBackLink, FootnoteRef, Lead } from "@/components/ui/type";
+import { FootnoteRef } from "@/components/ui/type";
 import { content } from "@/content";
 import { edit, medals, wallet, work } from "@/content/derive";
 import type { Claim } from "@/content/schema";
 import { portraitFor } from "@/lib/portrait-fixture";
-import { SECTIONS, type SectionId } from "@/lib/sections";
-
-const nameOf = (id: SectionId) => SECTIONS.find((section) => section.id === id)!.name;
 
 /**
  * The story (DESIGN.md §3.1), in order. Part 4 laid down its structure so the Island and
  * Search have somewhere to go: every section with its id, surface and real copy, plainly
  * set. Parts 5–12 turn each one into its signature moment (§7): the hero is Part 5's, the
  * statement, About and the highlights Part 6's, the edit Part 7's, research Part 8's, the
- * work bento Part 9's, the chip Part 10's and the wallet and the medals Part 11's.
+ * work bento Part 9's, the chip Part 10's, the wallet and the medals Part 11's, and the
+ * close, the dock, the thread and the footer Part 12's.
  */
 export default function Home() {
-  const { profile, copy, highlights } = content;
+  const { profile, highlights } = content;
 
   // Footnotes are numbered by content; each mention gets its own back-link (§9).
   const mentions = new Map<number, number>();
@@ -100,51 +98,18 @@ export default function Home() {
 
       <Credentials marks={credentialsMarks()} />
 
-      <Section id="contact" name={nameOf("contact")} surface="light" aria-labelledby="contact-title">
-        <Container>
-          <Stack gap={6}>
-            <Eyebrow tone="fg-2">{nameOf("contact")}</Eyebrow>
-            <Display id="contact-title">{copy.contact.headline}</Display>
-            <Lead>
-              <a href={`mailto:${profile.email}`} className="text-accent underline underline-offset-(--underline-offset)">
-                {profile.email}
-              </a>
-            </Lead>
-          </Stack>
-        </Container>
-      </Section>
+      <Contact />
     </>
   );
 
   // Rendered after the story, so every mention has been counted.
-  const cited = content.footnotes.filter((note) => mentions.has(note.id));
+  const cited = content.footnotes
+    .filter((note) => mentions.has(note.id))
+    .map((note) => ({ id: note.id, note: note.note, source: note.source ?? null, mentions: mentions.get(note.id) ?? 0 }));
   return (
     <>
       <main>{story}</main>
-      <Section as="footer" id="footer" surface="light-alt" aria-label="Notes and credits">
-        <Container>
-          <Stack gap={6}>
-            {cited.length > 0 ? (
-              <ol className="flex max-w-measure flex-col gap-2">
-                {cited.map((note) => (
-                  <li key={note.id} id={`fn-${note.id}`}>
-                    <Footnote as="span">
-                      {note.id}. {note.note}
-                      {note.source ? ` ${note.source}` : null}
-                      {Array.from({ length: mentions.get(note.id) ?? 0 }, (_, index) => (
-                        <Fragment key={index}>
-                          <FootnoteBackLink n={note.id} occurrence={index + 1} />
-                        </Fragment>
-                      ))}
-                    </Footnote>
-                  </li>
-                ))}
-              </ol>
-            ) : null}
-            <Footnote>{copy.footer.credit}</Footnote>
-          </Stack>
-        </Container>
-      </Section>
+      <Footer notes={cited} />
     </>
   );
 }

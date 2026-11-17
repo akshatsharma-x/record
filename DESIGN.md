@@ -14,7 +14,7 @@ The portfolio of Akshat Sharma: AI & ML engineer, B.Tech CSE '27 at Manipal Univ
 4. [Tokens](#4-tokens): [Neutrals](#41-neutrals) · [Surfaces](#42-surfaces) · [Finishes](#43-finishes) · [Type](#44-type) · [Space and layout](#45-space-and-layout) · [Radii](#46-radii) · [Materials](#47-materials) · [Elevation](#48-elevation) · [Layers](#49-layers) · [Icons](#410-icons)
 5. [Motion](#5-motion): [Curves](#51-curves) · [Springs](#52-springs) · [Durations](#53-durations) · [The Resolve](#54-the-resolve) · [Scroll scenes](#55-scroll-scenes) · [Motion on intent](#56-motion-on-intent) · [Reduced motion edition](#57-reduced-motion-edition)
 6. [Interaction](#6-interaction): [The cursor](#61-the-cursor) · [The Island](#62-the-island) · [Search](#63-search) · [Focus ring](#64-focus-ring) · [Pressed state](#65-pressed-state) · [Depth on hover](#66-depth-on-hover)
-7. [Signature moments](#7-signature-moments): [The hero](#71-the-hero) · [The statement and About](#72-the-statement-and-about) · [The highlights](#73-the-highlights) · [The edit](#74-the-edit) · [Research](#75-research) · [Work](#76-work) · [Skills](#77-skills) · [Credentials](#78-credentials)
+7. [Signature moments](#7-signature-moments): [The hero](#71-the-hero) · [The statement and About](#72-the-statement-and-about) · [The highlights](#73-the-highlights) · [The edit](#74-the-edit) · [Research](#75-research) · [Work](#76-work) · [Skills](#77-skills) · [Credentials](#78-credentials) · [Contact and the footer](#79-contact-and-the-footer)
 8. [Surprises](#8-surprises)
 9. [Voice](#9-voice)
 10. [Budgets](#10-budgets)
@@ -111,7 +111,8 @@ Part 4 laid every section down with its id, surface and real copy, plainly set, 
 | `/research/[slug]` | A paper page. |
 | `/specs` | The full "Tech Specs" page: every skill by category, then education and coursework. It prints as itself (§7.7). |
 | `/compare` | A hidden easter egg. |
-| `/colophon` | How the site is built. |
+| `/colophon` | How the site is built: a sheet like /specs (Part 12). |
+| `/api/contact` | The composer's endpoint (POST only, §7.9). |
 | 404 | The page is "out of focus". |
 | `/dev/kitchen`, `/dev/content` | Dev-only; return 404 in production. |
 
@@ -567,6 +568,22 @@ In 3D, each is a bevelled extrusion of its outline in brushed silver under a cle
 
 Under each, in words: its name, its line, and its description with its footnote, so everything on either face is in the DOM. On LOW and OFF tiers, with reduced motion and without JavaScript, each medal is a still: both faces drawn in SVG from the same outlines and engravings, turned over by a click (a crossfade with reduced motion). Without JavaScript the turn isn't offered; the words carry both faces.
 
+### 7.9 Contact and the footer
+
+Built in Part 12 (`components/contact/` and `components/footer/`; the composer's rules in `lib/contact.ts` and its connections in `lib/contact-server.ts`, the endpoint at `app/api/contact`, the dock's magnification in `lib/dock.ts`, the behavior in `lib/contact-behavior.ts`, and /colophon at `app/colophon`). The bar: the phone number appears nowhere, every message reaches Akshat or the visitor's own mail app, and the dock works fully by keyboard.
+
+**The close.** On a light surface, `copy.contact.headline` resolves from blur (§5.4). Under it come the availability line (`profile.availability`, hidden while it's null) and two live lines. The first is "It's 9:41 PM in Jaipur", or "IST" until the city is confirmed. The second says how Akshat's working hours (`profile.workingHours`, 10:00–18:00 IST) meet the visitor's day (`copy.about.visitorDay`, on the visitor's own clock): "Our working hours overlap 3:30–6:30 PM your time", or "I'll see it first thing in my morning". Only the browser knows the visitor's clock, so both lines fill in after hydration, in space kept for them.
+
+**The dock.** A glass shelf of tiles: Email, LinkedIn and GitHub, and the résumé only once a phone-free PDF exists (§2 rule 2). Email's tile wears the finish, GitHub's carries its mark from the skills' Simple Icons sprite, and LinkedIn's is a monogram (§12). Under a mouse the tiles magnify as macOS's do: the one under the pointer grows to 1.6×, its neighbors less, on a raised-cosine falloff that reaches 2.6 tile widths. The row spreads about the pointer, so no two tiles overlap and the one under the pointer stays under it, all on the snappy spring. Each tile's name shows as a tooltip on hover and on keyboard focus, and Escape hides it. A click plays the launch bounce and lights a dot under what it opened. Email copies the address, and the Island says "Email copied" and offers "Open mail app". Reduced motion, touch and the keyboard get no magnification, and need none: each tile is a plain link, in the tab order, at full size.
+
+**The thread.** Styled as a message thread. Akshat's bubble opens it ("Hi — what are you working on?"), and the visitor's next bubble is the composer, with labeled fields for the name, email and message. Each field is checked as the visitor leaves it, and every field on send, in content's friendly words (`copy.contact.thread.errors`), by the same zod/mini rules the endpoint uses. A honeypot field waits out of sight and out of reach. Sent, the words swoosh up out of the composer into the thread as the visitor's bubble, "Delivered" appears under it, and the Island says "Message sent". If it can't send (the rate limit, no keys, a failure), the words stay, and "Send it from your mail app instead" opens the visitor's mail app with them already written. Without JavaScript, that link is the way.
+
+**The endpoint.** POST /api/contact takes JSON from the site's own pages only, up to 24 KB, and checks, in order: the honeypot (a quiet 202 that sends nothing), the words (a 400 that names the fields), and the rate limit (five an hour per IP and per sender's address, in a sliding window, with Upstash; a 429). Then it delivers through Resend's API to Akshat with reply-to set to the visitor (a 502 if that fails). Keys live in the environment (`.env.example`). Without them, development uses a console transport and an in-memory limit, and a production build answers 503 and the page offers the mail app: it fails closed, and gracefully. Nothing logged holds personal data: no names, addresses, words or IPs.
+
+**The footer.** First the notes, numbered as content numbers them, each with a ↩ back to every mention: numbered when there's more than one, and each a whole 44pt target. Then a site map (Overview, Work, Research, Specs and Colophon) and the settings: the theme, the finish, "Larger cursor" and "Use system cursor", as Search offers them. Last, "This site uses no cookies.", the credit and the © line with the visitor's year.
+
+**/colophon** is a sheet in the manner of /specs: how the site is built, from `copy.colophon`.
+
 ---
 
 ## 8. Surprises
@@ -766,6 +783,16 @@ Append as you go, each with its reason.
 - **The medals hold 60fps** (Part 11). Measured on the production build in WebKit with the Apple GPU at DPR 2, on an M5 Pro: frames averaged 16.7ms with none over 20ms while each medal spun from a hard flick, while scrolling past all three in 3D after a pause in Skills, and on a brisk scroll from Work to Contact that never paused (the medals stayed stills). On LOW and OFF tiers they're stills; an iPhone 12 hasn't been measured (see the chip, Part 10).
 - **A still's shapes are drawn once** (Part 11). Both faces of a still reuse its outline, rim and field through `<use>`, at one decimal: the section's markup fell from 92 KB to 26 KB.
 - **Performance after Part 11** (Part 11). First-load JS is 166.7 KB, 0.4 KB more than after Part 10 (the medals' view and the quiet-moment helper; their scene, the QR encoder and the behavior are lazy or server-only). Lighthouse's mobile run, under DevTools throttling: performance 0.99, LCP 1.6s, blocking time 40ms, CLS 0, and 1.0 for accessibility, best practices and SEO. The home page's HTML is 82 KB gzipped.
+
+- **The composer adapts a tested reference** (Part 12). `lib/contact.ts` follows the one in ~/Downloads/port: a pure `handleContact` that's handed its rate limiter and its transport, so the tests drive every path with fakes; zod/mini in the browser; and it fails closed. It drops that version's intents and its 2.5-second time trap: the brief asks for a honeypot, and a person who autofills and pastes can beat 2.5 seconds.
+- **No keys, no relay** (Part 12). A production build without Resend's or Upstash's keys sends nothing and answers 503, and the page offers the mail app with the visitor's words. Development uses a console transport and a limit in memory, and `CONTACT_TRANSPORT=console` gives a production build the same, so the end-to-end tests deliver for real.
+- **The limit counts the sender's address too** (Part 12): five an hour per IP and five per address, since a forwarded-for header is only as honest as its proxy.
+- **LinkedIn's tile is a monogram** (Part 12). Simple Icons removed LinkedIn's logo at LinkedIn's request, so rather than draw a lookalike, the tile carries "in" in the site's own type, in the accent on a plain tile, as the skills cloud does for logos it doesn't have (Part 10). GitHub's mark comes from the same sprite as the skills.
+- **Every ↩ is its own target, and numbered** (Part 12). Side by side, a note's back-links had 44pt hit areas that overlapped, so a tap on the first could land on the second. Now each takes 44pt of width, and a note cited three times reads ↩¹ ↩² ↩³, so the visitor knows which mention each goes back to. Case studies and paper pages share the change.
+- **An error red for light surfaces** (Part 12). The system red falls under 4.5:1 for small text on light cards, so `--color-error` is #C5000F on light and the dark-mode system red on dark, tested like every other pair.
+- **/colophon exists now** (Part 12). The footer's site map lists it, so it's built: a small sheet of how the site is made, from content, stating facts about the site, never about Akshat.
+- **The live lines and the footer's settings load after the page** (Part 12). Both need the browser to show anything, so they're lazy chunks with their space kept; the settings sit at the very end of the page.
+- **Performance after Part 12** (Part 12). First-load JS is 167.8 KB, 1.1 KB more than after Part 11: the footer's settings and the live lines load as lazy chunks after the page, and the dock's and the composer's behavior is a lazy chunk that comes in as #contact nears. Lighthouse's mobile run, under DevTools throttling: performance 0.98–0.99, LCP 1.6s, blocking time 90–110ms (40ms after Part 11: the settings' chunk and the lazy lines now hydrate in the window it measures) and CLS 0, with 1.0 for accessibility, best practices and SEO.
 
 ---
 

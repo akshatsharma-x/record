@@ -107,6 +107,8 @@
   /* Activity tones on dark: Apple's system green and red for dark mode. */
   --status-success: #30d158;
   --status-error: #ff453a;
+  /* Error text on light surfaces: a deeper red, so a form's words clear 4.5:1 on its card. */
+  --status-error-on-light: #c5000f;
 
   /* A photographic shadow color for elevation (§4.8). */
   --shadow-ink: rgb(0 0 0 / 0.04);
@@ -210,6 +212,7 @@
     --color-on-accent: var(--on-accent);
     --color-focus: var(--color-accent);
     --color-selection: color-mix(in srgb, var(--color-accent) 25%, transparent);
+    --color-error: color-mix(in srgb, var(--status-error) calc(var(--tone-dark) * 100%), var(--status-error-on-light));
   }
 
   /* Surface backgrounds and cards (§4.2). In the light theme cards invert against their
@@ -588,6 +591,34 @@
   --medal-bevel: 5px;
   --medal-step: 2.5px;
   --medal-rule: 1.6px;
+
+  /* Contact (Part 12): the dock's tiles, how far they rise and bounce, the thread's
+     bubbles (iMessage's gray for Akshat's, the accent for the visitor's) and the composer. */
+  --dock-tile: 52px;
+  --dock-tile-wide: 60px;
+  --dock-gap: 12px;
+  --dock-padding: 10px;
+  --dock-rise: 0.6;
+  --dock-dot: 4px;
+  --dock-bounce: 0.9s;
+  --dock-bounce-height: -46%;
+  --dock-bounce-again: -18%;
+  --dock-glyph: 26px;
+  --dock-monogram: 23px;
+  --dock-plain-light: #ffffff;
+  --dock-plain-dark: #2c2c2e;
+  --dock-graphite: #3a3a3c;
+  --dock-graphite-deep: #161618;
+  --dock-shade: #000000;
+  --dock-tile-rim: rgb(255 255 255 / 0.28);
+  --dock-tile-shadow: 0 1px 2px rgb(0 0 0 / 0.18), 0 6px 14px rgb(0 0 0 / 0.16);
+  --bubble-them-light: #e9e9eb;
+  --bubble-them-dark: #2c2c2e;
+  --bubble-radius: 20px;
+  --bubble-tail: 6px;
+  --bubble-max: 85%;
+  --thread-width: 34rem;
+  --composer-send: 36px;
 
   /* Work (Part 9): the bento's tiles and their previews, the case-study sheet and the page
      behind it, and the architecture diagrams. Preview sizes are in the previews' view units. */
