@@ -1,19 +1,22 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect } from "react";
-import { Container, Grid } from "@/components/ui/layout";
 import { usePageModes } from "@/lib/page-modes";
-import { useSurface } from "@/lib/stores/surface";
+
+// Each mode's parts load the first time it's on, so the first load carries only this.
+const GridOverlay = dynamic(() => import("./grid-overlay").then((module) => module.GridOverlay), { ssr: false });
 
 /**
- * The page modes Search and G and F turn on (DESIGN.md §6.3):
- * - Show grid: the layout grid's columns over the page, at the content width.
- * - Focus mode: the section being read stays lit while the rest of the page dims.
+ * The page modes (DESIGN.md §6.3, §8), from G, F and Search:
+ * - The design grid (./grid-overlay.tsx): the layout's columns and gutters, the 8pt
+ *   baseline, and the 734, 1068 and 1440 breakpoints marked, for designers.
+ * - Focus mode (./focus-tracker.ts): everything but the section under the pointer, or the
+ *   keyboard's focus, dims and softens. F again or Esc leaves it.
  */
 export function PageModes() {
   const grid = usePageModes((state) => state.grid);
   const focus = usePageModes((state) => state.focus);
-  const section = useSurface((state) => state.section);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -22,22 +25,17 @@ export function PageModes() {
   }, [focus]);
 
   useEffect(() => {
-    if (!focus || !section) return;
-    const element = document.getElementById(section);
-    element?.setAttribute("data-focused", "");
-    return () => element?.removeAttribute("data-focused");
-  }, [focus, section]);
+    if (!focus) return;
+    let alive = true;
+    let stop: (() => void) | null = null;
+    void import("./focus-tracker").then(({ trackFocus }) => {
+      if (alive) stop = trackFocus();
+    });
+    return () => {
+      alive = false;
+      stop?.();
+    };
+  }, [focus]);
 
-  if (!grid) return null;
-  return (
-    <div className="grid-overlay" aria-hidden="true" data-testid="grid-overlay">
-      <Container className="h-full">
-        <Grid className="h-full">
-          {Array.from({ length: 12 }, (_, column) => (
-            <div key={column} className="grid-overlay-column" />
-          ))}
-        </Grid>
-      </Container>
-    </div>
-  );
+  return grid ? <GridOverlay /> : null;
 }

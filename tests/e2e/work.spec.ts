@@ -244,6 +244,10 @@ test.describe("the case-study sheet", () => {
       await expect(sheet(page).locator(".case-title")).toHaveText(studies.find((study) => study.slug === slug)!.name);
       await page.goBack();
       await expect(page).toHaveURL(/\/$/);
+      // The sheet flies home before the next click: Playwright scrolls a tile into view
+      // before it clicks, and the page's scroll comes back as the fold ends, so a click made
+      // mid-fold can land beside its tile. A visitor can't scroll then (the page is held).
+      await expect(ghost(page)).toHaveCount(0);
     }
     await closed(page);
   });

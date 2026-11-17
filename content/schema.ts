@@ -118,6 +118,10 @@ const Profile = z.strictObject({
     github: Url,
     scholar: Url.nullable(),
     orcid: Url.nullable(),
+    /** The site's own address, once it's live: the printed résumé's QR code points here. */
+    site: Url.nullable(),
+    /** The RETROGRADE edition of the site, once it's live: Search's "retro" opens it. */
+    retrograde: Url.nullable(),
   }),
   /** A phone-free résumé PDF in /public. null means there's no download (DESIGN.md §2 rule 2). */
   resumePdf: PublicPdf.nullable(),
@@ -459,11 +463,39 @@ const FooterCopy = z.strictObject({
   copyright: Template("year"),
 });
 
+/** A surprise in /colophon's list: its name, and how to find it. */
+const Thing = z.strictObject({ name: Text, find: Text });
+
 /** How the site is built (/colophon): rows like a spec sheet's. Facts about the site, not about Akshat. */
 const ColophonCopy = z.strictObject({
   headline: Text,
   sub: Text,
   rows: z.array(z.strictObject({ label: Text, items: z.array(Text).min(1) })).min(1),
+  /** The surprises (DESIGN.md §8), behind a spoiler: one per id in lib/surprises. */
+  things: z.strictObject({ label: Text, show: Text, hide: Text, items: z.record(z.string(), Thing) }),
+});
+
+/** The surprises' own words (DESIGN.md §8). */
+const SurprisesCopy = z.strictObject({
+  devanagari: z.strictObject({ name: Text, note: Text }),
+  clearSkies: Text,
+  commands: z.strictObject({
+    hello: z.strictObject({ phrase: Text, label: Text, answer: Text }),
+    nineFortyOne: z.strictObject({ phrase: Text, label: Text, answer: Text }),
+    sudo: z.strictObject({ phrase: Text, label: Text, answer: Text }),
+    compare: z.strictObject({ phrase: Text, label: Text }),
+    retro: z.strictObject({ phrase: Text, label: Text }),
+    clarity: z.strictObject({ phrase: Text, label: Text }),
+  }),
+  console: z.strictObject({ greeting: Text }),
+  notFound: z.strictObject({ headline: Text, sub: Text, action: Text }),
+  compare: z.strictObject({
+    headline: Text,
+    picker: Text,
+    none: Text,
+    footnote: Text,
+    rows: z.strictObject({ studying: Text, internships: Text, papers: Text, honors: Text, stack: Text }),
+  }),
 });
 
 const Copy = z.strictObject({
@@ -553,6 +585,7 @@ const Copy = z.strictObject({
   contact: ContactCopy,
   footer: FooterCopy,
   colophon: ColophonCopy,
+  surprises: SurprisesCopy,
 });
 
 const ContentShape = z.strictObject({

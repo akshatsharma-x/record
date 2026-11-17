@@ -8138,6 +8138,462 @@
     line-height: var(--text-footnote--line-height);
   }
 
+  /* ─── Surprises (§8, Part 13) ────────────────────────────────────────────── */
+
+  /* The name's morph: the first name blurs out as अक्षत blurs in, in the same place. */
+  .hero-morph {
+    display: inline-grid;
+  }
+
+  .hero-latin,
+  .hero-devanagari {
+    grid-area: 1 / 1;
+    transition:
+      opacity var(--duration-reveal) var(--ease-out),
+      filter var(--duration-reveal) var(--ease-out),
+      scale var(--duration-reveal) var(--ease-out);
+  }
+
+  .hero-devanagari {
+    justify-self: center;
+    opacity: 0;
+    filter: blur(var(--morph-blur));
+    scale: var(--motion-resolve-scale);
+  }
+
+  .hero-name[data-morph] {
+    cursor: pointer;
+  }
+
+  .hero-name[data-morphed] .hero-latin {
+    opacity: 0;
+    filter: blur(var(--morph-blur));
+    scale: var(--motion-resolve-scale);
+  }
+
+  .hero-name[data-morphed] .hero-devanagari {
+    opacity: 1;
+    filter: none;
+    scale: none;
+  }
+
+  .hero-name-note {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    opacity: 0;
+    transition: opacity var(--duration-reveal) var(--ease-out);
+  }
+
+  .hero-name-note[data-shown] {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) :is(.hero-latin, .hero-devanagari) {
+      filter: none;
+      scale: none;
+      transition: opacity var(--motion-resolve-duration) var(--ease-out);
+    }
+  }
+
+  /* Search's "clarity": a blurred layer whose clear middle grows from the pointer, its
+     center and radius (--x, --y and --r) set by lib/surprises/command-clarity.ts. */
+  .clarity {
+    position: fixed;
+    z-index: var(--layer-sticky);
+    inset: 0;
+    -webkit-backdrop-filter: blur(var(--clarity-blur));
+    backdrop-filter: blur(var(--clarity-blur));
+    -webkit-mask-image: radial-gradient(circle at var(--x) var(--y), transparent var(--r), var(--neutral-dark-bg) calc(var(--r) + var(--clarity-edge)));
+    mask-image: radial-gradient(circle at var(--x) var(--y), transparent var(--r), var(--neutral-dark-bg) calc(var(--r) + var(--clarity-edge)));
+    pointer-events: none;
+  }
+
+  /* With reduced motion it's one soft pulse in place, and nothing travels. */
+  .clarity[data-still] {
+    -webkit-mask-image: none;
+    mask-image: none;
+    opacity: 0;
+  }
+
+  /* The design grid: the baseline every 8pt, and a ruler marking 734, 1068 and 1440. */
+  .grid-overlay-baseline {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(to bottom, var(--grid-baseline-ink) var(--hairline-width), transparent var(--hairline-width));
+    background-size: 100% var(--grid-baseline);
+  }
+
+  .grid-overlay > .px-gutter {
+    position: absolute;
+    inset: 0;
+  }
+
+  .grid-overlay-ruler {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  /* Each mark is the width of the window it names: its dashed edge is where that window
+     would end, and its label sits inside that edge, along the bottom, clear of the Island. */
+  .grid-overlay-mark {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 1.5);
+    border-inline-end: var(--hairline-width) dashed var(--grid-mark-ink);
+    color: var(--grid-mark-ink);
+    font-family: var(--font-mono);
+    font-size: var(--text-footnote);
+    line-height: var(--grid-ruler);
+  }
+
+  .grid-overlay-mark[data-mark="734"] {
+    width: var(--grid-mark-1);
+  }
+
+  .grid-overlay-mark[data-mark="1068"] {
+    width: var(--grid-mark-2);
+  }
+
+  .grid-overlay-mark[data-mark="1440"] {
+    width: var(--grid-mark-3);
+  }
+
+  .grid-overlay-legend {
+    position: absolute;
+    bottom: calc(var(--spacing) * 3);
+    left: var(--grid-gutter);
+    padding: calc(var(--spacing) * 1) calc(var(--spacing) * 2.5);
+    border-radius: var(--radius-chip);
+    background-color: var(--color-glass-solid);
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: var(--text-footnote);
+  }
+
+  /* Focus mode softens what it dims, and with reduced motion it changes at once. */
+  html[data-focus-mode] [data-section]:not([data-focused]) {
+    filter: blur(var(--focus-mode-soften));
+  }
+
+  html[data-focus-mode] [data-section] {
+    transition:
+      opacity var(--duration-ui) var(--ease-out),
+      filter var(--duration-ui) var(--ease-out);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"])[data-focus-mode] [data-section] {
+      transition: none;
+    }
+  }
+
+  /* /compare: a column per year, each with its picker; phones show the latest two years,
+     tablets three, wider screens all four. Each row's name sits across its columns. */
+  .compare {
+    display: grid;
+    margin-block: calc(var(--spacing) * 10);
+  }
+
+  .compare-head,
+  .compare-row {
+    display: grid;
+    grid-template-columns: repeat(var(--slots), minmax(0, 1fr));
+    column-gap: calc(var(--grid-gutter) * 1.5);
+  }
+
+  .compare-head {
+    position: sticky;
+    z-index: 1;
+    top: var(--island-clearance);
+    padding-block: calc(var(--spacing) * 4);
+    border-block-end: var(--hairline-width) solid var(--color-hairline);
+    background-color: var(--color-surface);
+  }
+
+  /* The years left out are the earliest: counted from the end, past the row's name. */
+  @variant max-md {
+    .compare-head,
+    .compare-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .compare-slot:not(:nth-last-child(-n + 2)) {
+      display: none;
+    }
+  }
+
+  @variant md {
+    .compare-head,
+    .compare-row {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .compare-slot:not(:nth-last-child(-n + 3)) {
+      display: none;
+    }
+  }
+
+  @variant lg {
+    .compare-head,
+    .compare-row {
+      grid-template-columns: repeat(var(--slots), minmax(0, 1fr));
+    }
+
+    .compare-slot:not(:nth-last-child(-n + 3)) {
+      display: flex;
+    }
+  }
+
+  .compare-pick {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* The year at a title's size is the picker, with the chevron that says it can change. */
+  .compare-picker {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-title);
+    font-weight: var(--text-title--font-weight);
+    letter-spacing: var(--text-title--letter-spacing);
+    line-height: var(--text-title--line-height);
+  }
+
+  .compare-picker select {
+    min-height: var(--target-min);
+    padding-block: calc(var(--spacing) * 1);
+    padding-inline: calc(var(--spacing) * 3) calc(var(--spacing) * 4 + var(--compare-chevron));
+    border-radius: var(--radius-control);
+    background-color: transparent;
+    color: var(--color-fg);
+    font: inherit;
+    letter-spacing: inherit;
+    appearance: none;
+    cursor: pointer;
+    transition: background-color var(--duration-ui) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .compare-picker select:enabled:hover {
+      background-color: var(--color-control-track);
+    }
+  }
+
+  /* Until the page can change a column, the year rests: no chevron, nothing to press. */
+  .compare-picker select:disabled {
+    padding-inline-end: calc(var(--spacing) * 3);
+    color: var(--color-fg);
+    opacity: 1;
+    cursor: default;
+  }
+
+  .compare-chevron {
+    position: absolute;
+    right: calc(var(--spacing) * 3);
+    width: var(--compare-chevron);
+    height: var(--compare-chevron);
+    color: var(--color-fg-2);
+    pointer-events: none;
+  }
+
+  .compare-picker:not([data-ready]) .compare-chevron {
+    display: none;
+  }
+
+  .compare-row {
+    row-gap: calc(var(--spacing) * 4);
+    padding-block: calc(var(--spacing) * 8);
+    border-block-end: var(--hairline-width) solid var(--color-hairline);
+  }
+
+  .compare-label {
+    grid-column: 1 / -1;
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-caps);
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .compare-cell {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    text-align: center;
+  }
+
+  .compare-count {
+    font-size: var(--compare-count);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--text-display--letter-spacing);
+    line-height: 1;
+  }
+
+  .compare-items {
+    display: grid;
+    gap: calc(var(--spacing) * 1);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .compare-none {
+    color: var(--color-fg-2);
+  }
+
+  .compare-footnote {
+    margin-block-end: calc(var(--spacing) * 12);
+  }
+
+  /* The 404: the light and the name behind the words are out of focus; the words aren't. */
+  .not-found-surface {
+    position: relative;
+    display: grid;
+    min-height: var(--not-found-height);
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .not-found-blur {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    transition: filter var(--duration-reveal-short) var(--ease-out);
+  }
+
+  .not-found[data-blurred] .not-found-blur {
+    filter: blur(var(--not-found-blur));
+  }
+
+  .not-found[data-focusing] .not-found-blur {
+    filter: none;
+  }
+
+  .not-found-light {
+    position: absolute;
+    width: var(--not-found-light-size);
+    height: var(--not-found-light-size);
+    border-radius: var(--radius-pill);
+    opacity: 0.5;
+  }
+
+  .not-found-light[data-light="a"] {
+    top: 0;
+    left: 0;
+    background-color: var(--accent-on-light);
+  }
+
+  .not-found-light[data-light="b"] {
+    right: 0;
+    bottom: 0;
+    background-color: var(--accent-2-on-light);
+  }
+
+  .not-found-name {
+    position: relative;
+    color: var(--color-fg);
+    font-size: var(--text-hero);
+    font-weight: var(--text-hero--font-weight);
+    letter-spacing: var(--text-hero--letter-spacing);
+    opacity: 0.5;
+    white-space: nowrap;
+  }
+
+  .not-found-body {
+    position: relative;
+    display: grid;
+    justify-items: start;
+    gap: calc(var(--spacing) * 6);
+  }
+
+  .not-found-action {
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
+    padding-inline: calc(var(--spacing) * 6);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent-fill);
+    color: var(--color-on-accent);
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .not-found-blur {
+      transition: none;
+    }
+  }
+
+  /* /colophon's things to find, behind a spoiler that's closed until asked. */
+  .things {
+    display: grid;
+    gap: calc(var(--spacing) * 4);
+    margin-block: calc(var(--spacing) * 12);
+  }
+
+  .things-title {
+    font-size: var(--text-title);
+    font-weight: var(--text-title--font-weight);
+    letter-spacing: var(--text-title--letter-spacing);
+  }
+
+  .things-toggle {
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
+    color: var(--color-accent);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .things-toggle::-webkit-details-marker {
+    display: none;
+  }
+
+  .things-hide,
+  .things-spoiler[open] .things-show {
+    display: none;
+  }
+
+  .things-spoiler[open] .things-hide {
+    display: inline;
+  }
+
+  /* Down one column, then the next: a list still reads in order. */
+  .things-list {
+    margin-block-start: calc(var(--spacing) * 4);
+    column-gap: calc(var(--grid-gutter) * 2);
+  }
+
+  @variant md {
+    .things-list {
+      columns: 2;
+    }
+  }
+
+  .things-item {
+    display: grid;
+    gap: calc(var(--spacing) * 1);
+    padding-block: calc(var(--spacing) * 2);
+    break-inside: avoid;
+  }
+
+  .things-find {
+    color: var(--color-fg-2);
+  }
+
   /* ─── Search (§6.3) ───────────────────────────────────────────────────────── */
 
   /* A centered glass panel in a top-layer dialog, 640px wide, with a 24px field. */
@@ -8474,7 +8930,7 @@
     .resume-edition {
       display: flex;
       flex-direction: column;
-      gap: calc(var(--print-gap) * 2);
+      gap: calc(var(--print-gap) * 1.5);
       color: var(--neutral-light-fg);
       font-family: var(--font-sans);
       font-size: var(--print-text);
@@ -8496,6 +8952,11 @@
     .resume-dates {
       color: var(--neutral-light-fg-2);
       font-size: var(--print-small);
+    }
+
+    /* A date range moves to the next line whole, never broken at its dash. */
+    .resume-dates {
+      white-space: nowrap;
     }
 
     .resume-section {
@@ -8527,6 +8988,54 @@
     .resume-edition ul {
       padding-inline-start: calc(var(--print-gap) * 2);
       list-style: disc;
+    }
+
+    .resume-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: calc(var(--print-gap) * 3);
+    }
+
+    .resume-identity {
+      display: flex;
+      flex-direction: column;
+      gap: calc(var(--print-gap) / 2);
+    }
+
+    /* The QR code back to the site, at the header's right. */
+    .resume-qr {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: calc(var(--print-gap) / 2);
+      color: var(--neutral-light-fg-2);
+      font-size: var(--print-small);
+    }
+
+    .resume-qr .pass-qr {
+      width: var(--print-qr);
+      height: var(--print-qr);
+    }
+
+    .resume-qr .pass-qr-paper {
+      fill: var(--pass-qr-paper);
+    }
+
+    .resume-qr .pass-qr-ink {
+      fill: var(--pass-qr-ink);
+    }
+
+    .resume-columns {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      gap: calc(var(--print-gap) * 3);
+    }
+
+    .resume-stack {
+      display: flex;
+      flex-direction: column;
+      gap: calc(var(--print-gap) * 2);
     }
   }
 

@@ -13,6 +13,7 @@ import {
   wallMinutes,
   workingOverlap,
 } from "@/lib/glance";
+import { glanceFlips } from "@/lib/surprises/glance-flips";
 import { useHydrated } from "@/lib/use-hydrated";
 import { useNow, useVisitorTimeZone } from "@/lib/use-now";
 
@@ -48,13 +49,14 @@ export function StudyingTile({ label, degree, field, institution, start, end, en
   const [flipped, setFlipped] = useState(false);
   const progress = now ? degreeProgress(start, end, timeZone, now) : null;
   const days = progress?.daysToGraduationMonth ?? null;
+  // The flip is a surprise with its own flag; without it the tile is just the ring.
+  const Flip = glanceFlips.on ? "button" : "div";
 
   return (
-    <button
-      type="button"
+    <Flip
+      {...(glanceFlips.on ? { type: "button" as const, onClick: () => setFlipped((value) => !value) } : {})}
       className="glance-flip"
       data-flipped={flipped || undefined}
-      onClick={() => setFlipped((value) => !value)}
     >
       <span className="glance-face" data-face="front" aria-hidden={flipped || undefined}>
         <span className="glance-label">{label}</span>
@@ -71,7 +73,7 @@ export function StudyingTile({ label, degree, field, institution, start, end, en
           {degree} {field}
         </span>
         <span className="glance-meta">{institution}</span>
-        {days !== null ? <span className="sr-only">Show the days to graduation</span> : null}
+        {days !== null && glanceFlips.on ? <span className="sr-only">Show the days to graduation</span> : null}
       </span>
       <span className="glance-face" data-face="back" aria-hidden={!flipped || undefined}>
         <span className="glance-label">{label}</span>
@@ -82,7 +84,7 @@ export function StudyingTile({ label, degree, field, institution, start, end, en
         <span className="glance-meta">{endLabel}</span>
         <span className="sr-only">Show the progress</span>
       </span>
-    </button>
+    </Flip>
   );
 }
 
@@ -170,8 +172,13 @@ export function TimeTile({ label, timeZone, zoneLabel, hours, visitorDay }: Time
   const overlap = now && visitorZone ? workingOverlap({ ...hours, timeZone }, { ...visitorDay, timeZone: visitorZone }, now) : null;
   const yourDay = `${clock(visitorDay.start)}–${clock(visitorDay.end)}`;
 
+  const Flip = glanceFlips.on ? "button" : "div";
   return (
-    <button type="button" className="glance-flip" data-flipped={flipped || undefined} onClick={() => setFlipped((value) => !value)}>
+    <Flip
+      {...(glanceFlips.on ? { type: "button" as const, onClick: () => setFlipped((value) => !value) } : {})}
+      className="glance-flip"
+      data-flipped={flipped || undefined}
+    >
       <span className="glance-time">
         <ClockFace minutes={minutes} />
         <span className="glance-time-text">
@@ -196,11 +203,11 @@ export function TimeTile({ label, timeZone, zoneLabel, hours, visitorDay }: Time
               </span>
             </span>
           ) : null}
-          {overlap ? (
+          {overlap && glanceFlips.on ? (
             <span className="sr-only">{flipped ? `Show ${localeHour12 ? "12" : "24"}-hour time` : "Show the overlap with your day"}</span>
           ) : null}
         </span>
       </span>
-    </button>
+    </Flip>
   );
 }

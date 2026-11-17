@@ -15,6 +15,8 @@ const BEHAVIORS = {
   paper: () => import("@/lib/research-behavior").then((module) => module.attachResearch),
   credentials: () => import("@/lib/credentials-behavior").then((module) => module.attachCredentials),
   contact: () => import("@/lib/contact-behavior").then((module) => module.attachContact),
+  // A surprise's (DESIGN.md §8): the name's morph, on the heading, while its flag is on.
+  "name-morph": () => import("@/lib/surprises/devanagari-name").then((module) => module.attachNameMorph),
 } satisfies Record<string, () => Promise<(root: HTMLElement) => () => void>>;
 
 /** `id` is the element it attaches to, when that isn't the section's own (the kitchen's fixtures). */

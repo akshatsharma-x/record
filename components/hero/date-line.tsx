@@ -1,7 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { dateLine, untilNextMinute } from "@/lib/hero";
+import { dateLine } from "@/lib/hero";
+import { clockTime, subscribe } from "@/lib/use-now";
 
 interface DateLineProps {
   /** Akshat's clock: the time zone, and how to name it ("IST", or "in Jaipur"). */
@@ -9,21 +10,6 @@ interface DateLineProps {
   /** What shows before JavaScript, and without it: the place, never a stale time. */
   fallback: string;
   className?: string;
-}
-
-/** Ticks on the minute, and again when the tab comes back. */
-function subscribe(onChange: () => void): () => void {
-  let timer = 0;
-  const tick = () => {
-    onChange();
-    timer = window.setTimeout(tick, untilNextMinute(Date.now()));
-  };
-  timer = window.setTimeout(tick, untilNextMinute(Date.now()));
-  document.addEventListener("visibilitychange", onChange);
-  return () => {
-    window.clearTimeout(timer);
-    document.removeEventListener("visibilitychange", onChange);
-  };
 }
 
 /**
@@ -34,7 +20,8 @@ function subscribe(onChange: () => void): () => void {
 export function DateLine({ place, fallback, className }: DateLineProps) {
   const text = useSyncExternalStore(
     subscribe,
-    () => dateLine(new Date(), place),
+    // The site's one clock, which ticks on the minute and can be frozen (Search's "9:41").
+    () => dateLine(clockTime(), place),
     () => null,
   );
   // Two keyed spans, so the live line arrives as new content: rewriting the fallback's

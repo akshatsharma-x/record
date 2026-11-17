@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
+import { Behavior } from "@/components/ui/behavior";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Container, Section } from "@/components/ui/layout";
@@ -9,6 +10,8 @@ import type { Portrait } from "@/content/schema";
 import { cx } from "@/lib/cx";
 import { HERO } from "@/lib/hero";
 import { SECTIONS } from "@/lib/sections";
+import { devanagariName } from "@/lib/surprises/devanagari-name";
+import { heroLens } from "@/lib/surprises/hero-lens";
 import { Aperture } from "./aperture";
 import { DateLine } from "./date-line";
 import { HeroController } from "./hero-controller";
@@ -30,18 +33,42 @@ export function Hero({ photo }: { photo: Portrait | null }) {
 
 // ─── Shared content ──────────────────────────────────────────────────────────
 
-/** The name, one span per line: two lines on phones, one on wider screens. */
+/**
+ * The name, one span per line: two lines on phones, one on wider screens. With its flag on
+ * (DESIGN.md §8), a click morphs the first name into Devanagari, with what it means; the
+ * heading still reads "Akshat Sharma" to assistive tech.
+ */
 function Name({ loupe }: { loupe?: boolean }) {
   const [first, ...rest] = content.profile.name.split(" ");
+  const morph = devanagariName.on ? content.copy.surprises.devanagari : null;
   return (
-    <h1 id={`${ID}-title`} className="hero-name text-hero" data-cursor={loupe ? "loupe" : undefined}>
-      <span className="hero-line" style={{ "--line": 0 } as CSSProperties}>
-        {first}
-      </span>{" "}
-      <span className="hero-line" style={{ "--line": 1 } as CSSProperties}>
-        {rest.join(" ")}
-      </span>
-    </h1>
+    <>
+      <h1 id={`${ID}-title`} className="hero-name text-hero" data-cursor={loupe ? "loupe" : undefined} data-morph={morph ? "" : undefined}>
+        <span className="hero-line" style={{ "--line": 0 } as CSSProperties}>
+          {morph ? (
+            <span className="hero-morph">
+              <span className="hero-latin">{first}</span>
+              <span className="hero-devanagari" lang="sa" aria-hidden="true">
+                {morph.name}
+              </span>
+            </span>
+          ) : (
+            first
+          )}
+        </span>{" "}
+        <span className="hero-line" style={{ "--line": 1 } as CSSProperties}>
+          {rest.join(" ")}
+        </span>
+      </h1>
+      {morph ? (
+        <>
+          <p className="hero-name-note" aria-hidden="true">
+            {morph.note}
+          </p>
+          <Behavior section="name-morph" id={`${ID}-title`} />
+        </>
+      ) : null}
+    </>
   );
 }
 
@@ -112,7 +139,7 @@ function TypeHero() {
       </div>
       <Container width="wide" className="hero-stack">
         <DateLineSlot />
-        <Name loupe />
+        <Name loupe={heroLens.on} />
         <Intro />
         <Actions />
         <div className="hero-ui">
@@ -239,7 +266,7 @@ function PortraitHero({ photo }: { photo: Portrait }) {
             <Actions />
             <div className="hero-ui">
               <HeroSwatches className="hero-swatches" />
-              <Aperture target={ID} />
+              {heroLens.on ? <Aperture target={ID} /> : null}
             </div>
           </div>
         </Container>

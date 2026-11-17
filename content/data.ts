@@ -33,6 +33,8 @@ export const data = {
       github: "https://github.com/akshatsharma-x",
       scholar: null, // TODO(akshat)
       orcid: null, // TODO(akshat)
+      site: null, // TODO(akshat): the site's address once it's live, for the printed résumé's QR code.
+      retrograde: null, // TODO(akshat): the RETROGRADE edition's address, for Search's "retro".
     },
     resumePdf: null, // TODO(akshat): a résumé PDF without the phone number. Until then, no download.
     // TODO(akshat): a portrait, at least 3000px tall, with soft side light and a plain
@@ -844,6 +846,56 @@ export const data = {
         { label: "Privacy", items: ["No cookies", "No phone number, anywhere"] },
         { label: "Testing", items: ["Vitest", "Playwright, in WebKit first", "axe-core"] },
       ],
+      things: {
+        label: "Things to find",
+        show: "Show the things to find",
+        hide: "Hide them again",
+        items: {
+          "hero-lens": { name: "The loupe", find: "Move the pointer over the name at the top. With a portrait, the ƒ button sets the background's blur." },
+          "devanagari-name": { name: "अक्षत", find: "Click the name at the top." },
+          "glance-flips": { name: "Two flips", find: "At a glance, click Studying for the days to graduation, and Local time for 12- or 24-hour time." },
+          "edit-shuttle": { name: "Play the edit", find: "Focus a clip in Experience, then press Space, or J, K and L." },
+          "clear-skies": { name: "Clear skies", find: "Drag the air-quality forecast's handle all the way right." },
+          "core-ripple": { name: "A ripple of cores", find: "Press the chip's die in Skills." },
+          "show-me-where": { name: "Show me where", find: "Choose a skill in Skills." },
+          "medal-glint": { name: "A glint", find: "Flick a medal hard." },
+          "dock-bounce": { name: "The bounce", find: "Open anything from the dock in Contact." },
+          delivered: { name: "Delivered", find: "Send a message from Contact." },
+          "command-hello": { name: "Hello", find: "Search for \"hello\"." },
+          "command-941": { name: "9:41", find: "Search for \"9:41\"." },
+          "command-sudo": { name: "Permission", find: "Search for \"sudo hire akshat\"." },
+          "command-compare": { name: "Compare", find: "Search for \"compare\"." },
+          "command-retro": { name: "Retro", find: "Search for \"retro\"." },
+          "command-clarity": { name: "Clarity", find: "Search for \"clarity\"." },
+          "design-grid": { name: "The grid", find: "Press G." },
+          "focus-mode": { name: "Focus mode", find: "Press F, and Esc to leave." },
+          "resume-edition": { name: "The résumé edition", find: "Print any page." },
+          "console-hello": { name: "A note for engineers", find: "Open the console." },
+          "compare-page": { name: "Compare Akshat models", find: "Visit /compare." },
+          "not-found": { name: "Out of focus", find: "Visit a page that doesn't exist." },
+        },
+      },
+    },
+    surprises: {
+      devanagari: { name: "अक्षत", note: "Sanskrit for 'unbroken'" },
+      clearSkies: "Clear skies ahead.",
+      commands: {
+        hello: { phrase: "hello", label: "Say hello", answer: "Hello to you too." },
+        nineFortyOne: { phrase: "9:41", label: "Set every clock to 9:41", answer: "9:41" },
+        sudo: { phrase: "sudo hire akshat", label: "Hire Akshat", answer: "Permission granted." },
+        compare: { phrase: "compare", label: "Compare Akshat models" },
+        retro: { phrase: "retro", label: "Open the RETROGRADE edition" },
+        clarity: { phrase: "clarity", label: "Bring everything into focus" },
+      },
+      console: { greeting: "Hi, fellow engineer." },
+      notFound: { headline: "This page is out of focus.", sub: "Whatever was here isn't anymore, or never was.", action: "Bring it into focus" },
+      compare: {
+        headline: "Compare Akshat models.",
+        picker: "Year",
+        none: "None",
+        footnote: "Derived from dated entries; nothing estimated.",
+        rows: { studying: "Studying", internships: "Internships to date", papers: "Papers", honors: "Honors", stack: "Joined the stack" },
+      },
     },
   },
 

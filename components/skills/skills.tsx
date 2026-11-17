@@ -1,4 +1,5 @@
 import { Behavior } from "@/components/ui/behavior";
+import { showMeWhere } from "@/lib/surprises/show-me-where";
 import { Button } from "@/components/ui/button";
 import { Container, Section } from "@/components/ui/layout";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -52,7 +53,7 @@ export function Skills() {
             ]}
           />
           <div className="skills-view" data-view="specs">
-            <SpecsSheet rows={categories.map((category) => ({ id: category.id, name: category.name, skills: category.skills }))} interactive />
+            <SpecsSheet rows={categories.map((category) => ({ id: category.id, name: category.name, skills: category.skills }))} interactive={showMeWhere.on} />
           </div>
           <div className="skills-view" data-view="cloud">
             <Cloud skills={cloud} label={views.cloud} />

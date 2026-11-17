@@ -21,7 +21,7 @@ The portfolio of Akshat Sharma: AI & ML engineer, B.Tech CSE '27 at Manipal Univ
 11. [Stack](#11-stack)
 12. [Decision log](#12-decision-log)
 
-- [Open conflicts](#open-conflicts): [C1](#c1-hover-only-delights) · [C5](#c5-sentence-case). C2, C4, C6 and C7 were resolved in Part 2, and C3 in Part 4 (§12).
+- [Open conflicts](#open-conflicts): [C5](#c5-sentence-case). C2, C4, C6 and C7 were resolved in Part 2, C3 in Part 4 and C1 in Part 13 (§12).
 
 ---
 
@@ -67,9 +67,9 @@ These apply to every part.
 2. **Privacy.** Never publish the phone number, even though every résumé carries it. It stays out of the HTML, the JSON-LD, the print edition, vCards and the git history. No résumé download until a phone-free PDF exists. No cookies; cookieless analytics only.
 3. **The cursor is always locatable** (§6.1, built in Part 3). No feature may hide, cover, lag or shrink the hotspot below its spec.
 4. **Motion has meaning.** Every animation explains a relationship, confirms an action or rewards intent. Loops run only inside media the visitor can pause, the periphery stays still, and everything has a reduced-motion edition (§5.7).
-5. **Respect the visitor.** Native scrolling, with no hijacking and no smooth-scroll library. No preloader or intro gate, no modal on load, no autoplaying sound, and no content that only hover reveals. *Open conflict: [C1](#c1-hover-only-delights).*
+5. **Respect the visitor.** Native scrolling, with no hijacking and no smooth-scroll library. No preloader or intro gate, no modal on load, no autoplaying sound, and no content that only hover reveals: a delight behind a hover only decorates what's already there (§8).
 6. **Performance is design** (§10). Animation is frame-rate independent: it's driven by time or by scroll position, never by frame count, so 60 Hz and 120 Hz ProMotion screens look identical. Animate transform and opacity; filter only sparingly.
-7. **Accessibility is design** (§10). WCAG 2.2 AA, targets of at least 44×44 pt, a full keyboard path and VoiceOver testing. Single-key shortcuts can be turned off (§6.3). *Open conflict: [C1](#c1-hover-only-delights).*
+7. **Accessibility is design** (§10). WCAG 2.2 AA, targets of at least 44×44 pt, a full keyboard path and VoiceOver testing. Single-key shortcuts can be turned off (§6.3).
 8. **Safari first.** Test macOS Safari and iOS Safari, then Chrome, then Firefox.
 9. **Tokens only.** Components contain no magic numbers: color, type, spacing, radius, duration and spring all come from tokens.
 10. **Every state is designed:** default, hover, focus-visible, pressed, disabled, loading, empty, error and success.
@@ -110,10 +110,10 @@ Part 4 laid every section down with its id, surface and real copy, plainly set, 
 | `/work/[slug]` | A case study. Opened from inside the site, it expands over the page as a sheet (§7.6). |
 | `/research/[slug]` | A paper page. |
 | `/specs` | The full "Tech Specs" page: every skill by category, then education and coursework. It prints as itself (§7.7). |
-| `/compare` | A hidden easter egg. |
+| `/compare` | "Compare Akshat models.": Akshat's years side by side, as Apple compares its models (§8). No menu links to it; Search's "compare" and /colophon's things to find do. |
 | `/colophon` | How the site is built: a sheet like /specs (Part 12). |
 | `/api/contact` | The composer's endpoint (POST only, §7.9). |
-| 404 | The page is "out of focus". |
+| 404 | "This page is out of focus.", and a button that brings it into focus on the way home (§8). |
 | `/dev/kitchen`, `/dev/content` | Dev-only; return 404 in production. |
 
 *Open conflict: [C5](#c5-sentence-case) ("Tech Specs").*
@@ -373,10 +373,11 @@ Search everything, jump anywhere and run actions. Built in Part 4: `components/s
 - **Matching** is fuzzy. Every typed word must match the title, keywords, subtitle or body: exactly, as a prefix, inside a longer word (four letters or more), typed together along word boundaries ("nextjs") or with a typo (one edit from four letters, two from eight; a transposition counts as one). Skill aliases and a small vocabulary (`lib/search/vocabulary.ts`) let a word find what it means: "rag" finds Cognivault AI and United Airlines, and "llm" finds Cartographer.
 - **Keyboard.** ↑ and ↓ move, Enter opens, ⌘Enter or Ctrl Enter opens in a new tab, and Esc closes. The field is a combobox that drives a grouped listbox through aria-activedescendant, so focus stays in the field. The page behind is inert, focus returns where it was, and a live region announces the count.
 - **Arithmetic.** A small parser works out typed sums, never eval: "12*7" shows 84, and Enter copies it.
-- **Actions** (Part 13 adds more): Copy email, Open LinkedIn, Open GitHub, Toggle theme, Change finish (or a finish by name), Larger cursor, Use system cursor, Show grid (G), Focus mode (F), Print the résumé edition and Single-key shortcuts. Each confirms itself through the Island.
-  - **Show grid** lays the grid's columns over the page at the content width.
-  - **Focus mode** keeps the section being read lit and dims the rest of the page. F or Esc turns it off.
-  - **Print the résumé edition** prints a résumé typeset from the content, with no phone number. Printing any page prints it.
+- **Actions:** Copy email, Open LinkedIn, Open GitHub, Toggle theme, Change finish (or a finish by name), Larger cursor, Use system cursor, Show grid (G), Focus mode (F), Print the résumé edition and Single-key shortcuts. Each confirms itself through the Island.
+  - **Show grid** lays the design grid over the page: its columns and gutters at the content width, the 8pt baseline, and rulers at the breakpoints (§8).
+  - **Focus mode** keeps the section under the pointer, or the one with the keyboard's focus, lit, and dims and softens the rest of the page. F or Esc turns it off.
+  - **Print the résumé edition** prints a one-page résumé typeset from the content, with no phone number (§8). Printing any page prints it.
+- **Secret commands** (Part 13): "hello", "9:41", "sudo hire akshat", "compare", "retro" and "clarity" (§8). Each shows only when its whole phrase is typed, as the Top hit, and never among the suggestions.
 - **Single-key shortcuts** ("/", G and F) never fire while typing, with a modifier or behind a modal dialog. Search can turn them off, and the choice persists, as WCAG 2.1.4 requires.
 
 ### 6.4 Focus ring
@@ -588,12 +589,37 @@ Built in Part 12 (`components/contact/` and `components/footer/`; the composer's
 
 ## 8. Surprises
 
-Catalog in Part 13.
+Small, tasteful and discoverable, and never in the way. Every section hides one delight, and the site adds a few of its own (Part 13).
 
-- Every section hides one delight behind a click or a hover, and the site adds a few global ones.
-- None of them blocks content, plays sound or repeats in an annoying way.
+- **The rules.** No surprise steals focus, plays a sound, blocks reading or fires more than once a session unless asked: the console's note and the clear sky's line say themselves once a session, and every other one happens only when the visitor does something. Each is reachable by keyboard, or purely optional: a delight behind a hover only ever decorates what's already on the page. Each respects reduced motion.
+- **The parts.** Each surprise is a file in `lib/surprises/` that holds its flag, `define({ id, section, on })`, and its behavior where it has one of its own. Its words are content's (`copy.surprises`, and its entry in `copy.colophon.things`). It has an end-to-end test, titled `[surprise:<id>]` in `tests/e2e/surprises.spec.ts`; the unit tests check that every surprise has its file, its flag, its words and its test.
+- **Flags** are fixed at build time, so the server and the browser always agree. `NEXT_PUBLIC_SURPRISES="+devanagari-name,-command-clarity"` turns any on or off for a build.
+- **Things to find.** /colophon lists every surprise that's on, behind a spoiler that's closed until asked (a `<details>`, so it works without JavaScript too).
 
-*Open conflict: [C1](#c1-hover-only-delights).*
+| Surprise | Where | What happens | Ships |
+|---|---|---|---|
+| `hero-lens` | Hero | The loupe magnifies the name under the pointer (the typographic edition, §6.1); with a portrait, the ƒ dial sets the background's blur. | On |
+| `devanagari-name` | Hero | A click on the name blurs "Akshat" into अक्षत, in the same place, with "Sanskrit for 'unbroken'" under it; another click turns it back. Assistive tech hears the name throughout. | Off, until Akshat approves it |
+| `glance-flips` | At a glance | Studying flips to the days to graduation, and Local time to 24-hour time (§7.2). | On |
+| `edit-shuttle` | Experience | Space plays the edit, and J, K and L shuttle it (§7.4). | On |
+| `clear-skies` | Research | The PM2.5 forecast's handle taken all the way right clears the sky completely, and the Island says "Clear skies ahead." Only the visitor's own drag or keys do it, never the scroll's play. | On |
+| `core-ripple` | Skills | The die's button ripples the cores, ring by ring (§7.7). | On |
+| `show-me-where` | Skills | Choosing a skill lights up what uses it, and the Island offers the jump (§7.7). | On |
+| `medal-glint` | Credentials | A hard flick spins a medal fast and throws a glint (§7.8). | On |
+| `dock-bounce` | Contact | An app opened from the dock bounces, and leaves the dot under it (§7.9). | On |
+| `delivered` | Contact | "Delivered" appears under a message sent (§7.9). | On |
+| `command-hello` | Search | "hello": the Island answers "Hello to you too." | On |
+| `command-941` | Search | "9:41": every clock on the site (the hero's date line, At a glance's Local time and the close's live line) shows 9:41 in the morning, Akshat's time, for five seconds. | On |
+| `command-sudo` | Search | "sudo hire akshat": "Permission granted.", then a jump to Contact. | On |
+| `command-compare` | Search | "compare" opens /compare. | On |
+| `command-retro` | Search | "retro" opens the RETROGRADE edition in a new tab, once `profile.links.retrograde` has its address. Until then Search doesn't know the word. | On, waiting for the address |
+| `command-clarity` | Search | "clarity": the page goes soft, then comes back into focus from the pointer outward, over 1.2s. With reduced motion, one soft pulse in place. | On |
+| `design-grid` | The site | G lays the grid over the page: its columns at the content width (12, or 8 on tablets and 4 on phones) and gutters, the 8pt baseline, rulers at 734, 1068 and 1440 (each the right edge of a window that wide), and a legend of what's showing. G again takes it away. | On |
+| `focus-mode` | The site | F dims and softens everything but the section under the pointer, or the one with the keyboard's focus: whichever moved last leads. F again or Esc leaves. | On |
+| `resume-edition` | The site | ⌘P prints a one-page résumé, on A4 or on Letter: the name, the email and the links, experience (each role's first two highlights), research, projects, skills, education and honors, and a QR code back to the site once `profile.links.site` has its address. There's no phone number in it. | On |
+| `console-hello` | The site | The DevTools console shows one message a session: the monogram, "Hi, fellow engineer.", the GitHub link and the email. | On |
+| `compare-page` | The site | /compare, "Compare Akshat models.": a column per year, each year its own picker, as Apple's compare pages have. The rows are what Akshat was studying, internships to date, papers, honors and what joined the stack that year, built only from dated entries: "Derived from dated entries; nothing estimated." Phones compare the latest two years, tablets three. | On |
+| `not-found` | The site | The 404, "This page is out of focus.": the light and the name behind the words are blurred, and "Bring it into focus" sharpens them and goes home. The words themselves are always sharp. | On |
 
 ---
 
@@ -794,17 +820,28 @@ Append as you go, each with its reason.
 - **The live lines and the footer's settings load after the page** (Part 12). Both need the browser to show anything, so they're lazy chunks with their space kept; the settings sit at the very end of the page.
 - **Performance after Part 12** (Part 12). First-load JS is 167.8 KB, 1.1 KB more than after Part 11: the footer's settings and the live lines load as lazy chunks after the page, and the dock's and the composer's behavior is a lazy chunk that comes in as #contact nears. Lighthouse's mobile run, under DevTools throttling: performance 0.98–0.99, LCP 1.6s, blocking time 90–110ms (40ms after Part 11: the settings' chunk and the lazy lines now hydrate in the window it measures) and CLS 0, with 1.0 for accessibility, best practices and SEO.
 
+- **A surprise's flag is fixed at build time** (Part 13). Each is a constant in its own file (`lib/surprises/`), and `NEXT_PUBLIC_SURPRISES` can override any for a build. A flag read in the browser alone would render one page on the server and another after hydration.
+- **The Devanagari name ships off** (Part 13), until Akshat approves it, as the brief has it. A build with `NEXT_PUBLIC_SURPRISES=+devanagari-name` shows it; the unit tests prove it works with its flag on. अक्षत is narrower than "Akshat", so it centers in the space the name keeps, and nothing beside it moves.
+- **Hover-only delights are decoration** (Part 13), which resolves C1. A delight may live behind a hover only when it adds nothing that isn't already on the page, like the loupe or the dock's magnification. Every other surprise is behind a click or a key, as the brief's rule has it: keyboard-reachable or purely optional.
+- **A secret command shows only when its whole phrase is typed** (Part 13). Matched fuzzily or as a prefix, it would spoil itself among the suggestions and turn up in ordinary searches ("hell" on the way to "hello"). Typed in full, it's the Top hit, so Enter runs it.
+- **"retro" waits for its address** (Part 13). Content has no URL for the RETROGRADE edition yet (`profile.links.retrograde`, a TODO), so Search doesn't know the word and /colophon doesn't list it. Once content has the URL, both do, with no code change.
+- **Every clock reads one time** (Part 13). The hero's date line, At a glance's Local time and the close's live line all read `clockTime()` (`lib/use-now.ts`), which is how "9:41" holds them all for five seconds. The date line had a ticker of its own; it shares the one clock now.
+- **The clear sky is the visitor's** (Part 13). Only the handle taken all the way right by a drag or a key clears it; the scroll's play carries the handle to the horizon without clearing anything, and taking the handle back from the visitor also takes back the clear sky.
+- **The clarity ripple is one masked layer** (Part 13). A fixed layer with a backdrop blur and a radial mask whose clear middle grows from the pointer, its radius set each frame; nothing in the page re-renders. Its clock starts on its first drawn frame, so a busy moment as Search closes can't skip the start. Playwright's WebKit doesn't draw backdrop filters at all, so the end-to-end test checks the layer's life (it appears, grows, never takes a click and goes) rather than its pixels; Chromium draws it.
+- **Focus mode follows whichever moved last** (Part 13): the pointer, or the keyboard's focus. A scroll that moving the focus caused doesn't hand the lit section back to the pointer. An Escape that something nearer takes first, such as the dock's label, doesn't also leave the mode.
+- **The grid's rulers are windows** (Part 13). Each of 734, 1068 and 1440 is drawn as the right edge of a window that wide, labeled along the bottom, clear of the Island; so the 1440 mark shows on a 1440 screen, at its edge.
+- **The résumé is one page of A4 and of Letter** (Part 13). Each role keeps its first two highlights, research and projects are a line each, skills sit beside education and honors, and the margins are 12mm: Letter, 18mm shorter than A4, had spilled onto a second page. The end-to-end test prints both sizes in Chromium and counts the pages. The QR code waits for the site's address (`profile.links.site`, a TODO), and a date range never breaks at its dash.
+- **/compare's years are content's** (Part 13): from the first dated entry (2023) to the latest month content knows has begun, so the build never guesses today, and a new year adds a column with no code change. Internships, papers and the stack put their count first, as Apple's compare pages do with a number; the rows' names are row headers, so each cell is announced with its row and its year. It's built ahead as a static page. It's indexable, as every page is (§10's SEO budget); only Search and /colophon lead to it, so it stays found rather than shown.
+- **The 404's words are never blurred** (Part 13). The page behind them is: the light and the name. A blurred headline would be a page that can't be read. "Bring it into focus" is a link home, so it works without JavaScript; with it, the blur clears first, and with reduced motion it goes home at once.
+- **The console's note and the clear sky say themselves once a session** (Part 13), in sessionStorage. Every other surprise happens only when the visitor does something, as often as they like.
+- **The count-up counts in whole steps** (Part 13). Intl's default allows three decimals, so a count passed through numbers like "3.999 internships"; the Counter counts in the final value's own precision now.
+- **Performance after Part 13** (Part 13). First-load JS is 168.9 KB, 1.1 KB more than after Part 12: the flags, the clocks' freeze, the page modes' shell and Search's pointer. Everything else a surprise needs is lazy: the grid's overlay and focus mode's tracking load the first time their mode is on, the console's note after the page, the name's morph through the behavior registry (`components/ui/behavior.tsx`), and Search's commands with Search. Lighthouse's mobile run, under DevTools throttling: the home page scores 0.99 for performance (LCP 1.6–1.7s, blocking time 50–80ms, CLS 0) and 1.0 for accessibility, best practices and SEO; /compare and /colophon score 1.0 in all four.
+
 ---
 
 ## Open conflicts
 
-Each entry is a pair of rules that can't both hold as written. They are deliberately left unresolved. An entry stays open until a decision changes the rules it names, and that decision and its reason go in §12. C2, C4, C6 and C7 were resolved that way in Part 2, and C3 in Part 4.
-
-### C1. Hover-only delights
-
-- **§2 rule 5:** no content that only hover reveals.
-- **§8:** every section hides one delight "behind a click or a hover".
-- **Clash:** a delight behind a hover alone is content that only hover reveals. It would also be missing from the full keyboard path (§2 rule 7).
+Each entry is a pair of rules that can't both hold as written. They are deliberately left unresolved. An entry stays open until a decision changes the rules it names, and that decision and its reason go in §12. C2, C4, C6 and C7 were resolved that way in Part 2, C3 in Part 4 and C1 in Part 13.
 
 ### C5. Sentence case
 

@@ -432,8 +432,11 @@ describe("warnings", () => {
 describe("gaps and drafts", () => {
   it("lists every null field", () => {
     const list = gaps(content);
-    expect(list).toHaveLength(46);
+    expect(list).toHaveLength(48);
     expect(list).toContain("profile.location.cityConfirmed");
+    // The surprises that wait for an address: the résumé's QR code and the RETROGRADE edition.
+    expect(list).toContain("profile.links.site");
+    expect(list).toContain("profile.links.retrograde");
     // Each case study's first chapter waits for its problem.
     expect(list).toContain("projects[cognivault-ai].problem");
     expect(list).toContain("projects[wcag-analyzer].stack");

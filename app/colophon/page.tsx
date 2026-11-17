@@ -5,6 +5,7 @@ import { Container, Section, Stack } from "@/components/ui/layout";
 import { Footnote } from "@/components/ui/type";
 import { content } from "@/content";
 import { SECTIONS } from "@/lib/sections";
+import { SURPRISES } from "@/lib/surprises";
 
 export const metadata: Metadata = {
   title: `${content.copy.colophon.headline.replace(/\.$/, "")} · ${content.profile.name}`,
@@ -19,6 +20,9 @@ export default function ColophonPage() {
   const { copy } = content;
   const overview = SECTIONS.find((section) => section.id === "top")!.name;
   const rows = copy.colophon.rows.map((row) => ({ id: row.label.toLowerCase(), name: row.label, items: row.items }));
+  const { things } = copy.colophon;
+  // Only what can be found: a surprise that's on, and "retro" once there's an edition to open.
+  const findable = SURPRISES.filter((surprise) => surprise.on && (surprise.id !== "command-retro" || content.profile.links.retrograde));
   return (
     <>
       <main className="specs-page">
@@ -34,6 +38,26 @@ export default function ColophonPage() {
           </Container>
           <Container>
             <SpecsSheet rows={rows} interactive={false} />
+          </Container>
+          <Container className="things">
+            <h2 id="things-title" className="things-title">
+              {things.label}
+            </h2>
+            {/* A spoiler: closed until the visitor asks, and a real disclosure without JavaScript. */}
+            <details className="things-spoiler">
+              <summary className="things-toggle">
+                <span className="things-show">{things.show}</span>
+                <span className="things-hide">{things.hide}</span>
+              </summary>
+              <ol className="things-list" aria-labelledby="things-title">
+                {findable.map((surprise) => (
+                  <li key={surprise.id} className="things-item" data-surprise={surprise.id}>
+                    <strong className="things-name">{things.items[surprise.id].name}</strong>
+                    <span className="things-find">{things.items[surprise.id].find}</span>
+                  </li>
+                ))}
+              </ol>
+            </details>
           </Container>
         </Section>
       </main>

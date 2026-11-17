@@ -1,3 +1,4 @@
+import { showMeWhere } from "./surprises/show-me-where";
 import { PHASES, sceneProgress } from "./chip";
 import { chipState, onChip, setChip } from "./chip-state";
 import { type EvidenceKind, evidenceTarget } from "./evidence";
@@ -30,7 +31,7 @@ export function attachSkills(root: HTMLElement): () => void {
 
   const chip = root.querySelector<HTMLElement>("#chip");
   if (chip) attachChip(chip, listen, undo);
-  attachShowMe(root, listen, undo);
+  if (showMeWhere.on) attachShowMe(root, listen, undo);
   const cloud = root.querySelector<HTMLElement>("[data-cloud]");
   if (cloud) attachCloud(cloud, listen, undo);
   root.setAttribute("data-skills-ready", "");

@@ -1,3 +1,4 @@
+import { coreRipple } from "@/lib/surprises/core-ripple";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/ui/layout";
 import { content } from "@/content";
@@ -25,13 +26,15 @@ export function Chip({ layers }: { layers: SkillLayer[] }) {
           <div className="chip-art" style={vars({ "--ratio": Math.round((view.box.width / view.box.height) * 1000) / 1000 })}>
             <div className="chip-box" style={vars({ "--aspect": `${view.box.width} / ${view.box.height}` })}>
               <ChipView poster={<ChipPoster ids={layers.map((layer) => layer.id)} />} label={chip.label} />
-              <button
-                type="button"
-                className="chip-die"
-                data-chip-die
-                aria-label={chip.cores}
-                style={vars({ "--x": `${percent(view.die.x)}%`, "--y": `${percent(view.die.y)}%` })}
-              />
+              {coreRipple.on ? (
+                <button
+                  type="button"
+                  className="chip-die"
+                  data-chip-die
+                  aria-label={chip.cores}
+                  style={vars({ "--x": `${percent(view.die.x)}%`, "--y": `${percent(view.die.y)}%` })}
+                />
+              ) : null}
             </div>
             <ol className="chip-labels">
               {layers.map((layer, i) => (

@@ -379,13 +379,14 @@
   --focus-mode-dim: 0.22;
 
   /* The print edition (§6.3, "Print the résumé edition"). */
-  --print-margin: 14mm;
+  --print-margin: 12mm;
   --print-text: 9.5pt;
   --print-small: 8.5pt;
   --print-title: 20pt;
   --print-heading: 10.5pt;
   --print-gap: 6pt;
   --print-caps-tracking: 0.06em;
+  --print-qr: 20mm;
 
   /* The hero (§7, Part 5). */
   --hero-height: 100svh;
@@ -620,6 +621,26 @@
   --thread-width: 34rem;
   --composer-send: 36px;
 
+  /* Surprises (Part 13, §8): the name's morph, the clarity ripple, the design grid's
+     baseline and breakpoint marks, focus mode's softening, the compare table and the 404. */
+  --morph-blur: 14px;
+  --clarity-blur: 7px;
+  --clarity-edge: 120px;
+  --grid-baseline: 8px;
+  --grid-baseline-ink: rgb(255 59 48 / 0.12);
+  --grid-mark-1: 734px;
+  --grid-mark-2: 1068px;
+  --grid-mark-3: 1440px;
+  --grid-mark-ink: #ff3b30;
+  --grid-ruler: 22px;
+  --focus-mode-soften: 2px;
+  --compare-count: clamp(2rem, 1.5rem + 2vw, 3rem);
+  /* Half the year it sits beside. */
+  --compare-chevron: 0.5em;
+  --not-found-blur: 24px;
+  --not-found-height: 100svh;
+  --not-found-light-size: 46vmax;
+
   /* Work (Part 9): the bento's tiles and their previews, the case-study sheet and the page
      behind it, and the architecture diagrams. Preview sizes are in the previews' view units. */
   --work-title: clamp(1.3125rem, 1.0982rem + 0.5357vw, 1.75rem);
@@ -715,7 +736,7 @@
 
 /* The résumé edition's paper (§6.3). */
 @page {
-  margin: 14mm;
+  margin: 12mm;
 }
 
 /* ─── 6. Reduced motion (§5.7) ────────────────────────────────────────────── */

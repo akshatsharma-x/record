@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { EDIT, type EditTrackId, isoToday, monthsAt, playStep, type ScrubClip, scrubMap, shuttle, targetOf, timeAt, activeAt } from "@/lib/edit";
 import { durations, gsapEase, type SpringState, springAtRest, springs, stepSpring } from "@/lib/motion";
 import { prefersReducedMotion } from "@/lib/reduced-motion";
+import { editShuttle } from "@/lib/surprises/edit-shuttle";
 
 interface ClipInfo {
   id: string;
@@ -284,14 +285,16 @@ export function EditController({ start, timeZone, clips }: { start: string; time
     const onKeyDown = (event: KeyboardEvent) => {
       if (!editing || event.metaKey || event.ctrlKey || event.altKey) return;
       const key = event.key.toLowerCase();
-      if (key === " ") {
+      // Space and J, K and L are a surprise of their own, with its own flag.
+      const shuttling = editShuttle.on;
+      if (shuttling && key === " ") {
         event.preventDefault();
         if (motion?.kind === "play") stop();
         else play(1);
-      } else if (key === "k") {
+      } else if (shuttling && key === "k") {
         event.preventDefault();
         stop();
-      } else if (key === "l" || key === "j") {
+      } else if (shuttling && (key === "l" || key === "j")) {
         event.preventDefault();
         play(shuttle(motion?.kind === "play" ? motion.speed : 0, key === "l" ? 1 : -1));
       } else if ((key === "arrowleft" || key === "arrowright") && (event.target as HTMLElement).dataset.track === "honors") {
