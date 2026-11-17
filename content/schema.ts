@@ -397,6 +397,75 @@ const SectionCopy = z.strictObject({
   sub: Text.optional(),
 });
 
+/** Copy with named slots the page fills in, such as "It's {time} {place}": each slot must be there. */
+const Template = (...slots: string[]) =>
+  Text.refine((text) => slots.every((slot) => text.includes(`{${slot}}`)), { error: `needs ${slots.map((slot) => `{${slot}}`).join(" and ")}` });
+
+const ContactCopy = z.strictObject({
+  headline: Text,
+  /** Akshat's live time: `{time}`, and `{place}` ("in Jaipur", or "IST" until the city is confirmed). */
+  clock: Template("time", "place"),
+  /** Akshat's working hours against the visitor's day, on the visitor's clock. */
+  overlap: Template("from", "to"),
+  noOverlap: Text,
+  dock: z.strictObject({
+    label: Text,
+    email: Text,
+    linkedin: Text,
+    github: Text,
+    resume: Text,
+    copied: Text,
+    notCopied: Text,
+    openMail: Text,
+  }),
+  thread: z.strictObject({
+    label: Text,
+    greeting: Text,
+    akshat: Text,
+    you: Text,
+    name: Text,
+    email: Text,
+    message: Text,
+    send: Text,
+    sending: Text,
+    delivered: Text,
+    sent: Text,
+    /** The mail app's way in when the form can't send. */
+    fallback: Text,
+    /** The subject of the email the form sends, and of the mail app's draft. */
+    subject: Text,
+    errors: z.strictObject({
+      nameRequired: Text,
+      nameLong: Text,
+      emailRequired: Text,
+      emailInvalid: Text,
+      emailLong: Text,
+      messageRequired: Text,
+      messageLong: Text,
+      rate: Text,
+      unavailable: Text,
+      failed: Text,
+    }),
+  }),
+});
+
+const FooterCopy = z.strictObject({
+  credit: Text,
+  notes: Text,
+  map: Text,
+  pages: z.strictObject({ specs: Text, colophon: Text }),
+  settings: Text,
+  cookies: Text,
+  copyright: Template("year"),
+});
+
+/** How the site is built (/colophon): rows like a spec sheet's. Facts about the site, not about Akshat. */
+const ColophonCopy = z.strictObject({
+  headline: Text,
+  sub: Text,
+  rows: z.array(z.strictObject({ label: Text, items: z.array(Text).min(1) })).min(1),
+});
+
 const Copy = z.strictObject({
   /** The hero's name, role and headline come from profile; its date line is live (Part 5). */
   hero: z.strictObject({ ctaWork: Text, ctaHello: Text }),
@@ -481,8 +550,9 @@ const Copy = z.strictObject({
     }),
     medals: z.strictObject({ label: Text, flip: Text, medal: Text }),
   }),
-  contact: SectionCopy,
-  footer: z.strictObject({ credit: Text }),
+  contact: ContactCopy,
+  footer: FooterCopy,
+  colophon: ColophonCopy,
 });
 
 const ContentShape = z.strictObject({

@@ -244,6 +244,25 @@ describe("the wallet's passes (Part 11)", () => {
   });
 });
 
+describe("the close (Part 12)", () => {
+  const card = { light: [color("--neutral-light-bg-alt"), color("--neutral-light-card")], dark: [color("--neutral-dark-card")] };
+
+  it("keeps a form's error words readable on its card, in both tones", () => {
+    for (const background of card.light) expect(ratio(color("--status-error-on-light"), background)).toBeGreaterThanOrEqual(AA);
+    for (const background of card.dark) expect(ratio(color("--status-error"), background)).toBeGreaterThanOrEqual(AA);
+  });
+
+  it("keeps Akshat's gray bubble readable, in both tones", () => {
+    expect(ratio(color("--neutral-light-fg"), color("--bubble-them-light"))).toBeGreaterThanOrEqual(AA);
+    expect(ratio(color("--neutral-dark-fg"), color("--bubble-them-dark"))).toBeGreaterThanOrEqual(AA);
+  });
+
+  it.each(FINISHES)("keeps LinkedIn's monogram, in the accent, readable on its plain tile ($name)", ({ id }) => {
+    expect(ratio(color(`--finish-${id}-on-light`), color("--dock-plain-light"))).toBeGreaterThanOrEqual(AA_LARGE);
+    expect(ratio(color(`--finish-${id}-on-dark`), color("--dock-plain-dark"))).toBeGreaterThanOrEqual(AA_LARGE);
+  });
+});
+
 describe("the tests themselves", () => {
   it("compute WCAG ratios correctly", () => {
     expect(ratio([0, 0, 0, 1], [255, 255, 255, 1])).toBeCloseTo(21, 5);

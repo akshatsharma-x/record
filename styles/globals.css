@@ -173,7 +173,10 @@
     .pass-flip,
     .pass-flip-input,
     .pass-flip-icon,
-    .medal-turn {
+    .medal-turn,
+    .dock-dot,
+    .composer-send,
+    .composer-send::before {
       corner-shape: round;
     }
 

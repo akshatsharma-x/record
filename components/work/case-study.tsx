@@ -235,7 +235,7 @@ export function CaseStudyView({ study, scope, heading: Heading, inSheet }: { stu
                       {note.source ? ` ${note.source}` : null}
                       {Array.from({ length: mentions.get(note.id) ?? 0 }, (_, index) => (
                         <Fragment key={index}>
-                          <FootnoteBackLink n={note.id} occurrence={index + 1} scope={scope} />
+                          <FootnoteBackLink n={note.id} occurrence={index + 1} total={mentions.get(note.id) ?? 0} scope={scope} />
                         </Fragment>
                       ))}
                     </li>

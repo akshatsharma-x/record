@@ -14,6 +14,7 @@ const BEHAVIORS = {
   research: () => import("@/lib/research-behavior").then((module) => module.attachResearch),
   paper: () => import("@/lib/research-behavior").then((module) => module.attachResearch),
   credentials: () => import("@/lib/credentials-behavior").then((module) => module.attachCredentials),
+  contact: () => import("@/lib/contact-behavior").then((module) => module.attachContact),
 } satisfies Record<string, () => Promise<(root: HTMLElement) => () => void>>;
 
 /** `id` is the element it attaches to, when that isn't the section's own (the kitchen's fixtures). */

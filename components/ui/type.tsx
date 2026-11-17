@@ -73,16 +73,20 @@ export function FootnoteRef({ n, occurrence = 1, scope }: { n: number; occurrenc
   );
 }
 
-/** The ↩ at the end of note `n`, back to where it was cited. */
-export function FootnoteBackLink({ n, occurrence = 1, scope }: { n: number; occurrence?: number; scope?: string }) {
+/**
+ * The ↩ at the end of note `n`, back to where it was cited. A note cited more than once
+ * (`total`) gets one per mention, each numbered, and each a whole 44pt target of its own
+ * (§2 rule 7), so neighbors never take each other's taps.
+ */
+export function FootnoteBackLink({ n, occurrence = 1, total = 1, scope }: { n: number; occurrence?: number; total?: number; scope?: string }) {
   return (
     <a
       href={`#${refId(n, occurrence, scope)}`}
       role="doc-backlink"
-      aria-label={occurrence > 1 ? `Back to mention ${occurrence} of footnote ${n}` : `Back to footnote ${n}`}
-      className="hit-area ml-1 inline-flex rounded-chip text-accent no-underline"
+      aria-label={total > 1 || occurrence > 1 ? `Back to mention ${occurrence} of footnote ${n}` : `Back to footnote ${n}`}
+      className="hit-area footnote-back rounded-chip text-accent no-underline"
     >
-      ↩
+      ↩{total > 1 ? <sup className="footnote-back-count">{occurrence}</sup> : null}
     </a>
   );
 }

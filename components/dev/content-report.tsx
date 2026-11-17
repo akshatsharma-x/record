@@ -536,10 +536,17 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
               `“${content.copy.about.currently}” · bento: “${content.copy.about.glance}” · a visitor's day: ${content.copy.about.visitorDay.start}–${content.copy.about.visitorDay.end}`,
             ],
             ["highlights", content.copy.highlights.eyebrow, "", "", ""],
-            ...(["experience", "research", "work", "skills", "contact"] as const).map((key) => {
+            ...(["experience", "research", "work", "skills"] as const).map((key) => {
               const copy = content.copy[key];
               return [key, copy.eyebrow ?? "", copy.headline, copy.sub ?? "", ""];
             }),
+            [
+              "contact",
+              "",
+              content.copy.contact.headline,
+              "",
+              `“${content.copy.contact.clock}” · “${content.copy.contact.overlap}” · “${content.copy.contact.noOverlap}” · opens with “${content.copy.contact.thread.greeting}”`,
+            ],
             [
               "credentials",
               content.copy.credentials.eyebrow ?? "",
@@ -547,7 +554,8 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
               content.copy.credentials.sub ?? "",
               `Without certificates: “${content.copy.credentials.headlineWithoutCertificates}” · Honors: “${content.copy.credentials.honors}”`,
             ],
-            ["footer", "", content.copy.footer.credit, "", ""],
+            ["footer", "", content.copy.footer.credit, "", `“${content.copy.footer.cookies}” · “${content.copy.footer.copyright}”`],
+            ["colophon", "", content.copy.colophon.headline, content.copy.colophon.sub, `${content.copy.colophon.rows.length} rows`],
           ].map((row) => row.map((cell, i) => (i === 0 ? <Mono key="section">{cell}</Mono> : cell)))}
         />
       </Section>

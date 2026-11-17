@@ -31,7 +31,9 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `npm run build && npm run start -- --port ${PRODUCTION}`,
+      // The composer's console transport and in-memory limit, on purpose: a real build with
+      // no keys answers 503 (tested in the unit tests), and this one delivers end to end.
+      command: `npm run build && CONTACT_TRANSPORT=console npm run start -- --port ${PRODUCTION}`,
       url: production,
       reuseExistingServer: false,
       timeout: 240_000,
