@@ -6894,6 +6894,666 @@
     }
   }
 
+  /* ─── Credentials (§7.8, Part 11) ─────────────────────────────────────────── */
+
+  .credentials-body {
+    display: grid;
+    gap: calc(var(--spacing) * 14);
+  }
+
+  /* On desktop the wallet and the medals stand side by side under the headline. */
+  @variant lg {
+    .credentials-body {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      column-gap: calc(var(--grid-gutter) * 3);
+      row-gap: calc(var(--spacing) * 12);
+      align-items: start;
+    }
+
+    .credentials-title {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* The wallet. The server's markup is a plain grid of passes, which is what reduced
+     motion and no JavaScript keep. Stacked (data-stacked, lib/credentials-behavior.ts),
+     the pass in front shows whole and each of the others shows its top beneath it. */
+  .wallet {
+    width: 100%;
+    max-width: var(--wallet-width);
+    container-type: inline-size;
+  }
+
+  .wallet-stack {
+    display: grid;
+    gap: var(--pass-gap);
+  }
+
+  .wallet[data-stacked] .wallet-stack {
+    --pass-height: calc(100cqi / var(--pass-ratio));
+    /* Enough of each pass to read what it is and its name: its kind's row, then its title. */
+    --pass-peek: calc(var(--pass-padding) * 1.2 + var(--pass-icon) + var(--spacing) + var(--pass-title) * var(--text-title--line-height));
+    --rest: max(var(--count) - 1, 0);
+    position: relative;
+    display: block;
+    height: calc(var(--pass-height) + min(var(--rest), 1) * var(--pass-gap) + var(--rest) * var(--pass-peek));
+  }
+
+  /* The stack's last pass shows only its top, then fades, as though into a pocket. */
+  .wallet[data-stacked][data-count]:not([data-count="1"]) .wallet-stack {
+    mask-image: linear-gradient(to bottom, var(--pass-shade) calc(100% - var(--pass-peek) * 0.35), transparent);
+  }
+
+  .pass {
+    position: relative;
+    aspect-ratio: var(--pass-aspect);
+    border-radius: var(--radius-card-s);
+    perspective: var(--pass-perspective);
+    color: var(--pass-ink);
+  }
+
+  .wallet[data-stacked] .pass {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: var(--slot, 0);
+    transform: translateY(
+      calc(min(var(--slot, 0), 1) * (var(--pass-height) + var(--pass-gap)) + max(var(--slot, 0) - 1, 0) * var(--pass-peek))
+    );
+  }
+
+  /* The pass in front stays over the others while it rises past them. */
+  .wallet[data-stacked] .pass[data-front] {
+    z-index: calc(var(--count) + 1);
+  }
+
+  .wallet[data-moving] .pass {
+    transition:
+      transform var(--duration-spring-smooth) var(--ease-spring-smooth),
+      translate var(--duration-spring-snappy) var(--ease-spring-snappy);
+  }
+
+  /* Hovering lifts a pass: one in the stack shows more of itself, the front one rises. */
+  @media (hover: hover) {
+    .wallet[data-stacked] .pass:not([data-front]):hover {
+      translate: 0 calc(var(--pass-lift) * -1);
+    }
+
+    .wallet[data-stacked] .pass[data-front]:hover {
+      translate: 0 calc(var(--pass-lift-front) * -1);
+    }
+  }
+
+  .wallet[data-stacked] .pass:not([data-front]):has(.pass-select:focus-visible) {
+    translate: 0 calc(var(--pass-lift) * -1);
+  }
+
+  .pass-card {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    border-radius: inherit;
+  }
+
+  /* The faces share one cell, so turning a pass never resizes it; the face turning away
+     hides at the midpoint, edge-on (WebKit flattens 3D where an ancestor clips, §12 Part 6),
+     and leaves the tab order and the accessibility tree with it. */
+  .pass-face {
+    position: relative;
+    display: grid;
+    min-width: 0;
+    min-height: 0;
+    grid-area: 1 / 1;
+    padding: var(--pass-padding);
+    overflow: hidden;
+    border-radius: inherit;
+    background: var(--pass-fill);
+    box-shadow:
+      inset 0 0 0 var(--hairline-width) var(--pass-rim),
+      var(--pass-shadow);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transition:
+      rotate var(--duration-ui-long) var(--ease-in-out),
+      opacity var(--duration-instant) linear calc(var(--duration-ui-long) / 2),
+      visibility var(--duration-instant) linear calc(var(--duration-ui-long) / 2),
+      box-shadow var(--duration-ui) var(--ease-out);
+  }
+
+  /* A soft sheen across the top, as on a laminated card. */
+  .pass-face::before {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(var(--pass-angle), var(--pass-sheen), var(--pass-sheen-clear) 46%);
+    content: "";
+    pointer-events: none;
+  }
+
+  .pass-face > * {
+    position: relative;
+  }
+
+  @media (hover: hover) {
+    .wallet[data-stacked] .pass:hover .pass-face {
+      box-shadow:
+        inset 0 0 0 var(--hairline-width) var(--pass-rim),
+        var(--pass-shadow-lifted);
+    }
+  }
+
+  .pass-face[data-face="back"] {
+    opacity: 0;
+    rotate: y 180deg;
+    visibility: hidden;
+  }
+
+  .pass:has(.pass-flip-input:checked) .pass-face[data-face="front"] {
+    opacity: 0;
+    rotate: y -180deg;
+    visibility: hidden;
+  }
+
+  .pass:has(.pass-flip-input:checked) .pass-face[data-face="back"] {
+    opacity: 1;
+    rotate: y 0deg;
+    visibility: visible;
+  }
+
+  /* Reduced motion: the turn is a crossfade. */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .pass-face {
+      rotate: none;
+      transition:
+        opacity var(--motion-resolve-duration) var(--ease-out),
+        visibility var(--motion-resolve-duration) var(--ease-out);
+    }
+  }
+
+  :root[data-motion="reduce"] .pass-face {
+    rotate: none;
+    transition:
+      opacity var(--motion-resolve-duration) var(--ease-out),
+      visibility var(--motion-resolve-duration) var(--ease-out);
+  }
+
+  /* Its color: the finish's gradient for Education, the finish's other tones in turn for
+     certificates, or the issuer's own tone. White type reads on all of them (the contrast
+     tests check every finish, and the schema checks an issuer's tone). */
+  .pass[data-tone="0"] {
+    --pass-fill: linear-gradient(var(--pass-angle), var(--accent-on-light), var(--accent-2-on-light));
+  }
+
+  .pass[data-tone="1"] {
+    --pass-fill: linear-gradient(var(--pass-angle), var(--accent-2-on-light), color-mix(in srgb, var(--accent-2-on-light) 64%, var(--pass-shade)));
+  }
+
+  .pass[data-tone="2"] {
+    --pass-fill: linear-gradient(var(--pass-angle), color-mix(in srgb, var(--accent-on-light) 78%, var(--pass-shade)), color-mix(in srgb, var(--accent-on-light) 52%, var(--pass-shade)));
+  }
+
+  .pass[data-tone="3"] {
+    --pass-fill: linear-gradient(var(--pass-angle), var(--pass-graphite), color-mix(in srgb, var(--pass-graphite) 55%, var(--pass-shade)));
+  }
+
+  .pass[data-tone="issuer"] {
+    --pass-fill: linear-gradient(var(--pass-angle), var(--pass-tone), color-mix(in srgb, var(--pass-tone) 72%, var(--pass-shade)));
+  }
+
+  /* The front: what it is, its name and issuer, then its fields and its QR code. */
+  .pass-face[data-face="front"] {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "kind kind"
+      "title title"
+      "subtitle subtitle"
+      "fields scan";
+    column-gap: calc(var(--spacing) * 4);
+  }
+
+  .pass-kind {
+    display: flex;
+    min-height: var(--pass-icon);
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    grid-area: kind;
+    padding-inline-end: var(--target-min);
+    font-size: var(--pass-label);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-caps);
+    line-height: var(--text-caption--line-height);
+    text-transform: uppercase;
+  }
+
+  .pass-badge {
+    padding: 0 calc(var(--spacing) * 1.5);
+    border-radius: var(--radius-pill);
+    box-shadow: inset 0 0 0 var(--hairline-width) currentcolor;
+    letter-spacing: var(--tracking-caps);
+  }
+
+  .pass-badge[hidden] {
+    display: none;
+  }
+
+  .pass-title {
+    grid-area: title;
+    margin-block-start: calc(var(--spacing) * 1);
+    font-size: var(--pass-title);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--text-title--letter-spacing);
+    line-height: var(--text-title--line-height);
+    text-wrap: balance;
+  }
+
+  .pass-subtitle {
+    grid-area: subtitle;
+    margin-block-start: calc(var(--spacing) * 1.5);
+    font-size: var(--pass-small);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .pass-fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-self: end;
+    gap: calc(var(--spacing) * 2) calc(var(--spacing) * 6);
+    grid-area: fields;
+  }
+
+  .pass-field dt,
+  .pass-row dt {
+    font-size: var(--pass-label);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-caps);
+    line-height: var(--text-caption--line-height);
+    text-transform: uppercase;
+  }
+
+  .pass-field dd {
+    font-size: var(--pass-value);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-body--line-height);
+  }
+
+  .pass-mono {
+    font-family: var(--font-mono);
+    font-weight: var(--font-weight-regular);
+  }
+
+  .pass-scan {
+    align-self: end;
+    grid-area: scan;
+  }
+
+  .pass-qr {
+    display: block;
+    width: var(--pass-qr);
+    height: var(--pass-qr);
+  }
+
+  .pass-qr-paper {
+    fill: var(--pass-qr-paper);
+  }
+
+  .pass-qr-ink {
+    fill: var(--pass-qr-ink);
+  }
+
+  /* The back: what it covers, what it proves, where to verify it and when it expires. */
+  .pass-face[data-face="back"] {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: calc(var(--spacing) * 4);
+    overflow-y: auto;
+  }
+
+  .pass-face[data-face="back"] > .pass-kind {
+    grid-area: auto;
+  }
+
+  .pass-back {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: calc(var(--spacing) * 2) calc(var(--spacing) * 5);
+    font-size: var(--pass-small);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .pass-row {
+    display: contents;
+  }
+
+  .pass-row dt {
+    padding-block-start: calc(var(--spacing) * 0.5);
+  }
+
+  .pass-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 calc(var(--spacing) * 1);
+  }
+
+  .pass-list > li:not(:last-child)::after {
+    content: ",";
+  }
+
+  .pass-link {
+    text-decoration: underline;
+    text-underline-offset: var(--underline-offset);
+    overflow-wrap: anywhere;
+  }
+
+  /* The ⓘ, at the top right of either face: a checkbox, so it turns the pass over without
+     JavaScript. Checked, it fills in, as a pressed toggle does. */
+  .pass-flip {
+    position: absolute;
+    z-index: 2;
+    inset-block-start: calc(var(--pass-padding) + var(--pass-icon) / 2 - var(--target-min) / 2);
+    inset-inline-end: calc(var(--pass-padding) - (var(--target-min) - var(--pass-icon)) / 2);
+    display: grid;
+    width: var(--target-min);
+    height: var(--target-min);
+    place-items: center;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+  }
+
+  .pass-flip-input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    border-radius: inherit;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .pass-flip-icon {
+    width: var(--pass-icon);
+    height: var(--pass-icon);
+    border-radius: var(--radius-pill);
+    pointer-events: none;
+    transition:
+      background-color var(--duration-micro) var(--ease-out),
+      color var(--duration-micro) var(--ease-out);
+  }
+
+  .pass-flip:has(:checked) .pass-flip-icon {
+    background-color: var(--pass-ink);
+    color: var(--pass-shade);
+  }
+
+  /* What brings a pass forward: the whole pass, once it's stacked. */
+  .pass-select {
+    display: none;
+  }
+
+  .wallet[data-stacked] .pass-select {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    display: block;
+    border-radius: inherit;
+    cursor: pointer;
+  }
+
+  .wallet[data-stacked] .pass[data-front] .pass-select {
+    cursor: default;
+  }
+
+  /* Turned over, the back's link takes the clicks. */
+  .wallet[data-stacked] .pass:has(.pass-flip-input:checked) .pass-select {
+    pointer-events: none;
+  }
+
+  /* The medals: each beside its words, one under another. */
+  .medals {
+    display: grid;
+    align-content: start;
+    gap: calc(var(--spacing) * 8);
+  }
+
+  .medal-list {
+    display: grid;
+    gap: calc(var(--spacing) * 8);
+  }
+
+  .medal {
+    display: grid;
+    grid-template-columns: var(--medal-size) minmax(0, 1fr);
+    align-items: center;
+    gap: calc(var(--spacing) * 6);
+  }
+
+  @variant md {
+    .medal {
+      grid-template-columns: var(--medal-size-wide) minmax(0, 1fr);
+    }
+  }
+
+  .medal-figure {
+    position: relative;
+    width: 100%;
+    aspect-ratio: var(--medal-aspect);
+  }
+
+  /* The stage's view is positioned by its own utility class, so it fills the figure by size. */
+  .medal-view {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* The medal's button: what the drag, the click, Enter and Space turn. It lets the page
+     scroll vertically, so a sideways drag spins the medal on a touch screen. */
+  .medal-turn {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    touch-action: pan-y;
+  }
+
+  /* Without JavaScript nothing would turn it: the words beside it carry both faces. */
+  @media (scripting: none) {
+    .medal-turn {
+      display: none;
+    }
+  }
+
+  .medal[data-scene="3d"] .medal-turn {
+    cursor: grab;
+  }
+
+  .medal[data-scene="3d"] .medal-turn:active {
+    cursor: grabbing;
+  }
+
+  .medal-caption {
+    display: grid;
+    gap: calc(var(--spacing) * 1);
+  }
+
+  .medal-name {
+    font-size: var(--text-eyebrow);
+    font-weight: var(--text-eyebrow--font-weight);
+    letter-spacing: var(--text-eyebrow--letter-spacing);
+    line-height: var(--text-eyebrow--line-height);
+  }
+
+  .medal-line {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-caps);
+    line-height: var(--text-caption--line-height);
+    text-transform: uppercase;
+  }
+
+  .medal-description {
+    margin-block-start: calc(var(--spacing) * 1);
+    color: var(--color-fg-2);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  /* The stills: both faces in one cell; the click turns them over, or crossfades them with
+     reduced motion. */
+  .medal-still {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    perspective: var(--medal-perspective);
+    filter: drop-shadow(0 var(--medal-drop-y) var(--medal-drop-blur) var(--medal-shadow));
+  }
+
+  /* The shapes and gradients both faces use: drawn once, and never shown themselves. */
+  .medal-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .medal-face {
+    width: 100%;
+    height: 100%;
+    grid-area: 1 / 1;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transition:
+      rotate var(--duration-ui-long) var(--ease-in-out),
+      opacity var(--duration-instant) linear calc(var(--duration-ui-long) / 2);
+  }
+
+  .medal-face[data-face="back"] {
+    opacity: 0;
+    rotate: y 180deg;
+  }
+
+  .medal[data-flipped] .medal-face[data-face="front"] {
+    opacity: 0;
+    rotate: y -180deg;
+  }
+
+  .medal[data-flipped] .medal-face[data-face="back"] {
+    opacity: 1;
+    rotate: y 0deg;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .medal-face {
+      rotate: none;
+      transition: opacity var(--motion-resolve-duration) var(--ease-out);
+    }
+  }
+
+  :root[data-motion="reduce"] .medal-face {
+    rotate: none;
+    transition: opacity var(--motion-resolve-duration) var(--ease-out);
+  }
+
+  /* The metal, the bevel and the step down to the field, the enamel and the cuts. */
+  .medal-stop-hi {
+    stop-color: var(--medal-metal-hi);
+  }
+
+  .medal-stop-mid {
+    stop-color: var(--medal-metal-mid);
+  }
+
+  .medal-stop-lo {
+    stop-color: var(--medal-metal-lo);
+  }
+
+  .medal-stop-light {
+    stop-color: var(--medal-light);
+  }
+
+  .medal-stop-clear {
+    stop-color: var(--medal-light-clear);
+  }
+
+  .medal-stop-dark {
+    stop-color: var(--medal-dark);
+  }
+
+  .medal-stop-grain {
+    stop-color: var(--medal-grain);
+  }
+
+  .medal-stop-gloss {
+    stop-color: var(--medal-gloss);
+  }
+
+  .medal-bevel,
+  .medal-step {
+    fill: none;
+  }
+
+  .medal-bevel {
+    stroke-width: var(--medal-bevel);
+  }
+
+  .medal-step {
+    stroke-width: var(--medal-step);
+  }
+
+  .medal-enamel {
+    fill: var(--color-accent-fill);
+  }
+
+  .medal-cut {
+    font-family: var(--font-sans);
+  }
+
+  .medal-cut .medal-rule {
+    stroke-width: var(--medal-rule);
+  }
+
+  .medal-caps {
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+  }
+
+  .medal-inlay {
+    fill: var(--medal-inlay);
+    stroke: none;
+  }
+
+  .medal-inlay .medal-rule {
+    stroke: var(--medal-inlay);
+  }
+
+  .medal-etch {
+    fill: var(--medal-etch);
+  }
+
+  .medal-etch .medal-rule {
+    stroke: var(--medal-etch);
+  }
+
+  .medal-cut-shadow,
+  .medal-cut-light {
+    transform: translateY(var(--medal-cut));
+  }
+
+  .medal-cut-shadow {
+    fill: var(--medal-dark);
+  }
+
+  .medal-cut-shadow .medal-rule {
+    stroke: var(--medal-dark);
+  }
+
+  .medal-cut-light {
+    fill: var(--medal-light);
+  }
+
+  .medal-cut-light .medal-rule {
+    stroke: var(--medal-light);
+  }
+
   /* ─── Search (§6.3) ───────────────────────────────────────────────────────── */
 
   /* A centered glass panel in a top-layer dialog, 640px wide, with a 24px field. */

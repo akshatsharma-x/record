@@ -570,7 +570,8 @@ export const data = {
   ],
 
   // TODO(akshat): for each certificate, the title, issuer, issue date, expiry, credential ID,
-  // a public verify URL, the skills covered and what it proves.
+  // a public verify URL, the skills covered and what it proves; optionally the issuer's
+  // tone for its pass (a #rrggbb that carries white text). Each one becomes a pass.
   certificates: [],
 
   achievements: [
@@ -582,18 +583,21 @@ export const data = {
         text: "Qualified at the college level in 2024 and 2025, among the top 50 of 300+ teams.",
         footnotes: [6],
       },
+      medal: { shape: "rounded-square", face: "Smart India Hackathon", line: "top 50 of 300+" },
     },
     {
       id: "deans-list",
       title: "Dean's List for Academic Excellence",
       org: "Manipal University Jaipur",
       years: [2024],
+      medal: { shape: "circle", face: "Dean's List" },
     },
     {
       id: "student-excellence-award",
       title: "Student Excellence Award",
       org: "Manipal University Jaipur",
       years: [2026],
+      medal: { shape: "shield", face: "Student Excellence Award" },
     },
   ],
 
@@ -754,6 +758,25 @@ export const data = {
       headline: "Credentials.",
       headlineWithoutCertificates: "Education.",
       honors: "Recognition.",
+      wallet: {
+        label: "Passes",
+        education: "Education",
+        certificate: "Certificate",
+        classOf: "Class of",
+        grade: "Grade",
+        issued: "Issued",
+        credentialId: "Credential ID",
+        skills: "Skills covered",
+        proves: "What it proves",
+        verify: "Verify",
+        expires: "Expires",
+        expired: "Expired",
+        never: "Never",
+        coursework: "Coursework",
+        flip: "Show the back",
+        scan: "Scan to verify",
+      },
+      medals: { label: "Honors", flip: "Turn over", medal: "medal" },
     },
     contact: { headline: "Let's build something clear." },
     footer: { credit: "Designed and built by Akshat Sharma in India." },

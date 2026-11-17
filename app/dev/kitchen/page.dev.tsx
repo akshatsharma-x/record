@@ -1,8 +1,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { Metadata } from "next";
+import { Wallet } from "@/components/credentials/wallet";
 import { Kitchen, type TokenGroups } from "@/components/dev/kitchen/kitchen";
 import { content } from "@/content";
+import { wallet } from "@/content/derive";
+import { withCertificates } from "@/content/fixtures";
 import { parseCss, rootTokens } from "@/lib/css-tokens";
 
 /**
@@ -32,6 +35,15 @@ const groups: TokenGroups = {
   motion: pick("--ease-", "--duration-", "--stagger-", "--scrub", "--motion-"),
 };
 
+/** The whole wallet, with content's passes and the fixture certificates (content/fixtures.ts). */
+const fixtures = wallet(withCertificates());
+
 export default function KitchenPage() {
-  return <Kitchen tokens={groups} email={content.profile.email} />;
+  return (
+    <Kitchen
+      tokens={groups}
+      email={content.profile.email}
+      credentials={{ headline: fixtures.headline, wallet: <Wallet passes={fixtures.passes} id="kitchen-wallet" /> }}
+    />
+  );
 }

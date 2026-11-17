@@ -1,5 +1,7 @@
 import { Fragment } from "react";
 import { About } from "@/components/about/about";
+import { Credentials } from "@/components/credentials/credentials";
+import { backKey, fieldKey, type PassMarks } from "@/components/credentials/pass";
 import { Statement } from "@/components/about/statement";
 import { type EditMarks, Experience } from "@/components/experience/experience";
 import { Hero } from "@/components/hero/hero";
@@ -8,28 +10,24 @@ import { Research } from "@/components/research/research";
 import { Skills } from "@/components/skills/skills";
 import { Work, type WorkMarks } from "@/components/work/work";
 import { Container, Section, Stack } from "@/components/ui/layout";
-import { Body, Display, Eyebrow, Footnote, FootnoteBackLink, FootnoteRef, Lead } from "@/components/ui/type";
+import { Display, Eyebrow, Footnote, FootnoteBackLink, FootnoteRef, Lead } from "@/components/ui/type";
 import { content } from "@/content";
-import { credentialsHeadline, edit, work } from "@/content/derive";
+import { edit, medals, wallet, work } from "@/content/derive";
 import type { Claim } from "@/content/schema";
-import { formatYearMonth } from "@/lib/dates";
 import { portraitFor } from "@/lib/portrait-fixture";
 import { SECTIONS, type SectionId } from "@/lib/sections";
 
 const nameOf = (id: SectionId) => SECTIONS.find((section) => section.id === id)!.name;
-
-const dates = (start: string, end: string) =>
-  `${formatYearMonth(start)} – ${end === "present" ? "present" : formatYearMonth(end)}`;
 
 /**
  * The story (DESIGN.md §3.1), in order. Part 4 laid down its structure so the Island and
  * Search have somewhere to go: every section with its id, surface and real copy, plainly
  * set. Parts 5–12 turn each one into its signature moment (§7): the hero is Part 5's, the
  * statement, About and the highlights Part 6's, the edit Part 7's, research Part 8's, the
- * work bento Part 9's and the chip Part 10's.
+ * work bento Part 9's, the chip Part 10's and the wallet and the medals Part 11's.
  */
 export default function Home() {
-  const { profile, copy, highlights, education, achievements } = content;
+  const { profile, copy, highlights } = content;
 
   // Footnotes are numbered by content; each mention gets its own back-link (§9).
   const mentions = new Map<number, number>();
@@ -67,6 +65,23 @@ export default function Home() {
       ]),
     );
 
+  // The wallet's grades and the medals' details cite their notes where they're stated.
+  const credentialsMarks = (): PassMarks => {
+    const cited: PassMarks = {};
+    for (const pass of wallet(content).passes) {
+      pass.fields.forEach((field, i) => {
+        if (field.footnotes.length > 0) cited[fieldKey(pass.id, i)] = <>{marks(field.footnotes)}</>;
+      });
+      pass.back.forEach((section, i) => {
+        if (section.kind === "text" && section.footnotes.length > 0) cited[backKey(pass.id, i)] = <>{marks(section.footnotes)}</>;
+      });
+    }
+    for (const medal of medals(content)) {
+      if (medal.description?.footnotes.length) cited[medal.id] = <>{marks(medal.description.footnotes)}</>;
+    }
+    return cited;
+  };
+
   const story = (
     <>
       <Hero photo={portraitFor(profile.photo)} />
@@ -83,33 +98,7 @@ export default function Home() {
 
       <Skills />
 
-      <Section id="credentials" name={nameOf("credentials")} surface="dark" aria-labelledby="credentials-title">
-        <Container>
-          <Stack gap={6}>
-            <Display id="credentials-title">{credentialsHeadline(content)}</Display>
-            <ul className="flex flex-col gap-3">
-              {education.map((entry) => (
-                <li key={entry.id}>
-                  <Body className="font-semibold">
-                    {entry.kind === "degree" ? entry.institution : `${entry.level}, ${entry.board}`}
-                  </Body>
-                  <Body tone="fg-2">
-                    {entry.kind === "degree"
-                      ? `${entry.degree}, ${entry.field} · ${dates(entry.start, entry.end)}`
-                      : String(entry.year)}
-                  </Body>
-                </li>
-              ))}
-              {achievements.map((achievement) => (
-                <li key={achievement.id}>
-                  <Body className="font-semibold">{achievement.title}</Body>
-                  <Body tone="fg-2">{[achievement.org, achievement.years.join(" · ")].filter(Boolean).join(" · ")}</Body>
-                </li>
-              ))}
-            </ul>
-          </Stack>
-        </Container>
-      </Section>
+      <Credentials marks={credentialsMarks()} />
 
       <Section id="contact" name={nameOf("contact")} surface="light" aria-labelledby="contact-title">
         <Container>

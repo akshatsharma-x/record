@@ -168,7 +168,12 @@
     .case-grabber,
     .cloud-cell,
     .skill-monogram,
-    .chip-list li {
+    .chip-list li,
+    .pass-badge,
+    .pass-flip,
+    .pass-flip-input,
+    .pass-flip-icon,
+    .medal-turn {
       corner-shape: round;
     }
 

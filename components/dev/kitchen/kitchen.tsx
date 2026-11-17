@@ -8,6 +8,7 @@ import { ThemeSelect } from "@/components/theme/theme-select";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { CubePoster } from "@/components/three/cube-poster";
 import { StageView, TIER_CHANGE_EVENT, useStage } from "@/components/three/stage";
+import { Behavior } from "@/components/ui/behavior";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Counter } from "@/components/ui/counter";
@@ -50,7 +51,16 @@ const TestCube = dynamic(() => import("@/components/three/test-cube"), { ssr: fa
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
-export function Kitchen({ tokens, email }: { tokens: TokenGroups; email: string }) {
+export function Kitchen({
+  tokens,
+  email,
+  credentials,
+}: {
+  tokens: TokenGroups;
+  email: string;
+  /** The wallet with fixture certificates, rendered on the server (it draws QR codes). */
+  credentials: { headline: string; wallet: ReactNode };
+}) {
   return (
     <main>
       <Section id="kitchen" name="Kitchen" surface="light">
@@ -72,6 +82,19 @@ export function Kitchen({ tokens, email }: { tokens: TokenGroups; email: string 
           <TextEffects />
           <Stage />
         </Container>
+      </Section>
+      <Section id="kitchen-credentials" name="Wallet" surface="dark" aria-labelledby="kitchen-credentials-title">
+        <Container className="flex flex-col gap-10">
+          <div className="flex flex-col gap-4">
+            <Display id="kitchen-credentials-title">{credentials.headline}</Display>
+            <Lead tone="fg-2" className="max-w-measure">
+              The wallet with the fixture certificates from content/fixtures.ts: one with a finish tone, one with an issuer
+              tone that never expires, and one that has expired with no ID or verify link.
+            </Lead>
+          </div>
+          {credentials.wallet}
+        </Container>
+        <Behavior section="credentials" id="kitchen-credentials" />
       </Section>
       <Section id="lights-down" name="Lights down" surface="dark" aria-labelledby="lights-down-title">
         <Container>
