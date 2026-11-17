@@ -10,6 +10,8 @@ import { magnify } from "./dock";
 import { island } from "./island/store";
 import { springs, stepSpring, type SpringState } from "./motion";
 import { prefersReducedMotion } from "./reduced-motion";
+import { delivered } from "./surprises/delivered";
+import { dockBounce } from "./surprises/dock-bounce";
 
 // ─── The dock ────────────────────────────────────────────────────────────────
 
@@ -103,6 +105,7 @@ export function attachDock(dock: HTMLElement): () => void {
 
   // The launch bounce, then the dot under what it opened.
   const launch = (item: HTMLElement) => {
+    if (!dockBounce.on) return;
     item.setAttribute("data-open", "");
     if (prefersReducedMotion()) return;
     item.removeAttribute("data-launch");
@@ -278,7 +281,8 @@ export function attachComposer(form: HTMLFormElement): () => void {
     const receipt = document.createElement("li");
     receipt.className = "receipt";
     receipt.textContent = form.dataset.delivered ?? "";
-    list.append(bubble, receipt);
+    // "Delivered" is a surprise of its own, with its own flag.
+    list.append(bubble, ...(delivered.on ? [receipt] : []));
     const to = bubble.getBoundingClientRect();
     if (prefersReducedMotion()) {
       bubble.animate([{ opacity: 0 }, { opacity: 1 }], { duration: spring("snappy").duration, easing: "ease-out" });

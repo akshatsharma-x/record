@@ -1,6 +1,7 @@
 import { content } from "@/content";
 import { searchIndex } from "@/content/derive";
 import type { SearchPayload } from "@/lib/search/types";
+import { secretCommands } from "@/lib/search/secrets";
 
 /**
  * The build-time search index (DESIGN.md §6.3), prerendered as a static file. Search
@@ -10,7 +11,8 @@ export function GET() {
   const { email, links } = content.profile;
   const payload: SearchPayload = {
     entries: searchIndex(content),
-    profile: { email, linkedin: links.linkedin, github: links.github },
+    profile: { email, linkedin: links.linkedin, github: links.github, timeZone: content.profile.location.timeZone },
+    secrets: secretCommands(content),
   };
   return Response.json(payload);
 }

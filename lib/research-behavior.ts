@@ -7,6 +7,7 @@
 import { Check, CircleAlert } from "lucide-react";
 import { ISLAND_TIMING, island } from "./island/store";
 import { createHazeEngine } from "./haze";
+import { announceClearSkies, clearSkies } from "./surprises/clear-skies";
 import { prefersReducedMotion, REDUCED_MOTION_QUERY } from "./reduced-motion";
 import { forecastLabel, forecastPaths, handleAt, HAZE, hazeDensity, hazeX, hazeY, levelAt, nextStop, playAt, RESEARCH, stepTime, timeWords } from "./research";
 
@@ -70,13 +71,43 @@ export function attachHaze(root: HTMLElement, resolution: number): () => void {
   const onInput = () => {
     taken = true;
     draw(HAZE.now + (Number(input.value) / resolution) * span);
+    if (clearSkies.on) clear(Number(input.value) >= Number(input.max));
+  };
+
+  // A surprise (DESIGN.md §8): taken all the way right, the sky clears completely, and the
+  // Island says so, once a session. Only the visitor's own drag (or keys) does it, never
+  // the scroll's play.
+  let cleared = false;
+  const clear = (on: boolean) => {
+    if (on) {
+      // However the handle got here, all the way right is a sky with nothing in it.
+      scene.style.setProperty("--density", "0");
+      engine.setDensity(0);
+    }
+    if (on === cleared) return;
+    cleared = on;
+    scene.toggleAttribute("data-clear", on);
+    if (on) {
+      announceClearSkies(scene.dataset.clearSkies ?? "");
+      return;
+    }
+    // Off the end again: the forecast's own haze, redrawn even where the handle hasn't moved.
+    shown = Number.NaN;
+    draw(HAZE.now + (Number(input.value) / resolution) * span);
   };
   // While the chapter is pinned, its play moves the handle, unless the visitor has it.
   const chapter = root.closest(".chapter");
   const onPlay = (event: Event) => {
     const play = (event as CustomEvent<number>).detail;
     if (play <= 0) taken = false;
-    if (!taken) draw(handleAt(play));
+    if (taken) return;
+    // The play has the handle back, so the sky is the forecast's again.
+    if (cleared) {
+      cleared = false;
+      scene.removeAttribute("data-clear");
+      shown = Number.NaN;
+    }
+    draw(handleAt(play));
   };
   // Tap to step: from now to the horizon, said aloud.
   const onStep = () => {

@@ -6,10 +6,13 @@ import { ResumeEdition } from "@/components/print/resume-edition";
 import { Search } from "@/components/search/search";
 import { SurfaceController } from "@/components/surface/surface-controller";
 import { PreferencesSync } from "@/components/theme/preferences-sync";
+import { ConsoleHello } from "@/components/surprises/console-hello";
 import { StageProvider } from "@/components/three/stage";
 import { content } from "@/content";
 import { fontVariables } from "@/lib/fonts";
 import { DEFAULT_FINISH, PREFERENCES_SCRIPT } from "@/lib/preferences";
+import { consoleHello } from "@/lib/surprises/console-hello";
+import { resumeEdition } from "@/lib/surprises/resume-edition";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -49,8 +52,16 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
         {modal}
         <PageModes />
         <Search />
-        <ResumeEdition />
+        {resumeEdition.on ? <ResumeEdition /> : null}
         <Cursor />
+        {consoleHello.on ? (
+          <ConsoleHello
+            initials={content.profile.initials}
+            greeting={content.copy.surprises.console.greeting}
+            github={content.profile.links.github}
+            email={content.profile.email}
+          />
+        ) : null}
       </body>
     </html>
   );

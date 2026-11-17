@@ -7,6 +7,9 @@ import { island, useIsland } from "@/lib/island/store";
 import { togglePageMode, usePageModes } from "@/lib/page-modes";
 import { openSearch, toggleSearch, useSearch } from "@/lib/search/store";
 import { isEditable, useShortcuts } from "@/lib/shortcuts";
+import { designGrid } from "@/lib/surprises/design-grid";
+import { focusMode } from "@/lib/surprises/focus-mode";
+import { trackPointer } from "@/lib/surprises/pointer";
 import { warmSearch } from "./warm";
 
 const SearchDialog = dynamic(() => import("./search-dialog"), { ssr: false });
@@ -24,6 +27,8 @@ export function Search() {
 
   useEffect(() => {
     useShortcuts.getState().sync();
+    // Where the pointer is, for "clarity" to start from (DESIGN.md §8).
+    trackPointer();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.isComposing) return;
       if (event.key === "Meta" || event.key === "Control") {
@@ -44,10 +49,10 @@ export function Search() {
         event.preventDefault();
         warmSearch();
         openSearch();
-      } else if (key === "g") {
+      } else if (key === "g" && designGrid.on) {
         const on = togglePageMode("grid");
         island.show({ icon: Grid3x3, title: `Grid ${on ? "on" : "off"}` });
-      } else if (key === "f") {
+      } else if (key === "f" && focusMode.on) {
         const on = togglePageMode("focus");
         island.show({ icon: Focus, title: `Focus mode ${on ? "on" : "off"}` });
       } else if (event.key === "Escape" && usePageModes.getState().focus && !useIsland.getState().expanded) {

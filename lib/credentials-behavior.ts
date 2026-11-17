@@ -5,8 +5,9 @@
  * about expiry by the visitor's calendar, and turns the medals. Each part returns what
  * undoes it.
  */
-import { createMotion, drag, faceAt, flip, release, step } from "./medal-motion";
+import { createMotion, drag, faceAt, flip, MEDAL_MOTION, release, step } from "./medal-motion";
 import { medalState, touchMedal } from "./medal-state";
+import { medalGlint } from "./surprises/medal-glint";
 import { prefersReducedMotion, REDUCED_MOTION_QUERY } from "./reduced-motion";
 import { hasExpired, moveFocus, slots } from "./wallet";
 
@@ -247,8 +248,17 @@ export function attachMedal(medal: HTMLElement): () => void {
     // A pointer that stopped before letting go lets the medal go still.
     const moving = event.timeStamp - latest.t <= SAMPLE.stale && latest.t > first.t;
     const velocity = moving ? ((latest.angle - first.angle) / (latest.t - first.t)) * 1000 : 0;
-    if (release(state.motion, velocity)) state.glint = performance.now();
+    if (release(state.motion, velocity) && medalGlint.on) throwGlint();
     run();
+  };
+
+  // The glint is the 3D scene's to draw; the medal says when one's in the air, while it lasts.
+  let glinting = 0;
+  const throwGlint = () => {
+    state.glint = performance.now();
+    medal.setAttribute("data-glint", "");
+    window.clearTimeout(glinting);
+    glinting = window.setTimeout(() => medal.removeAttribute("data-glint"), MEDAL_MOTION.glint * 1000);
   };
 
   const onPointerCancel = () => {
@@ -295,7 +305,9 @@ export function attachMedal(medal: HTMLElement): () => void {
   button.addEventListener("keydown", onKeyDown);
   return () => {
     window.cancelAnimationFrame(frame);
+    window.clearTimeout(glinting);
     medal.removeAttribute("data-spinning");
+    medal.removeAttribute("data-glint");
     edition.disconnect();
     button.removeEventListener("keydown", onKeyDown);
     button.removeEventListener("pointerdown", onPointerDown);

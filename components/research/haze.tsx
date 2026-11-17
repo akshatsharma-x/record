@@ -1,3 +1,5 @@
+import { content } from "@/content";
+import { clearSkies } from "@/lib/surprises/clear-skies";
 import { type CSSProperties, useId } from "react";
 import { Button } from "@/components/ui/button";
 import { forecastLabel, forecastPaths, HAZE, hazeDensity, hazeLine, hazeX, hazeY, levelAt, skyline, timeWords } from "@/lib/research";
@@ -26,7 +28,11 @@ export function Haze() {
   return (
     <div className="haze" id={id}>
       {/* The final frame's haze, until the canvas draws it. */}
-      <div className="haze-scene" style={vars({ "--aspect": `${SCENE.width} / ${SCENE.height}`, "--density": hazeDensity(level) })}>
+      <div
+        className="haze-scene"
+        style={vars({ "--aspect": `${SCENE.width} / ${SCENE.height}`, "--density": hazeDensity(level) })}
+        data-clear-skies={clearSkies.on ? content.copy.surprises.clearSkies : undefined}
+      >
         <div className="haze-glow" />
         <svg className="haze-skyline" viewBox={`0 0 ${SCENE.width} ${SCENE.height}`} preserveAspectRatio="xMidYMax slice" aria-hidden="true">
           {skyline(SCENE.width, SCENE.height).map((building) => (

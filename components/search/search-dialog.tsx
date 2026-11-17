@@ -35,12 +35,14 @@ import { calculate, formatValue } from "@/lib/search/arithmetic";
 import { loadSearchIndex } from "@/lib/search/load";
 import { prepare } from "@/lib/search/match";
 import { compose, groupOf, GROUPS, type Item } from "@/lib/search/results";
+import { secretFor } from "@/lib/search/secrets";
 import { closeSearch, useSearch } from "@/lib/search/store";
 import type { SearchEntry, SearchPayload } from "@/lib/search/types";
 import { SECTIONS } from "@/lib/sections";
 import { isApplePlatform } from "@/lib/shortcuts";
 import { sectionOf, travelTo } from "@/lib/travel";
 import { type Action, buildActions, useActionState } from "./actions";
+import { runSecret } from "./secrets";
 
 const ICONS: Record<SearchEntry["kind"], LucideIcon> = {
   section: Hash,
@@ -126,7 +128,27 @@ export default function SearchDialog() {
 
   const composed = useMemo(() => compose<Result>([...entries, ...actions], query), [entries, actions, query]);
 
-  const top: Option | null = calculation ? { calculation } : composed.top ? { result: composed.top } : null;
+  // A secret command (DESIGN.md §8) shows only when it's typed exactly, as the Top hit.
+  const secret = useMemo<Result | null>(() => {
+    const command = payload ? secretFor(query, payload.secrets) : null;
+    if (!command) return null;
+    return {
+      kind: "action",
+      action: true,
+      suggested: false,
+      id: command.id,
+      title: command.phrase,
+      subtitle: command.label,
+      keywords: [],
+      body: "",
+      icon: Sparkles,
+      run: () => runSecret(command, payload?.profile.timeZone ?? "UTC", (href) => go(href, false)),
+    };
+    // go only reads the pathname and the router, which don't change while Search is open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, payload]);
+
+  const top: Option | null = secret ? { result: secret } : calculation ? { calculation } : composed.top ? { result: composed.top } : null;
   // Arithmetic takes the Top hit; what would have been leads its group instead.
   const displaced = calculation ? composed.top : null;
   const groups = displaced

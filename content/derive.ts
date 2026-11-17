@@ -599,13 +599,15 @@ export type Edit = ReturnType<typeof edit>;
 export type CompareRowId = "studying" | "internships" | "papers" | "honors" | "stack";
 
 /**
- * Year columns from the first timeline year to this year, built only from dated entries.
- * Undated projects stay out until they have a year, and nothing is estimated.
+ * Year columns from the first timeline year to this year (or, without `now`, to the latest
+ * year content dates anything in, so the page can be built ahead), built only from dated
+ * entries. Undated projects stay out until they have a year, and nothing is estimated.
  */
-export function compareTable(content: Content, now: Date) {
-  const today = todayFor(content, now);
-  const firstYear = Number(timeline(content, now).start.slice(0, 4));
-  const years = range(firstYear, today.year);
+export function compareTable(content: Content, now?: Date) {
+  const firstYear = Number(edit(content).start.slice(0, 4));
+  const lastYear = now ? todayFor(content, now).year : Number(edit(content).known.slice(0, 4));
+  const years = range(firstYear, lastYear);
+  const labels = content.copy.surprises.compare.rows;
   const conferences = new Map(content.conferences.map((conference) => [conference.id, conference]));
   const internships = content.experience
     .filter((role) => role.kind === "internship")
@@ -621,7 +623,7 @@ export function compareTable(content: Content, now: Date) {
   return {
     years,
     rows: [
-      row("studying", "Studying", (year) =>
+      row("studying", labels.studying, (year) =>
         content.education.flatMap((entry) =>
           entry.kind === "degree"
             ? parseYearMonth(entry.start).year <= year && year <= parseYearMonth(entry.end).year
@@ -632,10 +634,10 @@ export function compareTable(content: Content, now: Date) {
               : [],
         ),
       ),
-      row("internships", "Internships to date", (year) =>
+      row("internships", labels.internships, (year) =>
         internships.filter((role) => parseYearMonth(role.start).year <= year).map((role) => role.org),
       ),
-      row("papers", "Papers", (year) =>
+      row("papers", labels.papers, (year) =>
         content.publications
           .filter((paper) => {
             const conference = conferences.get(paper.presentedAt);
@@ -643,10 +645,10 @@ export function compareTable(content: Content, now: Date) {
           })
           .map((paper) => paper.title),
       ),
-      row("honors", "Honors", (year) =>
+      row("honors", labels.honors, (year) =>
         content.achievements.filter((achievement) => achievement.years.includes(year)).map((a) => a.title),
       ),
-      row("stack", "Joined the stack", (year) =>
+      row("stack", labels.stack, (year) =>
         evidence.filter((skill) => skill.firstYear === year).map((skill) => skill.label),
       ),
     ],

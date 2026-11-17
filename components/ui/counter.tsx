@@ -6,6 +6,15 @@ import { durations, gsapEase } from "@/lib/motion";
 import { useHydrated } from "@/lib/use-hydrated";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 
+/**
+ * The formatter for the digits while they count: as many decimals as the final value has,
+ * so 4 counts 0, 1, 2, 3, 4 and never passes through 3.999 (Intl's default is up to three).
+ */
+export function countingFormatter(value: number, format?: Intl.NumberFormatOptions): Intl.NumberFormat {
+  const digits = new Intl.NumberFormat("en-US", format).formatToParts(value).find((part) => part.type === "fraction")?.value.length ?? 0;
+  return new Intl.NumberFormat("en-US", { ...format, minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
 interface CounterProps {
   value: number;
   prefix?: string;
@@ -24,6 +33,7 @@ interface CounterProps {
  */
 export function Counter({ value, prefix = "", suffix = "", format, className }: CounterProps) {
   const formatter = useMemo(() => new Intl.NumberFormat("en-US", format), [format]);
+  const step = useMemo(() => countingFormatter(value, format), [format, value]);
   const final = `${prefix}${formatter.format(value)}${suffix}`;
   const ref = useRef<HTMLSpanElement>(null);
   const hydrated = useHydrated();
@@ -46,14 +56,14 @@ export function Counter({ value, prefix = "", suffix = "", format, className }: 
         const tick = (now: number) => {
           const progress = Math.min(1, (now - start) / durations.count);
           if (progress < 1) {
-            setCounting(`${prefix}${formatter.format(value * ease(progress))}${suffix}`);
+            setCounting(`${prefix}${step.format(value * ease(progress))}${suffix}`);
             frame = requestAnimationFrame(tick);
           } else {
             setCounting(null);
             setDone(true);
           }
         };
-        setCounting(`${prefix}${formatter.format(0)}${suffix}`);
+        setCounting(`${prefix}${step.format(0)}${suffix}`);
         frame = requestAnimationFrame(tick);
       },
       { threshold: 0.5 },
@@ -63,7 +73,7 @@ export function Counter({ value, prefix = "", suffix = "", format, className }: 
       observer.disconnect();
       cancelAnimationFrame(frame);
     };
-  }, [formatter, observable, prefix, reduced, suffix, value]);
+  }, [step, observable, prefix, reduced, suffix, value]);
 
   const ready = reduced || !observable || done || counting !== null;
 

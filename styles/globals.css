@@ -176,7 +176,9 @@
     .medal-turn,
     .dock-dot,
     .composer-send,
-    .composer-send::before {
+    .composer-send::before,
+    .not-found-light,
+    .not-found-action {
       corner-shape: round;
     }
 

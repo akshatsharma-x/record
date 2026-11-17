@@ -22,6 +22,9 @@ import type { Searchable } from "@/lib/search/match";
 import type { SearchPayload } from "@/lib/search/types";
 import { useShortcuts } from "@/lib/shortcuts";
 import { usePreferences } from "@/lib/stores/preferences";
+import { designGrid } from "@/lib/surprises/design-grid";
+import { focusMode } from "@/lib/surprises/focus-mode";
+import { resumeEdition } from "@/lib/surprises/resume-edition";
 
 /**
  * Search's actions (DESIGN.md §6.3). Each confirms itself through the Island, which also
@@ -52,6 +55,9 @@ export interface ActionState {
 }
 
 const onOff = (on: boolean) => (on ? "On" : "Off");
+
+/** An action that exists only while its surprise's flag is on (DESIGN.md §8). */
+const when = (on: boolean, actions: Action[]): Action[] => (on ? actions : []);
 
 function host(url: string) {
   return url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
@@ -180,46 +186,52 @@ export function buildActions(profile: SearchPayload["profile"] | null, state: Ac
         island.show({ icon: MousePointerClick, title: `System cursor ${state.system ? "off" : "on"}` });
       },
     },
-    {
-      kind: "action",
-      id: "action:grid",
-      title: "Show grid",
-      subtitle: "The layout grid over the page",
-      keywords: ["grid", "columns", "layout", "design"],
-      body: "",
-      icon: Grid3x3,
-      hint: "G",
-      state: onOff(state.grid),
-      run: () => {
-        const on = togglePageMode("grid");
-        island.show({ icon: Grid3x3, title: `Grid ${on ? "on" : "off"}` });
+    ...when(designGrid.on, [
+      {
+        kind: "action" as const,
+        id: "action:grid",
+        title: "Show grid",
+        subtitle: "The layout grid over the page",
+        keywords: ["grid", "columns", "layout", "design"],
+        body: "",
+        icon: Grid3x3,
+        hint: "G",
+        state: onOff(state.grid),
+        run: () => {
+          const on = togglePageMode("grid");
+          island.show({ icon: Grid3x3, title: `Grid ${on ? "on" : "off"}` });
+        },
       },
-    },
-    {
-      kind: "action",
-      id: "action:focus",
-      title: "Focus mode",
-      subtitle: "Dim everything but the section you're reading",
-      keywords: ["focus", "reading", "dim", "distraction"],
-      body: "",
-      icon: Focus,
-      hint: "F",
-      state: onOff(state.focus),
-      run: () => {
-        const on = togglePageMode("focus");
-        island.show({ icon: Focus, title: `Focus mode ${on ? "on" : "off"}` });
+    ]),
+    ...when(focusMode.on, [
+      {
+        kind: "action" as const,
+        id: "action:focus",
+        title: "Focus mode",
+        subtitle: "Dim everything but the section you're reading",
+        keywords: ["focus", "reading", "dim", "distraction"],
+        body: "",
+        icon: Focus,
+        hint: "F",
+        state: onOff(state.focus),
+        run: () => {
+          const on = togglePageMode("focus");
+          island.show({ icon: Focus, title: `Focus mode ${on ? "on" : "off"}` });
+        },
       },
-    },
-    {
-      kind: "action",
-      id: "action:print",
-      title: "Print the résumé edition",
-      subtitle: "A one-page résumé, set for paper",
-      keywords: ["print", "resume", "résumé", "cv", "pdf", "paper"],
-      body: "",
-      icon: Printer,
-      run: () => window.print(),
-    },
+    ]),
+    ...when(resumeEdition.on, [
+      {
+        kind: "action" as const,
+        id: "action:print",
+        title: "Print the résumé edition",
+        subtitle: "A one-page résumé, set for paper",
+        keywords: ["print", "resume", "résumé", "cv", "pdf", "paper"],
+        body: "",
+        icon: Printer,
+        run: () => window.print(),
+      },
+    ]),
     {
       kind: "action",
       id: "action:shortcuts",
