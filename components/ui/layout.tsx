@@ -52,7 +52,7 @@ interface ContainerProps extends BaseProps {
 /** Centers content at a DESIGN.md width. The gutter sits outside it, so measure means measure. */
 export function Container({ width = "content", as: Tag = "div", className, children, ...rest }: ContainerProps) {
   return (
-    <div className="px-gutter">
+    <div className="px-page">
       <Tag className={cx("mx-auto w-full", widths[width], className)} {...rest}>
         {children}
       </Tag>

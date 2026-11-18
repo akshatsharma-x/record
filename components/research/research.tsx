@@ -28,16 +28,16 @@ function Chapter({ paper, index, count, caption }: { paper: ResearchPaper; index
             <p className="chapter-eyebrow">
               Paper {index + 1} of {count}
             </p>
-            <h3 id={title} className="chapter-title">
-              <Link href={paper.href} prefetch>
+            <h3 id={title} className="chapter-title p-name">
+              <Link href={paper.href} prefetch className="u-url">
                 {paper.title}
               </Link>
             </h3>
             <StatusPill status={paper.status} label={paper.statusLabel} />
-            <p className="chapter-tldr">{paper.tldr}</p>
+            <p className="chapter-tldr p-summary">{paper.tldr}</p>
             <ul className="chapter-keywords" aria-label="Keywords">
               {paper.keywords.map((keyword) => (
-                <li key={keyword}>
+                <li key={keyword} className="p-category">
                   <Chip>{keyword}</Chip>
                 </li>
               ))}

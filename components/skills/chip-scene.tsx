@@ -261,7 +261,8 @@ export default function ChipScene() {
     const stage = document.getElementById("chip");
     if (!group || !stage) return;
     const box = stage.getBoundingClientRect();
-    const target = sceneProgress({ top: box.top, height: box.height }, window.innerHeight);
+    const frame = stage.querySelector<HTMLElement>(".chip-sticky")?.offsetHeight ?? window.innerHeight;
+    const target = sceneProgress({ top: box.top, height: box.height }, frame);
     const state = motion.current;
     const step = (value: number, to: number, settle: number) => value + (to - value) * (1 - Math.exp(-delta / settle));
     state.progress = state.progress < 0 ? target : step(state.progress, target, SETTLE.scroll);

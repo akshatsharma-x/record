@@ -106,9 +106,9 @@ export function Thread() {
           </button>
         </div>
       </form>
-      {/* Without JavaScript the form can't check or send: the mail app is the way. */}
+      {/* Without JavaScript the form can't check or send: the address is the way. */}
       <p className="composer-nojs">
-        <a href={mailto}>{words.fallback}</a>
+        {words.nojs} <a href={mailto}>{profile.email}</a>
       </p>
     </section>
   );

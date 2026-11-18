@@ -59,7 +59,7 @@ export function StudyingTile({ label, degree, field, institution, start, end, en
       data-flipped={flipped || undefined}
     >
       <span className="glance-face" data-face="front" aria-hidden={flipped || undefined}>
-        <span className="glance-label">{label}</span>
+        <span className="glance-label">{label}</span>{" "}
         <span className="glance-ring" style={{ "--ring": progress ? progress.percent : 0 } as CSSProperties}>
           <svg viewBox="0 0 48 48" aria-hidden="true">
             <circle className="glance-ring-track" cx="24" cy="24" r="20" pathLength="100" />
@@ -68,19 +68,19 @@ export function StudyingTile({ label, degree, field, institution, start, end, en
           <span className="glance-ring-label" data-live={progress ? "" : undefined}>
             {progress ? `${progress.percent}%` : end.slice(0, 4)}
           </span>
-        </span>
+        </span>{" "}
         <span className="glance-detail">
           {degree} {field}
-        </span>
+        </span>{" "}
         <span className="glance-meta">{institution}</span>
-        {days !== null && glanceFlips.on ? <span className="sr-only">Show the days to graduation</span> : null}
+        {days !== null && glanceFlips.on ? <span className="sr-only"> Show the days to graduation</span> : null}
       </span>
       <span className="glance-face" data-face="back" aria-hidden={!flipped || undefined}>
-        <span className="glance-label">{label}</span>
+        <span className="glance-label">{label}</span>{" "}
         <span className="glance-figure" data-live="">
           {days ?? ""}
-        </span>
-        <span className="glance-detail">{days === 1 ? "day to graduation" : "days to graduation"}</span>
+        </span>{" "}
+        <span className="glance-detail">{days === 1 ? "day to graduation" : "days to graduation"}</span>{" "}
         <span className="glance-meta">{endLabel}</span>
         <span className="sr-only">Show the progress</span>
       </span>
@@ -182,7 +182,7 @@ export function TimeTile({ label, timeZone, zoneLabel, hours, visitorDay }: Time
       <span className="glance-time">
         <ClockFace minutes={minutes} />
         <span className="glance-time-text">
-          <span className="glance-label">{label}</span>
+          <span className="glance-label">{label}</span>{" "}
           <span className="glance-value" data-live={minutes !== null ? "" : undefined}>
             {minutes !== null ? (
               <>
@@ -191,7 +191,7 @@ export function TimeTile({ label, timeZone, zoneLabel, hours, visitorDay }: Time
             ) : (
               zoneLabel
             )}
-          </span>
+          </span>{" "}
           <span className="glance-detail">Working hours {span}</span>
           {overlap && flipped ? (
             <span className="glance-overlap" data-live="">
@@ -204,7 +204,7 @@ export function TimeTile({ label, timeZone, zoneLabel, hours, visitorDay }: Time
             </span>
           ) : null}
           {overlap && glanceFlips.on ? (
-            <span className="sr-only">{flipped ? `Show ${localeHour12 ? "12" : "24"}-hour time` : "Show the overlap with your day"}</span>
+            <span className="sr-only"> {flipped ? `Show ${localeHour12 ? "12" : "24"}-hour time` : "Show the overlap with your day"}</span>
           ) : null}
         </span>
       </span>

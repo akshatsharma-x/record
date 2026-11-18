@@ -22,7 +22,7 @@ export function Illustration({ illustration, caption }: { illustration: Illustra
       <p className="sr-only">{describe(illustration)}</p>
       {illustration.kind === "cold-chain" ? <ColdChain stops={illustration.stops} factors={illustration.factors} /> : <Haze />}
       <figcaption className="illustration-caption">
-        <span className="illustration-hint">{illustration.hint}</span>
+        <span className="illustration-hint">{illustration.hint}</span>{" "}
         <span>{caption}</span>
       </figcaption>
     </figure>

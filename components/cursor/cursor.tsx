@@ -4,8 +4,12 @@ import { useEffect, useRef } from "react";
 import type { CursorController } from "@/lib/cursor/controller";
 import { CURSOR_LARGE_KEY, CURSOR_SYSTEM_KEY, useCursorSettings } from "@/lib/cursor/settings";
 
-/** The custom cursor runs only for a fine pointer that can hover (DESIGN.md §6.1). */
-const FINE_POINTER = "(hover: hover) and (pointer: fine)";
+/**
+ * The custom cursor runs wherever a fine pointer that can hover is attached (DESIGN.md
+ * §6.1): a mouse or a trackpad, an iPad's included, though its main pointer is a finger.
+ * Touch still gets the native behavior: the engine yields to any pointer that isn't a mouse.
+ */
+const FINE_POINTER = "(any-hover: hover) and (any-pointer: fine)";
 const FORCED_COLORS = "(forced-colors: active)";
 
 /**

@@ -53,7 +53,7 @@ export function ResumeEdition() {
             <p className="resume-entry-head">
               <span>
                 <strong>{role.org}</strong>, {role.role}
-              </span>
+              </span>{" "}
               <span className="resume-dates">{dates(role.start, role.end)}</span>
             </p>
             <ul>

@@ -238,12 +238,13 @@ test.describe("the composer", () => {
     expect(await response.json()).toEqual({ status: 202, id: null });
   });
 
-  test("without JavaScript, offers the mail app instead of a form it couldn't send", async ({ browser }) => {
+  test("without JavaScript, shows the address instead of a form it couldn't send", async ({ browser }) => {
     const context = await browser.newContext({ javaScriptEnabled: false, viewport: WIDE });
     const page = await context.newPage();
     await page.goto("/");
     await expect(page.locator(".composer")).toBeHidden();
-    await expect(page.locator(".composer-nojs a")).toHaveText(words.thread.fallback);
+    await expect(page.locator(".composer-nojs")).toHaveText(`${words.thread.nojs} ${content.profile.email}`);
+    await expect(page.locator(".composer-nojs a")).toHaveText(content.profile.email);
     await expect(page.locator(".composer-nojs a")).toHaveAttribute("href", new RegExp(`^mailto:${content.profile.email}`));
     // The dock's links work as they are.
     await expect(page.locator('.dock-item[data-app="email"]')).toHaveAttribute("href", `mailto:${content.profile.email}`);

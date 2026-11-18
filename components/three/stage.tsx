@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { type ComponentType, createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { cx } from "@/lib/cx";
+import { TIER_SESSION_KEY } from "@/lib/frames";
 import type { Tier } from "@/lib/tier";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 
@@ -61,12 +62,21 @@ export function StageProvider({ children }: { children: ReactNode }) {
     setViews((count) => count + 1);
     return () => setViews((count) => count - 1);
   }, []);
+  // The governor found drawing too slow: posters, for the rest of the session.
+  const slow = useCallback(() => {
+    setTier("LOW");
+    try {
+      sessionStorage.setItem(TIER_SESSION_KEY, "LOW");
+    } catch {
+      // Fine: the posters stand for this page, at least.
+    }
+  }, []);
   const active = wanted && !reducedMotion && (tier === "HIGH" || tier === "MID");
   const value = useMemo(() => ({ tier, active, register }), [tier, active, register]);
   return (
     <StageContext.Provider value={value}>
       {children}
-      {active && tier ? <StageCanvas tier={tier} /> : null}
+      {active && tier ? <StageCanvas tier={tier} onSlow={slow} /> : null}
     </StageContext.Provider>
   );
 }

@@ -191,7 +191,7 @@ test.describe("About", () => {
       const studying = page.locator('[data-tile="studying"] button');
       await expect(studying).toContainText("84%");
       await studying.click();
-      await expect(studying.locator('[data-face="back"]')).toContainText("227days to graduation");
+      await expect(studying.locator('[data-face="back"]')).toContainText("227 days to graduation");
       await expect(studying.locator('[data-face="front"]')).toHaveAttribute("aria-hidden", "true");
       await studying.click();
       await expect(studying.locator('[data-face="front"]')).not.toHaveAttribute("aria-hidden");

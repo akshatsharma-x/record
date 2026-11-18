@@ -4,7 +4,7 @@
  * signals in the browser, runs a one-second frame-time probe and caches the answer for
  * the session.
  */
-import { SLOW_FRAME_MS, VERY_SLOW_FRAME_MS } from "./frames";
+import { SLOW_FRAME_MS, TIER_SESSION_KEY, VERY_SLOW_FRAME_MS } from "./frames";
 
 export const TIERS = ["HIGH", "MID", "LOW", "OFF"] as const;
 export type Tier = (typeof TIERS)[number];
@@ -111,7 +111,7 @@ export function probeFrameTime(duration = 1000): Promise<number> {
   });
 }
 
-export const TIER_SESSION_KEY = "classyfolio:tier";
+export { TIER_SESSION_KEY };
 export const TIER_OVERRIDE_KEY = "classyfolio:tier-override";
 
 function isTier(value: unknown): value is Tier {

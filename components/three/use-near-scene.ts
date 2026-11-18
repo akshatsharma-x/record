@@ -61,7 +61,22 @@ export function useNearScene(id: string, { quiet = false }: { quiet?: boolean } 
   }, [id, active, near, scene, quiet]);
 
   useEffect(() => {
-    document.getElementById(id)?.setAttribute("data-scene", active && scene ? "3d" : "poster");
+    const element = document.getElementById(id);
+    if (!element) return;
+    const next = active && scene ? "3d" : "poster";
+    if (element.getAttribute("data-scene") === next) return;
+    // An edition can change the element's height (the chip's scene is a tall stage, its
+    // poster isn't). Above the viewport, that would carry what's in view up or down. The
+    // browser's scroll anchoring catches it only sometimes (WebKit and Chromium both skip it
+    // in some cases), so the page keeps its place by itself (Part 15): everything below the
+    // element moves with its bottom edge, so whatever drift that edge shows once the change
+    // is laid out, after any anchoring the browser did, is what the page scrolls back.
+    const edge = () => element.getBoundingClientRect().bottom;
+    const before = edge();
+    element.setAttribute("data-scene", next);
+    if (before > 0) return;
+    const drift = edge() - before;
+    if (Math.abs(drift) >= 1) window.scrollBy({ top: drift, behavior: "instant" });
   }, [id, active, scene]);
 
   return { near, scene };

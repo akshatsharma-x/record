@@ -44,7 +44,7 @@ export function Chip({ layers }: { layers: SkillLayer[] }) {
                   style={vars({ "--x": percent(view.anchors[i].x), "--y": `${percent(view.anchors[i].y)}%` })}
                 >
                   <button type="button" className="chip-label" data-layer={layer.id} aria-expanded="false" aria-controls={`chip-${layer.id}`}>
-                    <span className="chip-label-name">{layer.category}</span>
+                    <span className="chip-label-name">{layer.category}</span>{" "}
                     <span className="chip-label-count">{layer.count}</span>
                   </button>
                 </li>

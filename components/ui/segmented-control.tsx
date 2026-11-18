@@ -1,4 +1,4 @@
-import { type CSSProperties, useId } from "react";
+import { type CSSProperties, Fragment, useId } from "react";
 import { cx } from "@/lib/cx";
 
 export interface SegmentedOption<T extends string> {
@@ -39,29 +39,36 @@ export function SegmentedControl<T extends string>({
   const controlled = value !== undefined;
 
   return (
-    <fieldset className={cx("segmented", className)} style={{ "--count": options.length } as CSSProperties}>
+    <fieldset
+      className={cx("segmented", className)}
+      style={{ "--count": options.length } as CSSProperties}
+    >
       <legend className="sr-only">{label}</legend>
       <span className="segmented-thumb" aria-hidden="true" />
       {options.map((option) => (
-        <label key={option.value}>
-          <input
-            type="radio"
-            className="sr-only"
-            name={group}
-            value={option.value}
-            disabled={option.disabled}
-            {...(controlled ? { checked: value === option.value } : { defaultChecked: defaultValue === option.value })}
-            onChange={
-              onValueChange
-                ? (event) => {
-                    const segment = event.currentTarget.parentElement;
-                    if (segment) onValueChange(option.value, segment);
-                  }
-                : undefined
-            }
-          />
-          {option.label}
-        </label>
+        <Fragment key={option.value}>
+          <label>
+            <input
+              type="radio"
+              className="sr-only"
+              name={group}
+              value={option.value}
+              disabled={option.disabled}
+              {...(controlled
+                ? { checked: value === option.value }
+                : { defaultChecked: defaultValue === option.value })}
+              onChange={
+                onValueChange
+                  ? (event) => {
+                      const segment = event.currentTarget.parentElement;
+                      if (segment) onValueChange(option.value, segment);
+                    }
+                  : undefined
+              }
+            />
+            {option.label}
+          </label>{" "}
+        </Fragment>
       ))}
     </fieldset>
   );
