@@ -61,9 +61,10 @@ function attachChip(chip: HTMLElement, listen: Listen, undo: (() => void)[]) {
   let frame = 0;
 
   const scene = () => chip.getAttribute("data-scene") === "3d";
+  const frameHeight = () => chip.querySelector<HTMLElement>(".chip-sticky")?.offsetHeight ?? window.innerHeight;
   const progress = () => {
     const box = chip.getBoundingClientRect();
-    return sceneProgress({ top: box.top, height: box.height }, window.innerHeight);
+    return sceneProgress({ top: box.top, height: box.height }, frameHeight());
   };
   const exploded = () => !scene() || progress() >= PHASES.explode[1] - 0.02;
 
@@ -118,11 +119,13 @@ function attachChip(chip: HTMLElement, listen: Listen, undo: (() => void)[]) {
       if (event.pointerType !== "touch" && chipState.active === id && pinned !== id && document.activeElement !== label) activate(pinned);
     });
     listen(label, "focus", () => {
-      // Tabbing in skips the scroll scene to the exploded chip.
+      // Tabbing in skips the scroll scene to the exploded chip, at once: the chip's own
+      // easing shows the explosion, and a smooth scroll still running as the keyboard moves
+      // on would carry the page away from what has focus next (Safari doesn't stop it; Part 15).
       if (!exploded()) {
         const box = chip.getBoundingClientRect();
-        const travel = box.height - window.innerHeight;
-        window.scrollTo({ top: window.scrollY + box.top + travel * PHASES.explode[1], behavior: prefersReducedMotion() ? "instant" : "smooth" });
+        const travel = box.height - frameHeight();
+        window.scrollTo({ top: window.scrollY + box.top + travel * PHASES.explode[1], behavior: "instant" });
       }
       activate(id);
     });

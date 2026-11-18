@@ -810,6 +810,7 @@ export const data = {
         delivered: "Delivered",
         sent: "Message sent",
         fallback: "Send it from your mail app instead",
+        nojs: "Write to me at",
         subject: "Hello from your site",
         errors: {
           nameRequired: "What should I call you?",

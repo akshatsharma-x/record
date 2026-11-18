@@ -109,7 +109,7 @@ function Actions() {
         ))}
       </ul>
       <div className="hero-ctas">
-        <Button href="#work">{copy.hero.ctaWork}</Button>
+        <Button href="#work">{copy.hero.ctaWork}</Button>{" "}
         {/* The link style draws its own ›. White on the dark hero, so it reads over the light field. */}
         <Button variant="link" href="#contact" className="hero-hello text-fg!">
           {copy.hero.ctaHello.replace(/\s*›\s*$/, "")}

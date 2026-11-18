@@ -8,3 +8,6 @@
 export const SLOW_FRAME_MS = 24;
 /** Above this, it drops straight to posters: slower than ~25fps. */
 export const VERY_SLOW_FRAME_MS = 40;
+
+/** Where the session keeps its 3D tier (lib/tier.ts), and where the governor writes LOW. */
+export const TIER_SESSION_KEY = "classyfolio:tier";

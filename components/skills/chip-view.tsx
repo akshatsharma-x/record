@@ -12,10 +12,12 @@ const ChipScene = dynamic(() => import("./chip-scene"), { ssr: false });
  * MID tiers with motion, else the poster. It asks for the stage only when the chip is
  * three screens away, and never swaps the poster for the scene while the chip is on screen
  * (components/three/use-near-scene.ts). #chip's data-scene says which edition it is, so the
- * scroll scene (a tall, sticky stage) exists only in 3D.
+ * scroll scene (a tall, sticky stage) exists only in 3D. The stage is taller than the
+ * poster, so the swap waits for the page to be still: mid-scroll (a travel from the Island,
+ * say) the page couldn't keep its place around it (Part 15).
  */
 export function ChipView({ poster, label }: { poster: ReactNode; label: string }) {
-  const { near, scene } = useNearScene("chip");
+  const { near, scene } = useNearScene("chip", { quiet: true });
   if (!near) {
     return (
       <div role="img" aria-label={label} data-cursor-ink="light" className="chip-view">

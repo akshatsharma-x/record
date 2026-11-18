@@ -438,6 +438,8 @@ const ContactCopy = z.strictObject({
     sent: Text,
     /** The mail app's way in when the form can't send. */
     fallback: Text,
+    /** Without JavaScript the form can't send, so this leads into the address itself. */
+    nojs: Text,
     /** The subject of the email the form sends, and of the mail app's draft. */
     subject: Text,
     errors: z.strictObject({

@@ -177,10 +177,12 @@ export function points(corners: readonly Point[]): string {
 
 /**
  * Where the chip is in its scroll scene, 0 to 1: it rises, turns into view, then explodes.
- * `stage` is the sticky stage's box and `viewport` the window's height.
+ * `stage` is the tall stage's box and `frame` the height of the sticky frame inside it
+ * (100svh): measured, never the window's height, which iOS Safari changes as its toolbar
+ * shows and hides, so the scene doesn't jump when it does (Part 15).
  */
-export function sceneProgress(stage: { top: number; height: number }, viewport: number): number {
-  const travel = stage.height - viewport;
+export function sceneProgress(stage: { top: number; height: number }, frame: number): number {
+  const travel = stage.height - frame;
   if (travel <= 0) return 1;
   return Math.min(1, Math.max(0, -stage.top / travel));
 }

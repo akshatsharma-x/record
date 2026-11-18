@@ -18,25 +18,28 @@ interface PaperCardProps {
  * the back. Cite flips the card, Done or Escape flips it back, and focus goes with it
  * (lib/research-behavior.ts, attachActions). The faces share one grid cell, so the card never changes size.
  * Without JavaScript, Cite links to the paper's page, where the citations are inline.
+ * The card is an h-entry: its front the content, with the paper's name, summary, link and
+ * keywords. That's also what tells a reader view the paper is the page's own content rather
+ * than a teaser to drop (Part 15).
  */
 export function PaperCard({ title, tldr, href, read, cite, children }: PaperCardProps) {
   const id = useId();
   return (
-    <div className="paper-card">
-      <div className="paper-face" data-face="front">
+    <div className="paper-card h-entry">
+      <div className="paper-face e-content" data-face="front">
         {children}
         <div className="paper-actions">
           {read ? (
             <Button href={read} target="_blank" rel="noopener noreferrer">
               Read
             </Button>
-          ) : null}
+          ) : null}{" "}
           <Button variant="secondary" className="needs-js" data-cite-open="" aria-expanded="false" aria-controls={`${id}-back`}>
             Cite
-          </Button>
+          </Button>{" "}
           <Button href={`${href}#cite`} variant="secondary" className="without-js">
             Cite
-          </Button>
+          </Button>{" "}
           <ShareButton title={title} text={tldr} href={href} />
         </div>
       </div>

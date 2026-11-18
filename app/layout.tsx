@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cursor } from "@/components/cursor/cursor";
 import { Island } from "@/components/island/island";
 import { PageModes } from "@/components/page-modes/page-modes";
@@ -14,6 +14,17 @@ import { DEFAULT_FINISH, PREFERENCES_SCRIPT } from "@/lib/preferences";
 import { consoleHello } from "@/lib/surprises/console-hello";
 import { resumeEdition } from "@/lib/surprises/resume-edition";
 import "@/styles/globals.css";
+
+/**
+ * Edge to edge (DESIGN.md §2, Part 15): with viewport-fit=cover the safe-area insets the
+ * layout already reads (the Island, the hero's cue and pause, the gutters) are real, so the
+ * dark hero runs under the notch in landscape while every word and control stays clear of it.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: content.profile.name,

@@ -363,7 +363,7 @@
   --island-clearance: calc(env(safe-area-inset-top) + var(--island-top) + var(--island-height) + var(--island-top));
   /* The collapsed pill is 36px, but its target is 44px: the nav's padding makes up the rest. */
   --island-hit: calc((var(--target-min) - var(--island-height)) / 2);
-  --island-sheet-width: calc(100vw - 2 * var(--grid-gutter));
+  --island-sheet-width: calc(100vw - 2 * var(--spacing-page));
 
   /* Search (§6.3): a 640px glass panel with a 24px field. */
   --search-width: 640px;
@@ -455,7 +455,6 @@
   --reel-pad: 24px;
   --reel-dot: 8px;
   --reel-dot-active: 28px;
-  --reel-dot-target: 36px;
   --reel-card-bg: var(--neutral-dark-card);
 
   /* The micro-films (Part 6), drawn in a 400×320 view, so these sizes are in its units. */
@@ -737,12 +736,28 @@
   }
 }
 
-/* Increased contrast: a 2px outline and opaque inks for the cursor. */
+/* Increased contrast: a 2px outline and opaque inks for the cursor, and hairlines strong
+   enough to see (§4.1, Part 15). */
 @media (prefers-contrast: more) {
   :root {
     --cursor-outline: 2px;
     --cursor-ink-dark: #1d1d1f;
     --cursor-ink-light: #f5f5f7;
+    --neutral-light-hairline: rgb(0 0 0 / 0.36);
+    --neutral-dark-hairline: rgb(255 255 255 / 0.4);
+  }
+}
+
+/* Reduced transparency, increased contrast and forced colors: every material is solid
+   (§4.7). At the primitives, so a surface that reads the glass tokens directly turns solid
+   too; under forced colors a translucent fill would keep its alpha over the system's Canvas. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
+  :root {
+    --glass-light: var(--neutral-light-card);
+    --glass-dark: var(--neutral-dark-card);
+    --search-glass-light: var(--neutral-light-card);
+    --search-glass-dark: var(--neutral-dark-card);
+    --glass-filter: none;
   }
 }
 
@@ -954,6 +969,9 @@
   /* Space (§4.5): an 8pt grid with 4pt half-steps, so p-1 is 4px and p-2 is 8px. */
   --spacing: 4px;
   --spacing-gutter: var(--grid-gutter);
+  /* The page's side margins: the gutter, and never less than a notch or the screen's
+     rounded corners need in landscape (viewport-fit=cover, Part 15). */
+  --spacing-page: max(var(--grid-gutter), env(safe-area-inset-left), env(safe-area-inset-right));
   --spacing-section: clamp(96px, 12vw, 180px);
   --spacing-target: var(--target-min);
 

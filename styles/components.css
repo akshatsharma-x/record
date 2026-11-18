@@ -378,7 +378,7 @@
      the frame the dot first appears) and never in native zones: typing, menus, embedded
      pages and video controls keep the system cursor. lib/cursor/resolve.ts lists the same
      zones (iframe, select, textarea, video[controls], audio[controls], [contenteditable]:not([contenteditable='false']), [data-cursor='native'], input:not([type='checkbox'], [type='radio'], [type='submit'], [type='button'], [type='reset'], [type='range'], [type='color'], [type='file'], [type='image'], [type='hidden'])_SELECTORS); tests/unit/cursor.test.ts keeps the lists equal. */
-  @media (hover: hover) and (pointer: fine) and (forced-colors: none) {
+  @media (any-hover: hover) and (any-pointer: fine) and (forced-colors: none) {
     html.cursor-custom,
     html.cursor-custom body :not(:is(iframe, select, textarea, video[controls], audio[controls], [contenteditable]:not([contenteditable='false']), [data-cursor='native'], input:not([type='checkbox'], [type='radio'], [type='submit'], [type='button'], [type='reset'], [type='range'], [type='color'], [type='file'], [type='image'], [type='hidden'])), :is(iframe, select, textarea, video[controls], audio[controls], [contenteditable]:not([contenteditable='false']), [data-cursor='native'], input:not([type='checkbox'], [type='radio'], [type='submit'], [type='button'], [type='reset'], [type='range'], [type='color'], [type='file'], [type='image'], [type='hidden'])) *),
     html.cursor-custom ::backdrop {
@@ -1067,6 +1067,7 @@
       visibility var(--duration-instant);
   }
 
+  /* Holds the bar's place in the open panel; the bar itself sits on top of it. */
   .island-spacer {
     display: flex;
     width: var(--island-bar-width);
@@ -1080,7 +1081,11 @@
     visibility: hidden;
   }
 
+  /* Open, the bar stays on top of the panel that arranges itself around it, so tapping
+     the bar closes what it opened (Safari doesn't move focus on a tap, so nothing else
+     would; Part 15). */
   .island[data-view="expanded"] .island-bar {
+    z-index: 1;
     translate: 0 var(--island-hit);
     transition:
       opacity var(--duration-micro) var(--ease-out),
@@ -1183,17 +1188,22 @@
       pointer-events: auto;
     }
 
+    /* Just its icon here, in a 44pt target. */
     .island-search {
+      min-width: var(--target-min);
+      justify-content: center;
       color: var(--color-fg);
     }
 
+    /* The sheet's actions sit along its foot, nearest the thumb (Part 15): Search, the
+       theme and Say hello, in the order they're read, above them the sections. */
     .island-panel {
       width: var(--island-sheet-width);
-      grid-template-columns: auto 1fr auto auto;
+      grid-template-columns: auto auto minmax(0, 1fr);
       grid-template-areas:
-        "spacer . search theme"
-        "links links links links"
-        "hello hello hello hello";
+        "spacer spacer spacer"
+        "links links links"
+        "search theme hello";
       row-gap: var(--spacing);
       padding: 0 calc(var(--spacing) * 2) calc(var(--spacing) * 3);
     }
@@ -1214,7 +1224,7 @@
 
     .island-hello {
       height: var(--target-min);
-      margin-inline: calc(var(--spacing) * 2);
+      margin-inline-start: var(--spacing);
       font-size: var(--text-body);
     }
   }
@@ -1247,6 +1257,21 @@
 
     .island-spacer > .island-monogram {
       visibility: visible;
+    }
+
+    /* On a phone the open Island is a tall sheet, which over the hero would hide its name
+       and its date for good, since both scroll away together. There it takes its place at
+       the top of the page instead, and the hero follows it (Part 15). */
+    @variant max-md {
+      .island {
+        position: relative;
+        top: auto;
+        left: auto;
+        width: fit-content;
+        margin-inline: auto;
+        margin-block-start: calc(env(safe-area-inset-top) + var(--island-top) - var(--island-hit));
+        translate: none;
+      }
     }
   }
 
@@ -1358,11 +1383,12 @@
     text-wrap: balance;
   }
 
+  /* Rows far enough apart that the chips' 44pt targets never overlap when they wrap. */
   .hero-chips {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: calc(var(--spacing) * 2);
+    gap: calc(var(--spacing) * 3) calc(var(--spacing) * 2);
   }
 
   .hero-ctas {
@@ -1429,7 +1455,7 @@
 
   .hero-pause {
     position: absolute;
-    right: var(--grid-gutter);
+    right: var(--spacing-page);
     bottom: calc(env(safe-area-inset-bottom) + var(--spacing) * 2);
     z-index: 4;
     display: grid;
@@ -2376,7 +2402,7 @@
 
   /* Full bleed, with the first card on the wide container's edge. */
   .reel {
-    --reel-inset: max(var(--grid-gutter), calc((100% - var(--container-wide)) / 2));
+    --reel-inset: max(var(--spacing-page), calc((100% - var(--container-wide)) / 2));
     position: relative;
   }
 
@@ -2459,34 +2485,36 @@
     color: var(--color-fg);
   }
 
+  /* Seven 44pt dots and the pause don't share a row on a phone (Part 15), so there the
+     pause wraps under the dots; from tablets up it sits at the reel's right edge. */
   .reel-controls {
     position: relative;
     display: flex;
     min-height: var(--target-min);
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
+    gap: calc(var(--spacing) * 3);
     margin-block-start: calc(var(--spacing) * 6);
     padding-inline: var(--reel-inset);
   }
 
   .reel-dots {
     display: flex;
+    max-width: 100%;
     padding-inline: calc(var(--spacing) * 1);
     border-radius: var(--radius-pill);
     background-color: var(--color-control-track);
   }
 
+  /* 44×44, shrinking only on a screen too narrow for seven of them (under 360px). */
   .reel-dot {
     display: grid;
-    width: var(--reel-dot-target);
+    width: var(--target-min);
+    min-width: 0;
     height: var(--target-min);
+    flex-shrink: 1;
     place-items: center;
-  }
-
-  @variant md {
-    .reel-dot {
-      width: var(--target-min);
-    }
   }
 
   .reel-dot-mark {
@@ -2525,8 +2553,6 @@
   }
 
   .reel-pause {
-    position: absolute;
-    right: var(--reel-inset);
     display: grid;
     width: var(--target-min);
     height: var(--target-min);
@@ -2534,6 +2560,13 @@
     border-radius: var(--radius-pill);
     background-color: var(--color-control-track);
     color: var(--color-fg);
+  }
+
+  @variant md {
+    .reel-pause {
+      position: absolute;
+      right: var(--reel-inset);
+    }
   }
 
   .reel-sheet {
@@ -3566,7 +3599,10 @@
         white-space: nowrap;
       }
 
-      /* Panels share one place and cross-dissolve: the new one resolves in (§5.4). */
+      /* Panels share one place and cross-dissolve: the new one resolves in (§5.4). The
+         others are inert (the controller), so no pointer, key or screen reader reaches
+         them; they're only transparent, not unrendered, so a reader view still finds every
+         role (Part 15). */
       .edit-panel,
       .edit-panel:not([data-kind="role"]) {
         display: grid;
@@ -3577,18 +3613,14 @@
         padding: 0;
         background: none;
         opacity: 0;
-        visibility: hidden;
-        transition:
-          opacity var(--duration-ui) var(--ease-out),
-          visibility var(--duration-instant) linear var(--duration-ui);
+        pointer-events: none;
+        transition: opacity var(--duration-ui) var(--ease-out);
       }
 
       .edit-panel[data-active] {
         opacity: 1;
-        visibility: visible;
-        transition:
-          opacity var(--motion-resolve-duration) var(--ease-out),
-          visibility var(--duration-instant);
+        pointer-events: auto;
+        transition: opacity var(--motion-resolve-duration) var(--ease-out);
       }
 
       .edit-panel-text > *,
@@ -4806,6 +4838,9 @@
   }
 
   .related-name {
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
     font-size: var(--text-body);
     font-weight: var(--font-weight-semibold);
   }
@@ -4837,11 +4872,11 @@
   .segmented.work-filter {
     display: flex;
     min-inline-size: 0;
-    max-inline-size: calc(100% + 2 * var(--grid-gutter));
+    max-inline-size: calc(100% + 2 * var(--spacing-page));
     justify-self: stretch;
     gap: calc(var(--spacing) * 2);
-    margin-inline: calc(-1 * var(--grid-gutter));
-    padding: var(--spacing) var(--grid-gutter);
+    margin-inline: calc(-1 * var(--spacing-page));
+    padding: var(--spacing) var(--spacing-page);
     overflow-x: auto;
     border-radius: 0;
     background: none;
@@ -5963,8 +5998,11 @@
     gap: calc(var(--spacing) * 2);
   }
 
+  /* The chip keeps its size; the link around it is a 44pt target. */
   .case-stack-link {
     display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
     border-radius: var(--radius-chip);
   }
 
@@ -6595,7 +6633,7 @@
 
   .core-link {
     display: inline-flex;
-    min-height: calc(var(--spacing) * 8);
+    min-height: var(--target-min);
     align-items: center;
     border-radius: var(--radius-chip);
     color: var(--color-accent);
@@ -6661,13 +6699,14 @@
 
   .specs-item {
     break-inside: avoid;
-    padding-block: var(--spacing);
     font-size: var(--text-body);
     line-height: var(--text-body--line-height);
   }
 
+  /* A 44pt target, whatever the skill's name (§2 rule 7): its row is the target's height. */
   .specs-skill {
-    min-height: calc(var(--spacing) * 8);
+    min-width: var(--target-min);
+    min-height: var(--target-min);
     border-radius: var(--radius-chip);
     color: var(--color-fg);
     text-align: start;
@@ -7747,6 +7786,27 @@
     opacity: 0;
   }
 
+  /* Touch can't hover, so there each name sits under its tile, as the Home Screen labels
+     its icons: nothing on a phone waits behind a hover (§2 rule 5, Part 15). */
+  @media (hover: none) {
+    .dock {
+      margin-block-end: calc(var(--spacing) * 8);
+    }
+
+    .dock-label,
+    .dock[data-quiet] .dock-label {
+      top: calc(100% + var(--dock-padding) + var(--spacing) * 2);
+      bottom: auto;
+      padding: 0;
+      background: none;
+      box-shadow: none;
+      color: var(--color-fg-2);
+      font-weight: var(--font-weight-regular);
+      opacity: 1;
+      translate: -50% 0;
+    }
+  }
+
   /* The dot under what it opened, as a dock marks a running app. */
   .dock-dot {
     position: absolute;
@@ -8025,7 +8085,10 @@
 
     .composer-nojs {
       display: block;
-      justify-self: end;
+      color: var(--color-fg);
+    }
+
+    .composer-nojs a {
       color: var(--color-accent);
       font-weight: var(--font-weight-semibold);
       text-decoration: underline;
@@ -8062,10 +8125,11 @@
     text-transform: uppercase;
   }
 
+  /* Far enough apart that one note's ↩ targets never overlap the next note's. */
   .footer-note-list {
     display: grid;
     max-width: var(--container-measure);
-    gap: calc(var(--spacing) * 2);
+    gap: calc(var(--spacing) * 6);
   }
 
   .footer-note-number {
@@ -8099,6 +8163,7 @@
 
   .footer-link {
     display: inline-flex;
+    min-width: var(--target-min);
     min-height: var(--target-min);
     align-items: center;
     color: var(--color-fg-2);
@@ -8224,7 +8289,7 @@
     background-size: 100% var(--grid-baseline);
   }
 
-  .grid-overlay > .px-gutter {
+  .grid-overlay > .px-page {
     position: absolute;
     inset: 0;
   }
@@ -9274,5 +9339,61 @@
   [data-theme="dark"] .theme-icon-to-dark,
   [data-theme="light"] .theme-icon-to-light {
     display: none;
+  }
+}
+
+/* ─── Forced colors (§4.7, Part 15) ──────────────────────────────────────────
+   Every color is the system's and fills fall away, so whatever a fill alone said (a choice,
+   a state, a shape) is said in system colors: the choice is the system's selection. */
+@layer components {
+  @media (forced-colors: active) {
+    /* Out of the forcing, so the text has no Canvas backplate over the highlight, but in
+       system colors only. */
+    .segmented > label:has(> input:checked),
+    .island-link[aria-current="true"],
+    .search-option[data-selected],
+    .edit-clip[aria-current] {
+      forced-color-adjust: none;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+
+    :is(.segmented > label:has(> input:checked), .island-link[aria-current="true"], .search-option[data-selected], .edit-clip[aria-current]) * {
+      color: HighlightText;
+    }
+
+    /* A switch is its track and its thumb, both drawn. */
+    .switch-track {
+      border: var(--hairline-width) solid CanvasText;
+    }
+
+    .switch-thumb {
+      background-color: CanvasText;
+    }
+
+    .switch-input:checked + .switch-track {
+      border-color: Highlight;
+      background-color: Highlight;
+    }
+
+    .switch-input:checked + .switch-track > .switch-thumb {
+      background-color: HighlightText;
+    }
+
+    /* The reel's dots, and the bar the current one stretches into. */
+    .reel-dot-mark {
+      background-color: CanvasText;
+    }
+
+    .reel-dot[aria-current] .reel-dot-mark,
+    .reel-dot[aria-current] .reel-dot-mark::after {
+      background-color: Highlight;
+    }
+
+    /* The timeline's clips are outlined; the one under the playhead is the selection. */
+    .edit-clip {
+      border: var(--hairline-width) solid CanvasText;
+    }
+
   }
 }

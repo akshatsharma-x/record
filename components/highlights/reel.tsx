@@ -107,6 +107,14 @@ export function Reel({ cards, label }: { cards: ReelCard[]; label: string }) {
     return () => observer.disconnect();
   }, []);
 
+  // Tab reaches the card in view and no other, its footnote marks as well as its +: the
+  // arrow keys move between cards (Part 15).
+  useEffect(() => {
+    track.current?.querySelectorAll<HTMLElement>("[data-reel-card]").forEach((slide, i) => {
+      for (const link of slide.querySelectorAll<HTMLElement>(".reel-text a[href]")) link.tabIndex = i === active ? 0 : -1;
+    });
+  }, [active]);
+
   const slideAt = (index: number) => track.current?.querySelectorAll<HTMLElement>("[data-reel-card]")[index] ?? null;
 
   /** Brings a card into view; with `focus`, its + takes the focus too. */

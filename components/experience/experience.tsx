@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { type CSSProperties, Fragment, type ReactNode } from "react";
 import { Chip } from "@/components/ui/chip";
 import { Container, Section } from "@/components/ui/layout";
 import { Display, Lead } from "@/components/ui/type";
@@ -35,11 +35,11 @@ function Metrics({ groups, marks }: { groups: EditMetricGroup[]; marks: ReactNod
                     ),
                   )}
                 </span>
-              </span>
+              </span>{" "}
               <span className="edit-metric-label">
                 {metric.label}
                 {m === group.metrics.length - 1 ? marks[g] : null}
-              </span>
+              </span>{" "}
             </span>
           ))}
         </p>
@@ -137,6 +137,15 @@ function Panel({ panel, marks }: { panel: EditPanel; marks: ReactNode[] }) {
   );
 }
 
+/**
+ * The name a screen reader hears, starting with the words on the clip (WCAG 2.5.3): "EY,
+ * Ernst & Young, Software Development Intern, Jun–Jul 2026", where the clip says "EY".
+ */
+function clipName(clip: EditClip): string {
+  const title = clip.title.startsWith(clip.label) ? clip.title : `${clip.label}, ${clip.title.replace(` (${clip.label})`, "")}`;
+  return [title, clip.subtitle, clip.dates].filter(Boolean).join(", ");
+}
+
 function Clip({ clip, from }: { clip: EditClip; from: number }) {
   return (
     <button
@@ -150,7 +159,7 @@ function Clip({ clip, from }: { clip: EditClip; from: number }) {
       data-ongoing={clip.end === null || undefined}
       tabIndex={-1}
       aria-describedby="edit-hint"
-      aria-label={[clip.title, clip.subtitle, clip.dates].filter(Boolean).join(", ")}
+      aria-label={clipName(clip)}
       style={vars({
         "--from": Math.round((monthsAt(clip.start) - from) * 1000) / 1000,
         ...(clip.end ? { "--to": Math.round((monthsAt(clip.end) - from) * 1000) / 1000 } : {}),
@@ -194,13 +203,16 @@ export function Experience({ marks }: { marks: EditMarks }) {
                 Press Space to play
               </p>
               <span className="edit-ruler-label" />
-              <div className="edit-ruler">
+              {/* The scale and the playhead's date only echo the dates each clip's name says. */}
+              <div className="edit-ruler" aria-hidden="true">
                 {/* Years past the scale's end are clipped: they show as today reaches them. */}
                 <div className="edit-scale">
                   {years.map((year) => (
-                    <span key={year} className="edit-year" style={vars({ "--at": monthsAt(`${year}-01-01`) - from })}>
-                      {year}
-                    </span>
+                    <Fragment key={year}>
+                      <span className="edit-year" style={vars({ "--at": monthsAt(`${year}-01-01`) - from })}>
+                        {year}
+                      </span>{" "}
+                    </Fragment>
                   ))}
                 </div>
                 <span className="edit-now">Now</span>
@@ -215,7 +227,7 @@ export function Experience({ marks }: { marks: EditMarks }) {
                   </div>
                 </div>
               ))}
-              <div className="edit-overlay">
+              <div className="edit-overlay" aria-hidden="true">
                 <span className="edit-playhead">
                   <span className="edit-playhead-time" />
                 </span>
