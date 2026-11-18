@@ -8812,6 +8812,8 @@
     font-weight: var(--font-weight-semibold);
   }
 
+  /* A key cap: the primary ink, since on the cap's own grey over the glass the secondary
+     ink could fall under 4.5:1 above a light page. */
   .search-kbd {
     display: inline-flex;
     min-width: calc(var(--spacing) * 5);
@@ -8819,7 +8821,7 @@
     padding: var(--hairline-width) calc(var(--spacing) * 1.5);
     border-radius: var(--radius-chip);
     background-color: var(--color-control-track);
-    color: var(--color-fg-2);
+    color: var(--color-fg);
     font-family: var(--font-sans);
     font-size: var(--text-footnote);
     line-height: var(--text-footnote--line-height);
@@ -8867,6 +8869,213 @@
 
   :root[data-motion="reduce"] .search-highlight {
     transition-property: opacity;
+  }
+
+  /* ─── Ask (§6.3, Part 14) ─────────────────────────────────────────────────── */
+
+  /* The answer, where the results were: its text, each claim's source number, then the
+     sources as chips. */
+  .ask {
+    display: grid;
+    max-height: var(--search-results);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    gap: calc(var(--spacing) * 4);
+    padding: calc(var(--spacing) * 5);
+  }
+
+  .ask-notice {
+    color: var(--color-fg-2);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+  }
+
+  .ask-text {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    text-wrap: pretty;
+  }
+
+  /* Quoted from the site's own text: a passage to a line. */
+  .ask-text[data-quote] {
+    display: grid;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .ask-text[data-quote] > span {
+    display: block;
+  }
+
+  .ask-mark {
+    margin-inline-start: calc(var(--spacing) * 0.5);
+    color: var(--color-accent);
+    font-size: var(--text-footnote);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--font-weight-semibold);
+    line-height: 0;
+  }
+
+  /* Where the next words will land, breathing until they do. */
+  .ask-caret {
+    display: inline-block;
+    width: var(--ask-caret);
+    height: var(--ask-caret);
+    margin-inline-start: calc(var(--spacing) * 1);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent);
+    vertical-align: middle;
+    animation: ask-caret var(--duration-reveal-long) var(--ease-in-out) infinite alternate;
+  }
+
+  @keyframes ask-caret {
+    to {
+      opacity: 0.25;
+    }
+  }
+
+  .ask-sources {
+    display: grid;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .ask-sources-label {
+    color: var(--color-fg-2);
+    font-size: var(--text-footnote);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-footnote--line-height);
+  }
+
+  .ask-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .ask-chip {
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    padding-inline: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-control-track);
+    color: var(--color-fg);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-caption--line-height);
+    cursor: pointer;
+    transition: background-color var(--duration-ui) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .ask-chip:hover {
+      background-color: color-mix(in srgb, var(--color-accent) 16%, var(--color-control-track));
+    }
+  }
+
+  .ask-chip-n {
+    display: inline-grid;
+    min-width: var(--ask-chip-n);
+    height: var(--ask-chip-n);
+    place-items: center;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent-fill);
+    color: var(--color-on-accent);
+    font-size: var(--text-footnote);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .ask-contact {
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
+    justify-self: start;
+    gap: calc(var(--spacing) * 1.5);
+    color: var(--color-accent);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+  }
+
+  .ask-contact-icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+  }
+
+  /* While an answer streams: a soft band of the finish's two accents travels round the
+     screen's edges, under the panel, and fades when the answer is whole. The ring is
+     masked to the edges and the layer around it blurred, so the blur comes after the mask
+     and the band has no hard inner edge. */
+  .ask-glow {
+    position: fixed;
+    z-index: -1;
+    inset: 0;
+    filter: blur(var(--ask-glow-blur));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-reveal) var(--ease-out);
+  }
+
+  .ask-glow[data-on] {
+    opacity: var(--ask-glow-opacity);
+  }
+
+  .ask-glow-ring {
+    position: absolute;
+    inset: 0;
+    padding: var(--ask-glow-width);
+    background: conic-gradient(from var(--ask-angle), var(--color-accent), var(--color-accent-2), var(--color-accent));
+    -webkit-mask:
+      linear-gradient(var(--neutral-dark-bg) 0 0) content-box,
+      linear-gradient(var(--neutral-dark-bg) 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(var(--neutral-dark-bg) 0 0) content-box exclude,
+      linear-gradient(var(--neutral-dark-bg) 0 0);
+    animation: ask-glow-travel var(--ask-glow-travel) linear infinite paused;
+  }
+
+  .ask-glow[data-on] .ask-glow-ring {
+    animation-play-state: running;
+  }
+
+  @keyframes ask-glow-travel {
+    to {
+      --ask-angle: 1turn;
+    }
+  }
+
+  /* A source a chip led to, lit for a moment: a soft tint and a ring, both fading. */
+  [data-ask-lit] {
+    border-radius: var(--radius-control);
+    outline: var(--ask-lit-ring) solid transparent;
+    outline-offset: var(--ask-lit-offset);
+    animation: ask-lit var(--ask-lit) var(--ease-out) both;
+  }
+
+  @keyframes ask-lit {
+    from,
+    40% {
+      outline-color: color-mix(in srgb, var(--color-accent) 55%, transparent);
+      background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
+  }
+
+  /* Still, with reduced motion: the glow stands, the caret doesn't breathe, the ring doesn't fade. */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) :is(.ask-glow-ring, .ask-caret) {
+      animation: none;
+    }
+
+    :root:not([data-motion="full"]) [data-ask-lit] {
+      outline-color: color-mix(in srgb, var(--color-accent) 55%, transparent);
+      background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+      animation: none;
+    }
+  }
+
+  :root[data-motion="reduce"] :is(.ask-glow-ring, .ask-caret) {
+    animation: none;
   }
 
   /* ─── Page modes (§6.3) ───────────────────────────────────────────────────── */

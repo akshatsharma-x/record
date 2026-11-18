@@ -239,6 +239,7 @@ export const data = {
       slug: "food-waste-cold-chain",
       title:
         "An Interpretable Artificial Intelligence Framework for Food Waste Prediction and Prevention in Cold-Chain Logistics",
+      short: "Food waste in cold chains",
       tldr: "An AI framework that predicts food waste in cold-chain logistics, and explains each prediction so the waste can be prevented.",
       keywords: ["interpretable AI", "explainable ML", "food waste", "cold-chain logistics", "sustainability"],
       presentedAt: "sci-2026",
@@ -258,6 +259,7 @@ export const data = {
     {
       slug: "pm25-forecasting",
       title: "Short-Term PM2.5 Forecasting Using ML for Sustainable Urban Air Quality",
+      short: "PM2.5 forecasting",
       tldr: "Machine-learning models that forecast fine-particle air pollution a short time ahead, so cities can act on air quality sooner.",
       keywords: ["PM2.5", "air quality", "time-series forecasting", "machine learning", "sustainability"],
       presentedAt: "sci-2026",
@@ -843,6 +845,7 @@ export const data = {
         { label: "3D", items: ["three.js, React Three Fiber and drei", "One WebGL context for the whole site", "Procedural models in studio light: nothing downloaded"] },
         { label: "Content", items: ["One typed file, checked with zod at every build", "Every number with its footnote"] },
         { label: "Contact", items: ["Resend for delivery", "Upstash for the rate limit"] },
+        { label: "Ask", items: ["Claude, through Anthropic's API", "Answers from the site's own content, each claim cited", "The site's own text when it can't answer"] },
         { label: "Privacy", items: ["No cookies", "No phone number, anywhere"] },
         { label: "Testing", items: ["Vitest", "Playwright, in WebKit first", "axe-core"] },
       ],
@@ -896,6 +899,26 @@ export const data = {
         footnote: "Derived from dated entries; nothing estimated.",
         rows: { studying: "Studying", internships: "Internships to date", papers: "Papers", honors: "Honors", stack: "Joined the stack" },
       },
+    },
+    ask: {
+      label: "Ask",
+      hint: "Answered from this site",
+      suggestions: [
+        "What does Akshat do at United Airlines?",
+        "Which projects use RAG?",
+        "What is the research about?",
+        "How do I get in touch?",
+      ],
+      sources: "Sources",
+      answering: "Answering",
+      fallback: {
+        unavailable: "Ask isn't answering right now, so here's what the site itself says.",
+        rate: "That's a lot of questions for one minute, so here's what the site itself says.",
+        offline: "You're offline, so here's what the site itself says.",
+        nothing: "Nothing on the site answers that. Akshat can, though.",
+      },
+      declined: "Ask can't answer that one. Akshat can, though.",
+      contact: "Get in touch",
     },
   },
 

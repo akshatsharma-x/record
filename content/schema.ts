@@ -242,6 +242,8 @@ const Illustration = z.discriminatedUnion("kind", [
 const Publication = z.strictObject({
   slug: Id,
   title: Text,
+  /** A few words for where a long title won't fit: Ask's source chips (Part 14). */
+  short: Text,
   tldr: Text,
   keywords: z.array(Text).min(1),
   /** The id of the conference where it was presented. */
@@ -476,6 +478,28 @@ const ColophonCopy = z.strictObject({
 });
 
 /** The surprises' own words (DESIGN.md §8). */
+/**
+ * Ask (DESIGN.md §6.3, Part 14): its words in Search. The answers come from the model, or
+ * from the site's own text when it can't answer; these are the words around them.
+ */
+const AskCopy = z.strictObject({
+  /** The group the suggested questions sit in, and the word before a question in the Top hit. */
+  label: Text,
+  /** What the Top hit says it does. */
+  hint: Text,
+  suggestions: z.array(Text).length(4),
+  /** Over the source chips. */
+  sources: Text,
+  /** While the answer is on its way, for screen readers. */
+  answering: Text,
+  /** When the answer comes from the site's own text instead, and why. */
+  fallback: z.strictObject({ unavailable: Text, rate: Text, offline: Text, nothing: Text }),
+  /** When the model declines the question. */
+  declined: Text,
+  /** The way to ask Akshat instead. */
+  contact: Text,
+});
+
 const SurprisesCopy = z.strictObject({
   devanagari: z.strictObject({ name: Text, note: Text }),
   clearSkies: Text,
@@ -586,6 +610,7 @@ const Copy = z.strictObject({
   footer: FooterCopy,
   colophon: ColophonCopy,
   surprises: SurprisesCopy,
+  ask: AskCopy,
 });
 
 const ContentShape = z.strictObject({
