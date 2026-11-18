@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 const PRODUCTION = 3100;
 const DEVELOPMENT = 3220;
+/** The stand-in for the Messages API that Ask asks in these tests (tests/support/anthropic-mock.ts). */
+const ANTHROPIC_MOCK = 3199;
 const production = `http://localhost:${PRODUCTION}`;
 const development = `http://localhost:${DEVELOPMENT}`;
 
@@ -31,9 +33,23 @@ export default defineConfig({
   ],
   webServer: [
     {
+      // Words a little apart, so an answer streams for long enough to watch.
+      command: `ANTHROPIC_MOCK_PORT=${ANTHROPIC_MOCK} ANTHROPIC_MOCK_DELAY=30 node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tests/support/anthropic-mock.ts`,
+      url: `http://127.0.0.1:${ANTHROPIC_MOCK}/`,
+      reuseExistingServer: false,
+      timeout: 30_000,
+    },
+    {
       // The composer's console transport and in-memory limit, on purpose: a real build with
       // no keys answers 503 (tested in the unit tests), and this one delivers end to end.
-      command: `npm run build && CONTACT_TRANSPORT=console npm run start -- --port ${PRODUCTION}`,
+      // Ask, likewise, asks the stand-in with a stand-in key and its limits in memory; a
+      // build with no key answers 503 (the unit tests), which the page meets with its own text.
+      command: [
+        "npm run build &&",
+        "CONTACT_TRANSPORT=console",
+        `ASK_ENABLED=true ANTHROPIC_API_KEY=sk-mock ANTHROPIC_BASE_URL=http://127.0.0.1:${ANTHROPIC_MOCK} ASK_LIMIT=memory`,
+        `npm run start -- --port ${PRODUCTION}`,
+      ].join(" "),
       url: production,
       reuseExistingServer: false,
       timeout: 240_000,

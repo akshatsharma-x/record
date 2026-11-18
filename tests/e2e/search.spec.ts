@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
+import { content } from "@/content";
 
 /** Search (DESIGN.md §6.3), on the production build: WebKit, iPhone and Chromium. */
 
@@ -70,7 +71,8 @@ test.describe("on a keyboard", () => {
     await page.goto("/");
     await openWithKeys(page);
     const groups = () => dialog(page).getByRole("group").evaluateAll((all) => all.map((group) => group.getAttribute("aria-labelledby") && document.getElementById(group.getAttribute("aria-labelledby")!)?.textContent));
-    expect(await groups()).toEqual(["Sections", "Actions"]);
+    // With nothing typed, Ask's suggested questions come first (Part 14).
+    expect(await groups()).toEqual([content.copy.ask.label, "Sections", "Actions"]);
     await search(page, "rag");
     expect(await groups()).toEqual(["Top hit", "Work", "Skills"]);
   });

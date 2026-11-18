@@ -178,7 +178,10 @@
     .composer-send,
     .composer-send::before,
     .not-found-light,
-    .not-found-action {
+    .not-found-action,
+    .ask-chip,
+    .ask-chip-n,
+    .ask-caret {
       corner-shape: round;
     }
 

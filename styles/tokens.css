@@ -641,6 +641,18 @@
   --not-found-height: 100svh;
   --not-found-light-size: 46vmax;
 
+  /* Ask (Part 14): the glow round the screen while an answer streams, the source chips'
+     numbers, the caret, and the ring that lights a source when a chip leads to it. */
+  --ask-glow-width: 20px;
+  --ask-glow-blur: 26px;
+  --ask-glow-opacity: 1;
+  --ask-glow-travel: 2600ms;
+  --ask-chip-n: 18px;
+  --ask-caret: 0.5em;
+  --ask-lit: 2400ms;
+  --ask-lit-ring: 3px;
+  --ask-lit-offset: 6px;
+
   /* Work (Part 9): the bento's tiles and their previews, the case-study sheet and the page
      behind it, and the architecture diagrams. Preview sizes are in the previews' view units. */
   --work-title: clamp(1.3125rem, 1.0982rem + 0.5357vw, 1.75rem);
@@ -843,6 +855,13 @@
   syntax: "<length>";
   inherits: false;
   initial-value: 0px;
+}
+
+/* Where Ask's glow is on its way round the screen (styles/components.css), so it can travel. */
+@property --ask-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0turn;
 }
 
 /* ─── 7. Tailwind's theme ─────────────────────────────────────────────────── */

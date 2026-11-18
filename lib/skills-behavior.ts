@@ -4,6 +4,7 @@ import { chipState, onChip, setChip } from "./chip-state";
 import { type EvidenceKind, evidenceTarget } from "./evidence";
 import { FISHEYE, fisheye } from "./honeycomb";
 import { island } from "./island/store";
+import { jumpTo } from "./jump";
 import { prefersReducedMotion } from "./reduced-motion";
 
 /**
@@ -238,32 +239,14 @@ function attachShowMe(root: HTMLElement, listen: Listen, undo: (() => void)[]) {
     if (button && root.contains(button) && !button.hasAttribute("data-dragged")) choose(button);
   });
 
-  // The jump, from the Island or beside the skill. A role is a panel in the edit, which
-  // moves only by its own playhead: choosing its clip springs the edit there (a hash
-  // scroll would be taken for the visitor's own, and stop it). Anything else scrolls into
-  // view and takes focus.
-  const jump = (id: string) => {
-    const target = document.getElementById(id);
-    if (!target) return false;
-    const panel = target.closest<HTMLElement>(".edit-panel");
-    const edit = document.getElementById("edit");
-    const clip = panel && edit?.hasAttribute("data-editing") ? edit.querySelector<HTMLElement>(`.edit-clip[data-panel="${CSS.escape(panel.dataset.panel ?? "")}"]`) : null;
-    if (clip) {
-      clip.click();
-      return true;
-    }
-    target.scrollIntoView({ behavior: prefersReducedMotion() ? "instant" : "smooth", block: "center" });
-    if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
-    target.focus({ preventScroll: true });
-    return true;
-  };
+  // The jump, from the Island or beside the skill (lib/jump.ts, which Ask's chips share).
   listen(
     document,
     "click",
     (event) => {
       const link = (event.target as Element | null)?.closest<HTMLAnchorElement>("a.island-activity-action, a.show-me-jump");
       const href = link?.getAttribute("href");
-      if (current && href?.startsWith("#") && jump(href.slice(1))) event.preventDefault();
+      if (current && href?.startsWith("#") && jumpTo(href.slice(1))) event.preventDefault();
     },
     { capture: true },
   );

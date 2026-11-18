@@ -12,6 +12,7 @@ import {
   Hash,
   LayoutGrid,
   type LucideIcon,
+  MessageCircleQuestion,
   Search as SearchIcon,
   Sparkles,
 } from "lucide-react";
@@ -27,6 +28,9 @@ import {
   useRef,
   useState,
 } from "react";
+import type { AskSource } from "@/lib/ask/documents";
+import { showSource } from "@/lib/ask/light";
+import { isQuestion, questionOf } from "@/lib/ask/question";
 import { cx } from "@/lib/cx";
 import { island } from "@/lib/island/store";
 import { durations } from "@/lib/motion";
@@ -42,7 +46,9 @@ import { SECTIONS } from "@/lib/sections";
 import { isApplePlatform } from "@/lib/shortcuts";
 import { sectionOf, travelTo } from "@/lib/travel";
 import { type Action, buildActions, useActionState } from "./actions";
+import { AskAnswer, AskGlow } from "./ask-answer";
 import { runSecret } from "./secrets";
+import { useAsk } from "./use-ask";
 
 const ICONS: Record<SearchEntry["kind"], LucideIcon> = {
   section: Hash,
@@ -65,7 +71,8 @@ interface Calculated {
   expression: string;
 }
 
-type Option = { result: Result } | { calculation: Calculated };
+/** A question to ask (DESIGN.md §6.3, Part 14): the Top hit when a query reads like one, or a suggestion. */
+type Option = { result: Result } | { calculation: Calculated } | { ask: string };
 
 const optionId = (base: string, index: number) => `${base}-${index}`;
 
@@ -148,9 +155,24 @@ export default function SearchDialog() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, payload]);
 
-  const top: Option | null = secret ? { result: secret } : calculation ? { calculation } : composed.top ? { result: composed.top } : null;
-  // Arithmetic takes the Top hit; what would have been leads its group instead.
-  const displaced = calculation ? composed.top : null;
+  // A question becomes "Ask: …"; with nothing typed, Ask suggests a few.
+  const question = questionOf(query);
+  const askable = payload !== null && isQuestion(query) && !secret;
+  const suggestions: Option[] = payload && !query.trim() ? payload.ask.suggestions.map((ask) => ({ ask })) : [];
+  const asking = useAsk(payload);
+  const answering = asking.answer.phase !== "idle" && asking.answer.question === question;
+
+  const top: Option | null = secret
+    ? { result: secret }
+    : askable
+      ? { ask: question }
+      : calculation
+        ? { calculation }
+        : composed.top
+          ? { result: composed.top }
+          : null;
+  // A question or arithmetic takes the Top hit; what would have been leads its group instead.
+  const displaced = askable || calculation ? composed.top : null;
   const groups = displaced
     ? GROUPS.map((group) => {
         const existing = composed.groups.find((entry) => entry.id === group.id);
@@ -158,7 +180,9 @@ export default function SearchDialog() {
         return { id: group.id, name: group.name, items: groupOf(displaced.kind) === group.id ? [displaced, ...items] : items };
       }).filter((group) => group.items.length > 0)
     : composed.groups;
-  const options: Option[] = [...(top ? [top] : []), ...groups.flatMap((group) => group.items.map((result) => ({ result })))];
+  const options: Option[] = answering
+    ? []
+    : [...(top ? [top] : []), ...suggestions, ...groups.flatMap((group) => group.items.map((result) => ({ result })))];
   const selected = Math.min(active, Math.max(0, options.length - 1));
   const count = options.length;
 
@@ -174,6 +198,7 @@ export default function SearchDialog() {
       return;
     }
     if (!open && element.open) {
+      asking.reset();
       const finish = () => {
         element.removeAttribute("data-closing");
         element.close();
@@ -187,6 +212,8 @@ export default function SearchDialog() {
       const timer = window.setTimeout(finish, durations.micro);
       return () => window.clearTimeout(timer);
     }
+    // asking.reset is stable; Search only reacts to opening and closing here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   /** Closes at once, so whatever runs next (a theme reveal, a print) sees the page. */
@@ -211,8 +238,21 @@ export default function SearchDialog() {
     router.push(href);
   };
 
+  /** An answer's source: Search closes, and the page goes there and lights it up. */
+  const openSource = (source: AskSource) => {
+    closeNow();
+    if (pathname === "/" && showSource(source.target)) return;
+    router.push(source.href);
+  };
+
   const choose = (option: Option | undefined, newTab: boolean) => {
     if (!option) return;
+    if ("ask" in option) {
+      // Asking stays in Search: the answer streams in where the results were.
+      setQuery(option.ask);
+      void asking.ask(option.ask);
+      return;
+    }
     if ("calculation" in option) {
       const text = String(option.calculation.value);
       void navigator.clipboard
@@ -243,7 +283,8 @@ export default function SearchDialog() {
       pointer.current = null;
     } else if (event.key === "Enter" && !event.nativeEvent.isComposing) {
       event.preventDefault();
-      choose(options[selected], event.metaKey || event.ctrlKey);
+      // Enter again on an answer's question changes nothing; editing it asks anew.
+      if (!answering) choose(options[selected], event.metaKey || event.ctrlKey);
     }
   };
 
@@ -267,10 +308,10 @@ export default function SearchDialog() {
 
   const [announced, setAnnounced] = useState("");
   useEffect(() => {
-    const message = !payload && !failed ? "" : count === 0 ? "No results" : count === 1 ? "1 result" : `${count} results`;
+    const message = answering || (!payload && !failed) ? "" : count === 0 ? "No results" : count === 1 ? "1 result" : `${count} results`;
     const timer = window.setTimeout(() => setAnnounced(message), durations.uiLong);
     return () => window.clearTimeout(timer);
-  }, [count, payload, failed]);
+  }, [count, payload, failed, answering]);
 
   // ─── Rendering ─────────────────────────────────────────────────────────────
 
@@ -296,6 +337,24 @@ export default function SearchDialog() {
       },
       onClick: (event: MouseEvent) => choose(option, event.metaKey || event.ctrlKey),
     };
+    if ("ask" in option) {
+      const words = payload?.ask;
+      return (
+        <div key={`ask:${option.ask}`} {...common}>
+          <MessageCircleQuestion aria-hidden="true" className="search-option-icon" />
+          <span className="search-option-text">
+            <span className="search-option-title">
+              {big ? `${words?.label}: ${option.ask}` : option.ask}
+              {big ? <span className="sr-pause">,</span> : null}
+            </span>
+            {big ? <span className="search-option-subtitle">{words?.hint}</span> : null}
+          </span>
+          <span className="search-option-meta" aria-hidden="true">
+            {words?.label}
+          </span>
+        </div>
+      );
+    }
     if ("calculation" in option) {
       const value = formatValue(option.calculation.value);
       return (
@@ -373,7 +432,7 @@ export default function SearchDialog() {
             type="text"
             role="combobox"
             aria-label="Search"
-            aria-expanded="true"
+            aria-expanded={!answering}
             aria-controls={listId}
             aria-autocomplete="list"
             aria-activedescendant={count > 0 ? optionId(listId, selected) : undefined}
@@ -386,8 +445,11 @@ export default function SearchDialog() {
             className="search-input"
             value={query}
             onChange={(event) => {
-              setQuery(event.currentTarget.value);
+              const next = event.currentTarget.value;
+              setQuery(next);
               setActive(0);
+              // Editing the question puts its answer away.
+              if (asking.answer.phase !== "idle" && questionOf(next) !== asking.answer.question) asking.reset();
             }}
             onKeyDown={onKeyDown}
           />
@@ -396,7 +458,8 @@ export default function SearchDialog() {
           </kbd>
         </label>
 
-        <div ref={list} id={listId} role="listbox" aria-label="Results" className="search-results">
+        {answering && payload ? <AskAnswer answer={asking.answer} copy={payload.ask} onSource={openSource} /> : null}
+        <div ref={list} id={listId} role="listbox" aria-label="Results" className="search-results" hidden={answering}>
           <div ref={highlight} className="search-highlight" aria-hidden="true" />
           {top ? (
             <div role="group" aria-labelledby={`${listId}-top`} className="search-group">
@@ -404,6 +467,14 @@ export default function SearchDialog() {
                 Top hit
               </div>
               {row(top, true)}
+            </div>
+          ) : null}
+          {suggestions.length > 0 ? (
+            <div role="group" aria-labelledby={`${listId}-ask`} className="search-group">
+              <div id={`${listId}-ask`} role="presentation" className="search-group-title">
+                {payload?.ask.label}
+              </div>
+              {suggestions.map((option) => row(option))}
             </div>
           ) : null}
           {groups.map((group) => (
@@ -440,6 +511,7 @@ export default function SearchDialog() {
           {announced}
         </p>
       </div>
+      <AskGlow on={answering && asking.answer.phase === "streaming"} />
     </dialog>
   );
 }
