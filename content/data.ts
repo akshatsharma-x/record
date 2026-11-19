@@ -243,7 +243,7 @@ export const data = {
       tldr: "An AI framework that predicts food waste in cold-chain logistics, and explains each prediction so the waste can be prevented.",
       keywords: ["interpretable AI", "explainable ML", "food waste", "cold-chain logistics", "sustainability"],
       presentedAt: "sci-2026",
-      // Until these are in, citations list Akshat alone.
+      // Until these are in, the paper says who presented it and offers no citation.
       coAuthors: null, // TODO(akshat)
       abstract: null, // TODO(akshat)
       doi: null, // TODO(akshat)
@@ -263,7 +263,7 @@ export const data = {
       tldr: "Machine-learning models that forecast fine-particle air pollution a short time ahead, so cities can act on air quality sooner.",
       keywords: ["PM2.5", "air quality", "time-series forecasting", "machine learning", "sustainability"],
       presentedAt: "sci-2026",
-      // Until these are in, citations list Akshat alone.
+      // Until these are in, the paper says who presented it and offers no citation.
       coAuthors: null, // TODO(akshat)
       abstract: null, // TODO(akshat)
       doi: null, // TODO(akshat)
@@ -693,6 +693,7 @@ export const data = {
   ],
 
   copy: {
+    skip: "Skip to content",
     hero: { ctaWork: "See my work", ctaHello: "Say hello ›" },
     statement: {
       headline:
@@ -715,6 +716,7 @@ export const data = {
       headline: "Research.",
       sub: "Machine learning for the food we save and the air we breathe.",
       caption: "Illustration of the idea, not results from the paper",
+      presentedBy: "Presented by {name}",
     },
     work: {
       headline: "Work.",

@@ -29,6 +29,13 @@
     inset: 0;
   }
 
+  /* A journey's end (lib/surface/controller.ts): the light changes once, crossfaded. */
+  [data-surface-arriving] .surface-backdrop > [data-backdrop-surface] {
+    transition:
+      background-color var(--duration-ui) var(--ease-out),
+      opacity var(--duration-ui) var(--ease-out);
+  }
+
   [data-backdrop-surface="light"] {
     background-color: var(--surface-light);
   }
@@ -1417,8 +1424,9 @@
     min-width: calc(var(--target-min) * 1.5);
   }
 
-  /* The scroll cue: a slim home-indicator bar that breathes once every 4s until the first
-     scroll, then never again. */
+  /* The scroll cue: a slim home-indicator bar, still. It breathed every 4s until the first
+     scroll, a loop at the screen's foot that §2 rule 4 keeps out of the periphery, and that
+     restyled the page 60 times a second while the visitor read (Part 17). */
   .hero-cue {
     position: absolute;
     bottom: calc(env(safe-area-inset-bottom) + var(--spacing) * 3);
@@ -1430,26 +1438,6 @@
     background-color: var(--neutral-dark-fg);
     opacity: 0.45;
     translate: -50% 0;
-    animation:
-      hero-fade var(--hero-ui-fade) var(--ease-out) var(--hero-ui-delay) backwards,
-      hero-breathe var(--hero-cue-breath) var(--ease-in-out) var(--hero-ui-delay) infinite;
-  }
-
-  @keyframes hero-breathe {
-    0%,
-    40%,
-    100% {
-      opacity: 0.45;
-      scale: 1;
-    }
-
-    20% {
-      opacity: 0.9;
-      scale: 1.06 1;
-    }
-  }
-
-  html[data-scrolled] .hero-cue {
     animation: hero-fade var(--hero-ui-fade) var(--ease-out) var(--hero-ui-delay) backwards;
   }
 
@@ -1973,6 +1961,8 @@
 
   /* The one gradient phrase (§4.4): the gradient shows through as the fg-3 ink clears. */
   .statement-emphasis {
+    /* One phrase, one line: it split as "the clear / kind" at 1440 (Part 17). */
+    white-space: nowrap;
     background-image: linear-gradient(var(--gradient-angle), var(--color-accent), var(--color-accent-2));
     -webkit-background-clip: text;
     background-clip: text;
@@ -2168,6 +2158,17 @@
   /* Tiles that do something when clicked: the whole tile is the button. */
   .glance-tile:has(.glance-flip) {
     padding: 0;
+  }
+
+  /* The tile clips its faces' flip, and with them the button's own ring: the tile wears it
+     instead (§6.4, Part 17), as a work card does for its link. */
+  .glance-tile:has(.glance-flip:focus-visible) {
+    outline: var(--focus-ring-width) solid var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .glance-tile:has(.glance-flip:active) {
+    scale: var(--motion-press-scale);
   }
 
   .glance-flip {
@@ -2402,7 +2403,9 @@
 
   /* Full bleed, with the first card on the wide container's edge. */
   .reel {
-    --reel-inset: max(var(--spacing-page), calc((100% - var(--container-wide)) / 2));
+    /* The first card under the section's heading, on the content grid (Part 17); the rest
+       run on past it, as a reel does. */
+    --reel-inset: max(var(--spacing-page), calc((100% - var(--container-content)) / 2));
     position: relative;
   }
 
@@ -2446,19 +2449,42 @@
   @variant md {
     .reel-card {
       width: min(calc(100% - var(--reel-peek)), var(--reel-card-max));
+      container-type: inline-size;
       grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
       grid-template-rows: minmax(0, 1fr);
       aspect-ratio: var(--aspect-wide);
     }
   }
 
+  /* Whose fact it is (Part 17), as an eyebrow over the card's words: one block with them, so
+     the card's grid places them as it placed the words alone. */
+  .reel-words {
+    display: grid;
+    align-content: start;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .reel-subject {
+    color: var(--color-fg-2);
+    font-size: var(--text-eyebrow);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-eyebrow--line-height);
+  }
+
+  /* 20ch: at 14 the words broke a phrase to a line ("Six / documents. / Two calls."). */
   .reel-text {
-    max-width: 14ch;
+    max-width: 20ch;
     font-size: var(--text-title);
     font-weight: var(--text-title--font-weight);
     line-height: var(--text-title--line-height);
     letter-spacing: var(--text-title--letter-spacing);
     text-wrap: balance;
+  }
+
+  @variant md {
+    .reel-text {
+      font-size: min(var(--text-title), var(--reel-text-cap));
+    }
   }
 
   .reel-film {
@@ -3570,16 +3596,29 @@
         left: calc(var(--edit-label) + var(--grid-gutter));
         display: block;
         pointer-events: none;
+        /* What changes in here every frame of a scrub never reaches the page's layout. */
+        contain: layout style;
       }
 
+      /* The playhead is a layer as wide as the timeline, moved by a transform, so a scrub is
+         a composite rather than a layout of the whole page each frame (Part 17); its line is
+         the layer's left edge. */
       .edit-playhead {
+        position: absolute;
+        inset: 0;
+        translate: calc(var(--playhead, 0) / var(--span) * 100%) 0;
+        will-change: translate;
+      }
+
+      .edit-playhead::before {
         position: absolute;
         top: 0;
         bottom: 0;
-        left: calc(var(--playhead, 0) / var(--span) * 100%);
+        left: 0;
         width: var(--edit-playhead);
         translate: -50% 0;
         background-color: var(--color-fg);
+        content: "";
       }
 
       /* Its label leans from the line's right at the start to its left at today, so it
@@ -3587,7 +3626,7 @@
       .edit-playhead-time {
         position: absolute;
         bottom: 100%;
-        left: 50%;
+        left: 0;
         padding: 0 var(--spacing);
         border-radius: var(--radius-chip);
         background-color: var(--color-fg);
@@ -5020,7 +5059,11 @@
   /* The reflow (work-controller.tsx): each tile glides to its new place on the smooth
      spring, and a tile that leaves or arrives fades. The page around it doesn't crossfade,
      and clicks reach the real page, so the visitor can pick again mid-flight. */
-  html[data-work-filtering]::view-transition {
+  html[data-work-filtering]::view-transition,
+  html[data-theme-switching]::view-transition,
+  html[data-finish-wiping]::view-transition {
+    /* The theme's and the finish's too: a second choice mid-wipe was lost to the
+       transition's overlay, which hit-tests as <html> (Part 17). */
     pointer-events: none;
   }
 
@@ -6240,6 +6283,19 @@
     display: grid;
     height: var(--chip-sticky);
     align-items: center;
+  }
+
+  /* With no room to pin, no stage: the scene's progress is then its end, the exploded chip
+     (lib/chip.ts, sceneProgress), and its labels sit in the flow instead of over what follows. */
+  @variant chip-short {
+    .chip[data-scene="3d"] {
+      height: auto;
+    }
+
+    .chip[data-scene="3d"] > .chip-sticky {
+      position: static;
+      height: auto;
+    }
   }
 
   .chip-frame {
@@ -7625,6 +7681,8 @@
     gap: calc(var(--spacing) * 1);
     color: var(--color-fg-2);
     font-size: var(--text-lead);
+    /* A live line: its figures change width with the minute otherwise (Part 17). */
+    font-variant-numeric: tabular-nums;
     letter-spacing: var(--text-lead--letter-spacing);
     line-height: var(--text-lead--line-height);
   }
@@ -8598,6 +8656,31 @@
     :root:not([data-motion="full"]) .not-found-blur {
       transition: none;
     }
+  }
+
+  /* The skip link (WCAG 2.4.1, Part 17): the first Tab stop on every page, out of sight
+     until it has focus, then a pill at the top left above the Island. */
+  .skip-link {
+    position: fixed;
+    z-index: var(--layer-overlay);
+    top: var(--spacing-page);
+    left: var(--spacing-page);
+    display: inline-flex;
+    min-height: var(--target-min);
+    align-items: center;
+    padding-inline: calc(var(--spacing) * 4);
+    border-radius: var(--radius-control);
+    background-color: var(--color-fg);
+    color: var(--color-surface);
+    font-weight: var(--font-weight-semibold);
+    translate: 0 calc(-100% - 2 * var(--spacing-page));
+    transition: translate var(--duration-micro) var(--ease-out);
+  }
+
+  .skip-link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+    translate: 0;
   }
 
   /* /colophon's parts after the sheet: the budgets, the accessibility statement and the

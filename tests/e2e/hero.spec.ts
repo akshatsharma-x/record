@@ -54,9 +54,10 @@ test("the hero reads as a Lock Screen: the date, the name, the role, the line, t
   await expect(top.getByText("AI & ML Engineer")).toBeVisible();
   await expect(top.getByText("I build intelligent systems — and make them clear.")).toBeVisible();
   const chips = top.getByRole("list", { name: "Key facts" }).getByRole("link");
-  await expect(chips).toHaveText(["Now at United Airlines", "B.Tech CSE ’27 · Manipal University Jaipur", "SCI-2026 · Springer LNNS"]);
+  await expect(chips).toHaveText(["AI & ML Intern at United Airlines", "B.Tech CSE ’27 · Manipal University Jaipur", "SCI-2026 · Springer LNNS"]);
+  // The current role's chip goes to that role, not to the timeline's start (Part 17).
   expect(await chips.evaluateAll((links) => links.map((link) => link.getAttribute("href")))).toEqual([
-    "#experience",
+    "#united-airlines-title",
     "#credentials",
     "#research",
   ]);
@@ -124,17 +125,14 @@ test("choosing a finish recolors the site from the swatch and says so in the Isl
   await expect(page.locator("html")).toHaveAttribute("data-finish", "pink-city");
 });
 
-test("the scroll cue breathes until the first scroll, then never again", async ({ page }) => {
+test("the scroll cue is still: nothing loops at the screen's foot (§2 rule 4, Part 17)", async ({ page }) => {
   await page.goto("/");
   const cue = hero(page).locator(".hero-cue");
-  const names = () => cue.evaluate((element) => getComputedStyle(element).animationName);
-  await expect.poll(names).toContain("hero-breathe");
+  await expect(cue).toBeVisible();
+  // It fades in with the rest of the hero's UI, once, and nothing repeats after that.
+  await expect.poll(() => cue.evaluate((element) => element.getAnimations().filter((animation) => animation.effect?.getTiming().iterations === Infinity).length)).toBe(0);
   await scrollBy(page, 300);
   await expect(page.locator("html")).toHaveAttribute("data-scrolled", "");
-  await expect.poll(names).not.toContain("hero-breathe");
-  await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-scrolled", "");
-  expect(await names()).not.toContain("hero-breathe");
 });
 
 test("the light field can be paused, and rests off-screen", async ({ page }) => {
@@ -205,7 +203,7 @@ test.describe("without JavaScript", () => {
     const top = hero(page);
     await expect(top.getByRole("heading", { level: 1 })).toHaveText("Akshat Sharma");
     await expect(top.locator(".hero-date")).toHaveText("India · IST");
-    for (const text of ["AI & ML Engineer", "I build intelligent systems — and make them clear.", "Now at United Airlines"]) {
+    for (const text of ["AI & ML Engineer", "I build intelligent systems — and make them clear.", "AI & ML Intern at United Airlines"]) {
       await expect(top.getByText(text)).toBeVisible();
     }
     await expect(top.getByRole("link", { name: "See my work" })).toBeVisible();

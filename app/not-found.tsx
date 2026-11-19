@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default function NotFound() {
   const words = content.copy.surprises.notFound;
   return (
-    <main className="not-found" data-blurred={outOfFocus.on ? "" : undefined}>
+    <main id="main" className="not-found" data-blurred={outOfFocus.on ? "" : undefined}>
       <Section id="not-found" surface="dark" padding="none" className="not-found-surface" aria-labelledby="not-found-title">
         <div className="not-found-blur" aria-hidden="true">
           <span className="not-found-light" data-light="a" />

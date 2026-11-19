@@ -50,7 +50,7 @@ export default function SpecsPage() {
   ];
   return (
     <>
-      <main className="specs-page">
+      <main id="main" className="specs-page">
         <Section id="specs" name="Skills" surface="light" padding="none" className="specs-section" aria-labelledby="specs-title">
           <Container className="specs-head">
             <Link href="/#skills" className="paper-back">

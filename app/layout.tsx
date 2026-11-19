@@ -66,6 +66,10 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: PREFERENCES_SCRIPT }} />
       </head>
       <body>
+        {/* The first stop: past the Island's eleven to the page itself (WCAG 2.4.1, Part 17). */}
+        <a href="#main" className="skip-link">
+          {content.copy.skip}
+        </a>
         <PreferencesSync />
         <SurfaceController />
         <Island initials={content.profile.initials} />

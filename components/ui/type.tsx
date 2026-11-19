@@ -1,5 +1,6 @@
 import type { ElementType, HTMLAttributes, ReactNode } from "react";
 import { cx } from "@/lib/cx";
+import { typesetNodes } from "@/lib/typeset";
 
 /**
  * Type styles (DESIGN.md §4.4). Each sets size, line height, tracking and weight from
@@ -26,17 +27,22 @@ interface TextProps<Tone extends string> extends HTMLAttributes<HTMLElement> {
   children?: ReactNode;
 }
 
-function textStyle<Tone extends keyof typeof tones>(name: string, style: string, tag: ElementType, defaultTone: Tone) {
-  function Text({ as: Tag = tag, tone = defaultTone, serif, className, ...rest }: TextProps<Tone>) {
-    return <Tag className={cx(style, tones[tone], serif && "font-serif", className)} {...rest} />;
+function textStyle<Tone extends keyof typeof tones>(name: string, style: string, tag: ElementType, defaultTone: Tone, headline = false) {
+  function Text({ as: Tag = tag, tone = defaultTone, serif, className, children, ...rest }: TextProps<Tone>) {
+    // Headlines are typeset: no dash starting a line, no last word on its own (lib/typeset.ts).
+    return (
+      <Tag className={cx(style, tones[tone], serif && "font-serif", className)} {...rest}>
+        {headline ? typesetNodes(children) : children}
+      </Tag>
+    );
   }
   Text.displayName = name;
   return Text;
 }
 
-export const Hero = textStyle<LargeTone>("Hero", "text-hero", "h1", "fg");
-export const Display = textStyle<LargeTone>("Display", "text-display", "h2", "fg");
-export const Title = textStyle<LargeTone>("Title", "text-title", "h3", "fg");
+export const Hero = textStyle<LargeTone>("Hero", "text-hero", "h1", "fg", true);
+export const Display = textStyle<LargeTone>("Display", "text-display", "h2", "fg", true);
+export const Title = textStyle<LargeTone>("Title", "text-title", "h3", "fg", true);
 export const Eyebrow = textStyle<SmallTone>("Eyebrow", "text-eyebrow", "p", "fg");
 export const Lead = textStyle<SmallTone>("Lead", "text-lead", "p", "fg");
 export const Body = textStyle<SmallTone>("Body", "text-body", "p", "fg");

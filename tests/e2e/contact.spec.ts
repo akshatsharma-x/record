@@ -69,15 +69,27 @@ test.describe("the close", () => {
 });
 
 test.describe("the dock", () => {
-  test("holds Email, LinkedIn and GitHub, and no résumé until a phone-free PDF exists", async ({ page }) => {
+  test("holds Email, LinkedIn and GitHub, and the résumé: printed, until a phone-free PDF exists", async ({ page }) => {
     await open(page);
     const items = page.locator(".dock-item");
-    await expect(items).toHaveCount(3);
-    await expect(items.locator(".dock-label")).toHaveText([words.dock.email, words.dock.linkedin, words.dock.github]);
+    const names = [words.dock.email, words.dock.linkedin, words.dock.github, words.dock.resume];
+    await expect(items).toHaveCount(4);
+    await expect(items.locator(".dock-label")).toHaveText(names);
     await expect(items.nth(0)).toHaveAttribute("href", `mailto:${content.profile.email}`);
     await expect(items.nth(1)).toHaveAttribute("href", content.profile.links.linkedin);
     await expect(items.nth(2)).toHaveAttribute("href", content.profile.links.github);
-    for (const i of [0, 1, 2]) await expect(items.nth(i)).toHaveAccessibleName([words.dock.email, words.dock.linkedin, words.dock.github][i]);
+    for (const [i, name] of names.entries()) await expect(items.nth(i)).toHaveAccessibleName(name);
+    // No PDF in content, so no download: the résumé is the page's print edition (Part 17),
+    // printed by the section's behavior, which loads as the section comes near.
+    expect(content.profile.resumePdf).toBeNull();
+    await toContact(page);
+    await expect(items.nth(3)).not.toHaveAttribute("download");
+    await page.evaluate(() => {
+      (window as unknown as { printed: number }).printed = 0;
+      window.print = () => void ((window as unknown as { printed: number }).printed += 1);
+    });
+    await items.nth(3).click();
+    expect(await page.evaluate(() => (window as unknown as { printed: number }).printed)).toBe(1);
   });
 
   test("magnifies under the mouse, on a cosine falloff, and rests when it leaves", async ({ page, isMobile }) => {

@@ -9,8 +9,11 @@ import { prefersReducedMotion } from "@/lib/reduced-motion";
 import { nearestCard, REEL } from "@/lib/reel";
 import { travelTo } from "@/lib/travel";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
+import { typesetNodes } from "@/lib/typeset";
 
 export interface ReelCard {
+  /** Whose fact it is, over the card's words. */
+  subject: string;
   id: string;
   /** The card's words as plain text, for labels and the sheet's title. */
   label: string;
@@ -217,7 +220,10 @@ export function Reel({ cards, label }: { cards: ReelCard[]; label: string }) {
             aria-roledescription="slide"
             aria-label={`${i + 1} of ${cards.length}`}
           >
-            <p className="reel-text">{card.text}</p>
+            <div className="reel-words">
+              <p className="reel-subject">{card.subject}</p>
+              <p className="reel-text">{typesetNodes(card.text)}</p>
+            </div>
             <div className="reel-film">{card.film}</div>
             <button
               type="button"

@@ -670,6 +670,11 @@ export interface HeroChip {
   label: string;
   /** The home section that tells the rest. */
   section: SectionId;
+  /**
+   * Where in it, when that's one thing in particular: the current role's panel, which the
+   * edit's playhead jumps to, rather than the timeline's start in 2023 (Part 17).
+   */
+  target?: string;
 }
 
 /**
@@ -679,7 +684,9 @@ export interface HeroChip {
 export function heroChips(content: Content): HeroChip[] {
   const chips: HeroChip[] = [];
   const now = content.experience.find((role) => role.id === content.profile.now);
-  if (now) chips.push({ label: `Now at ${now.org}`, section: "experience" });
+  // The role itself, not only the company: beside "AI & ML Engineer" a bare "Now at" read as
+  // that title at that company (Part 17). The parenthesis is the role's detail, for Experience.
+  if (now) chips.push({ label: `${now.role.replace(/\s*\([^)]*\)$/, "")} at ${now.org}`, section: "experience", target: `${now.id}-title` });
   const degree = content.education.find((entry) => entry.kind === "degree");
   if (degree?.kind === "degree") {
     const year = degree.end.slice(2, 4);
@@ -816,6 +823,11 @@ export type ReelFilm =
 
 export interface ReelItem {
   id: string;
+  /**
+   * Whose fact it is, over the card's words (Part 17): the company for a role's, the
+   * project's or the honor's name, or the section's. "97% accurate." alone said of what.
+   */
+  subject: string;
   text: string;
   footnotes: number[];
   /** The full fact, for the card's sheet: the notes it cites, or the papers it counts. */
@@ -869,8 +881,16 @@ export function reel(content: Content): ReelItem[] {
         resolved = { kind: "bars", value: film.value, label: statedAs(stated, [film.value]) };
         break;
     }
+    const { id } = highlight.ref;
+    const role = id ? content.experience.find((entry) => entry.id === id) : undefined;
+    const subject =
+      (role && (role.short ?? role.org)) ??
+      content.projects.find((project) => project.slug === id)?.name ??
+      content.achievements.find((achievement) => achievement.id === id)?.title ??
+      section.name;
     return {
       id: highlight.id,
+      subject,
       text: highlight.text,
       footnotes: highlight.footnotes,
       fact,
@@ -1565,6 +1585,8 @@ export interface ResearchPaper {
   statusLabel: string;
   /** Akshat, then the co-authors content names. */
   authors: { name: string; self: boolean }[];
+  /** Whether content knows the co-authors; until it does, the authors are Akshat alone only as far as content knows. */
+  authorsKnown: boolean;
   /** "SCI-2026 · Swinburne Vietnam, Hanoi · 28–29 April 2026 · Springer LNNS" */
   venue: string;
   conference: Conference;
@@ -1572,7 +1594,8 @@ export interface ResearchPaper {
   doiUrl: string | null;
   /** When the proceedings came out; null until content records it. */
   published: string | null;
-  citations: Citations;
+  /** APA, IEEE and BibTeX, or null until content knows every author. */
+  citations: Citations | null;
   related: RelatedProject[];
   illustration: Illustration | null;
 }
@@ -1626,19 +1649,24 @@ export function research(content: Content): ResearchPaper[] {
         status: status.status,
         statusLabel: status.label,
         authors: names.map((name, i) => ({ name, self: i === 0 })),
+        authorsKnown: paper.coAuthors !== null,
         venue: venueLine(conference),
         conference,
         doi: paper.doi,
         doiUrl: paper.doi ? `https://doi.org/${paper.doi}` : null,
         published: paper.published ?? null,
-        citations: cite({
-          title: paper.title,
-          authors: names.map(splitName),
-          conference,
-          keywords: paper.keywords,
-          doi: paper.doi,
-          published: paper.published,
-        }),
+        // A citation names every author, so there's none until content knows them all (Part 17).
+        citations:
+          paper.coAuthors === null
+            ? null
+            : cite({
+                title: paper.title,
+                authors: names.map(splitName),
+                conference,
+                keywords: paper.keywords,
+                doi: paper.doi,
+                published: paper.published,
+              }),
         related: relatedProjects(content, paper),
         illustration: paper.illustration ?? null,
       },
@@ -1656,10 +1684,15 @@ const scholarDate = (iso: string) => iso.replaceAll("-", "/");
 export function scholarMeta(paper: ResearchPaper): Record<string, string | string[]> {
   return {
     citation_title: paper.title,
-    citation_author: paper.authors.map(({ name }) => {
-      const { given, family } = splitName(name);
-      return given ? `${family}, ${given}` : family;
-    }),
+    // Scholar takes its author list as the whole list: none until content knows it (Part 17).
+    ...(paper.authorsKnown
+      ? {
+          citation_author: paper.authors.map(({ name }) => {
+            const { given, family } = splitName(name);
+            return given ? `${family}, ${given}` : family;
+          }),
+        }
+      : {}),
     citation_conference_title: paper.conference.name,
     citation_publication_date: scholarDate(paper.published ?? paper.conference.start),
     ...(paper.doi ? { citation_doi: paper.doi } : {}),

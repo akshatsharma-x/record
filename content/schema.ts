@@ -555,6 +555,8 @@ const SurprisesCopy = z.strictObject({
 });
 
 const Copy = z.strictObject({
+  /** The first Tab stop on every page, past the Island to the page's own content (Part 17). */
+  skip: Text,
   /** The hero's name, role and headline come from profile; its date line is live (Part 5). */
   hero: z.strictObject({ ctaWork: Text, ctaHello: Text }),
   statement: z.strictObject({
@@ -576,6 +578,11 @@ const Copy = z.strictObject({
   research: SectionCopy.extend({
     /** Under every concept illustration, so none reads as a result. */
     caption: Text,
+    /**
+     * A paper's byline while content doesn't know its co-authors (Part 17): who presented it,
+     * which content does know, rather than a list that would read as Akshat's alone.
+     */
+    presentedBy: Template("name"),
   }),
   work: SectionCopy.extend({
     /** The bento's filter: each shows the projects in its categories. */

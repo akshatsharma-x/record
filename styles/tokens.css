@@ -396,7 +396,6 @@
   --hero-light-loop: 20s;
   --hero-cue-width: 134px;
   --hero-cue-height: 5px;
-  --hero-cue-breath: 4s;
   --hero-out-name: -14vh;
   --hero-out-subject: 9vh;
   --hero-out-scale: 0.92;
@@ -453,6 +452,9 @@
   --reel-gap: 16px;
   --reel-peek: 48px;
   --reel-card-max: 820px;
+  /* Beside its film, a card's words are at most a twentieth of the card: at the title size
+     of a 1440 screen, "Six documents." broke a word to a line (Part 17). */
+  --reel-text-cap: 5cqi;
   --reel-pad: 24px;
   --reel-dot: 8px;
   --reel-dot-active: 28px;
@@ -688,7 +690,7 @@
   --duration-reveal-short: 600ms;
   --duration-reveal: 700ms;
   --duration-reveal-long: 900ms;
-  --duration-count: 1200ms;
+  --duration-count: 900ms;
   /* The Island's name swap: a blur-crossfade inside the micro range. */
   --duration-swap: 180ms;
   --stagger-lines: 60ms;
@@ -842,6 +844,9 @@
    holds the same query (EDIT.query), and tests/unit/edit.test.ts keeps them in step. */
 @custom-variant edit-pinned (@media (min-width: 1069px) and (min-height: 760px) and (scripting: enabled) and (prefers-reduced-motion: no-preference));
 @custom-variant research-pinned (@media (min-width: 1069px) and (min-height: 760px) and (scripting: enabled) and (prefers-reduced-motion: no-preference));
+/* Too short a viewport for the chip and its labels in one sticky screen: a low window, or a
+   page zoomed to 200% (Part 17). There the 3D chip doesn't pin, and shows exploded. */
+@custom-variant chip-short (@media (max-height: 600px));
 /* A narrow research illustration: its labels grow to stay legible, and the cold chain's
    "Why?" sits under the drawing instead of beside a stop. */
 @custom-variant illustration-narrow (@container illustration (max-width: 34rem));

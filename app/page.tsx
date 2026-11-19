@@ -116,7 +116,7 @@ export default function Home() {
   return (
     <>
       <JsonLd data={person(content)} />
-      <main>{story}</main>
+      <main id="main">{story}</main>
       <Footer notes={cited} />
     </>
   );

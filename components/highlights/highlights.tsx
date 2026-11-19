@@ -14,7 +14,7 @@ export function Highlights({ texts }: { texts: ReactNode[] }) {
   const items = reel(content);
   return (
     <Section id="highlights" name="Highlights" surface="light-alt" aria-labelledby="highlights-title" className="highlights">
-      <Container width="wide">
+      <Container>
         <h2 id="highlights-title" className="highlights-title text-eyebrow">
           {content.copy.highlights.eyebrow}
         </h2>
@@ -23,6 +23,7 @@ export function Highlights({ texts }: { texts: ReactNode[] }) {
         label="Highlights"
         cards={items.map((item, i) => ({
           id: item.id,
+          subject: item.subject,
           label: item.text,
           text: texts[i],
           film: <Film film={item.film} />,

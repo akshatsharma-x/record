@@ -1,5 +1,6 @@
 import { behaviorReady } from "./behaviors";
 import { prefersReducedMotion } from "./reduced-motion";
+import { announceTravel } from "./travel";
 
 /**
  * Jumps to something on the home page (DESIGN.md §7.7, §6.3): Show me where's jump, and
@@ -21,6 +22,8 @@ export function jumpTo(id: string): boolean {
 function land(target: HTMLElement, panel: HTMLElement | null) {
   const edit = document.getElementById("edit");
   const clip = panel && edit?.hasAttribute("data-editing") ? edit.querySelector<HTMLElement>(`.edit-clip[data-panel="${CSS.escape(panel.dataset.panel ?? "")}"]`) : null;
+  // Either way the page may cross several sections' light: it changes once, at the end.
+  announceTravel();
   if (clip) {
     clip.click();
     return;

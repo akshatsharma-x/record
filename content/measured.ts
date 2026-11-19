@@ -10,8 +10,8 @@ export const measured: MeasurementInput | null = {
   lighthouse: "13.6.0",
   origin: "http://localhost:3240",
   pages: [
-    { path: "/", performance: 0.99, accessibility: 1, bestPractices: 1, seo: 1, lcpMs: 1681, tbtMs: 39, cls: 0 },
-    { path: "/work/cognivault-ai", performance: 1, accessibility: 1, bestPractices: 1, seo: 1, lcpMs: 1537, tbtMs: 15, cls: 0 },
-    { path: "/research/food-waste-cold-chain", performance: 0.99, accessibility: 1, bestPractices: 1, seo: 1, lcpMs: 1557, tbtMs: 30, cls: 0.016 },
+    { path: "/", performance: 0.99, accessibility: 1, bestPractices: 1, seo: 1, lcpMs: 1670, tbtMs: 17, cls: 0 },
+    { path: "/work/cognivault-ai", performance: 1, accessibility: 1, bestPractices: 1, seo: 1, lcpMs: 1529, tbtMs: 8, cls: 0 },
+    { path: "/research/food-waste-cold-chain", performance: 1, accessibility: 1, bestPractices: 1, seo: 1, lcpMs: 1531, tbtMs: 31, cls: 0.017 },
   ],
 };

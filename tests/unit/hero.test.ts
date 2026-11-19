@@ -54,10 +54,15 @@ describe("the date line", () => {
   // 04:11 UTC is 9:41 AM in India.
   const now = new Date(Date.UTC(2026, 10, 16, 4, 11));
 
-  it("reads like a Lock Screen: the visitor's date, then Akshat's time and place", () => {
-    const date = new Intl.DateTimeFormat("en-US", { weekday: "long", day: "numeric", month: "long" }).format(now);
-    expect(dateLine(now, jaipur, "en-US")).toBe(`${date} · 9:41 AM IST`);
+  it("reads like a Lock Screen: Akshat's date and time, and where that is", () => {
+    expect(dateLine(now, jaipur, "en-US")).toBe("Monday, November 16 · 9:41 AM IST");
     expect(dateLine(now, { label: "in Jaipur", timeZone: "Asia/Kolkata" }, "en-US")).toMatch(/ · 9:41 AM in Jaipur$/);
+  });
+
+  it("is Akshat's day wherever the visitor is: never the visitor's date beside Akshat's time", () => {
+    // 22:20 on Sunday the 15th in Chicago is 9:50 on Monday the 16th in India.
+    const evening = new Date(Date.UTC(2026, 10, 16, 4, 20));
+    expect(dateLine(evening, jaipur, "en-US")).toBe("Monday, November 16 · 9:50 AM IST");
   });
 
   it("follows the visitor's locale for both halves", () => {
@@ -121,10 +126,10 @@ describe("the CSS twins (the brief's numbers)", () => {
     expect(ms("--hero-ui-delay") + ms("--hero-ui-fade")).toBeLessThanOrEqual(1200);
   });
 
-  it("scrolls out with the subject at .92 and loops the light over 20s, the cue every 4s", () => {
+  it("scrolls out with the subject at .92 and loops the light over 20s; the cue is still", () => {
     expect(Number(token("--hero-out-scale"))).toBe(0.92);
     expect(token("--hero-light-loop")).toBe("20s");
-    expect(token("--hero-cue-breath")).toBe("4s");
+    expect(tokens.has("--hero-cue-breath")).toBe(false);
   });
 
   it("draws the loupe as a 120px lens at 1.35×", () => {

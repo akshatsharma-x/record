@@ -45,6 +45,8 @@ function Currently() {
 export function About({ bio }: { bio: ReactNode[] }) {
   return (
     <Section id="about" name="About" surface="light" aria-labelledby="about-title" className="about">
+      {/* Wide, a two-column scene like the edit: its bento's tiles keep fixed shapes, and on
+          the content grid they were too small for their words (Part 17). */}
       <Container width="wide">
         <div className="about-grid">
           <div className="about-bio">

@@ -13,9 +13,9 @@ interface DateLineProps {
 }
 
 /**
- * The hero's date line, like a Lock Screen (DESIGN.md §7): today's date where the visitor
- * is, in their locale, then Akshat's live time. Only the browser knows the visitor's day,
- * so the server renders the fallback and the client fills it in after hydration.
+ * The hero's date line, like a Lock Screen (DESIGN.md §7): Akshat's date and live time, in
+ * the visitor's locale. Only the browser knows the visitor's locale and the minute, so the
+ * server renders the fallback and the client fills it in after hydration.
  */
 export function DateLine({ place, fallback, className }: DateLineProps) {
   const text = useSyncExternalStore(

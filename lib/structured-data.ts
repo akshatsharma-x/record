@@ -18,7 +18,10 @@ export function personId(): string {
   return `${absolute("/")}#person`;
 }
 
-/** Who Akshat is: name, title, where Akshat works and studies, and the profiles elsewhere. */
+/**
+ * Who Akshat is: name, title, where Akshat works and studies, and the profiles elsewhere.
+ * The title is the one Akshat holds where Akshat works, since the two are read together.
+ */
 export function person(content: Content): Node {
   const { profile } = content;
   const current = content.experience.find((role) => role.end === "present");
@@ -28,7 +31,7 @@ export function person(content: Content): Node {
     "@type": "Person",
     "@id": personId(),
     name: profile.name,
-    jobTitle: profile.role,
+    jobTitle: current?.role ?? profile.role,
     description: profile.headline,
     url: absolute("/"),
     ...(current ? { worksFor: { "@type": "Organization", name: current.org } } : {}),

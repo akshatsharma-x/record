@@ -22,11 +22,6 @@ const loadBundle = () => import("./bundle");
 const StageCanvas = dynamic(() => loadBundle().then((bundle) => bundle.StageCanvas), { ssr: false });
 const StageViewport = dynamic(() => loadBundle().then((bundle) => bundle.StageViewport), { ssr: false });
 
-/** What counts as the visitor's first touch of the page. */
-const FIRST_TOUCH = ["pointerdown", "keydown", "wheel", "touchstart", "scroll"] as const;
-/** How long the page sits untouched before the 3D comes in anyway, in milliseconds. */
-const STAGE_IDLE_MS = 10_000;
-
 interface StageState {
   tier: Tier | null;
   /** True when 3D renders: a view is on the page, the tier is capable and motion is full. */
@@ -45,37 +40,13 @@ export function StageProvider({ children }: { children: ReactNode }) {
   const reducedMotion = useReducedMotion();
   const [views, setViews] = useState(0);
   const [tier, setTier] = useState<Tier | null>(null);
-  // On a page with a 3D view, the tier is settled, and the 3D chunk fetched where it's
-  // capable, at the visitor's first touch of the page or once it has sat idle for a while,
-  // whichever comes first, so the scenes are ready before anyone reaches them (Part 16).
-  // Not at the first idle moment after load: evaluating three.js is one long task, and
-  // that's when a first tap is likeliest. A view that comes near first asks for the same.
-  const [warm, setWarm] = useState(false);
-  const wanted = views > 0 || warm;
-
-  useEffect(() => {
-    if (!document.querySelector("[data-scene]")) return;
-    let done = false;
-    let idle = 0;
-    const go = () => {
-      if (done) return;
-      done = true;
-      stop();
-      setWarm(true);
-    };
-    const whenIdle = () => {
-      idle = typeof window.requestIdleCallback === "function" ? window.requestIdleCallback(go, { timeout: STAGE_IDLE_MS }) : window.setTimeout(go);
-    };
-    for (const name of FIRST_TOUCH) window.addEventListener(name, go, { passive: true, capture: true });
-    const settle = window.setTimeout(whenIdle, STAGE_IDLE_MS);
-    const stop = () => {
-      for (const name of FIRST_TOUCH) window.removeEventListener(name, go, { capture: true });
-      window.clearTimeout(settle);
-      if (typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idle);
-      else window.clearTimeout(idle);
-    };
-    return stop;
-  }, []);
+  // The tier is settled, and the 3D chunk fetched where it's capable, once a scene comes
+  // within three screens (its view registers then: components/three/use-near-scene.ts), so
+  // it's ready before anyone reaches it and never fetched by a visitor who doesn't come near.
+  // Part 16 fetched it at the first touch of the page, or after ten idle seconds: 270 KB
+  // for visitors who never reached a scene, evaluated in the middle of the statement's
+  // scrub (Part 17).
+  const wanted = views > 0;
 
   useEffect(() => {
     if (tier === "HIGH" || tier === "MID") void loadBundle();

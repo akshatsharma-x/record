@@ -116,7 +116,7 @@ test.describe("findable", () => {
     for (const study of caseStudies(content)) expect(types.get(study.href)).toContain("CreativeWork");
     for (const paper of research(content)) expect(types.get(paper.href)).toContain("ScholarlyArticle");
     const person = JSON.parse((await head(request, "/")).jsonLd.find((text) => text.includes('"Person"'))!) as Record<string, unknown>;
-    expect(person).toMatchObject({ name: content.profile.name, jobTitle: content.profile.role, sameAs: [content.profile.links.linkedin, content.profile.links.github] });
+    expect(person).toMatchObject({ name: content.profile.name, jobTitle: content.experience.find((role) => role.end === "present")!.role, sameAs: [content.profile.links.linkedin, content.profile.links.github] });
   });
 });
 

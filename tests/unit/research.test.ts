@@ -130,11 +130,23 @@ describe("citations", () => {
   });
 });
 
+describe("a paper's citation", () => {
+  it("waits until content names every author: none while the co-authors are unknown", () => {
+    for (const entry of research(content)) {
+      const unknown = content.publications.find((item) => item.slug === entry.slug)!.coAuthors === null;
+      expect(entry.authorsKnown).toBe(!unknown);
+      if (unknown) expect(entry.citations).toBeNull();
+    }
+  });
+});
+
 describe("the BibTeX matches the content fields", () => {
-  for (const entry of content.publications) {
+  // As it will once the co-authors are known: here, none besides Akshat.
+  const known = { ...content, publications: content.publications.map((item) => ({ ...item, coAuthors: item.coAuthors ?? [] })) };
+  for (const entry of known.publications) {
     it(entry.slug, () => {
       const venue = content.conferences.find((item) => item.id === entry.presentedAt)!;
-      const { type, key, fields } = parseBibtex(paper(entry.slug).citations.bibtex);
+      const { type, key, fields } = parseBibtex(research(known).find((item) => item.slug === entry.slug)!.citations!.bibtex);
       expect(type).toBe("inproceedings");
       expect(key).toMatch(/^sharma2026[a-z]+$/);
       expect(fields).toEqual({
@@ -193,12 +205,13 @@ describe("the research section", () => {
 
 describe("structured data", () => {
   it("gives Google Scholar its tags, dated by the presentation until the proceedings are out", () => {
+    // Its authors only once content knows them all: Scholar takes the tags as the whole list.
     expect(scholarMeta(paper("pm25-forecasting"))).toEqual({
       citation_title: "Short-Term PM2.5 Forecasting Using ML for Sustainable Urban Air Quality",
-      citation_author: ["Sharma, Akshat"],
       citation_conference_title: "SCI-2026",
       citation_publication_date: "2026/04/28",
     });
+    expect(scholarMeta({ ...paper("pm25-forecasting"), authorsKnown: true })).toMatchObject({ citation_author: ["Sharma, Akshat"] });
     const published = { ...paper("pm25-forecasting"), doi: "10.1007/x", published: "2026-09-01" };
     expect(scholarMeta(published)).toMatchObject({ citation_doi: "10.1007/x", citation_publication_date: "2026/09/01" });
   });

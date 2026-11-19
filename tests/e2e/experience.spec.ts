@@ -162,6 +162,17 @@ test.describe("pinned, on a wide, tall screen", () => {
     );
   });
 
+  test("the hero's role chip lands the playhead on the current role, from the top of the page", async ({ page }) => {
+    // Straight from the hero, before the section has come near: the jump loads the edit's
+    // behavior itself (lib/behaviors.ts), and the panel on show is the role, not 2023's.
+    await page.clock.setFixedTime(NOW);
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("list", { name: "Key facts" }).getByRole("link").first().click();
+    await expect(active(page)).toHaveAttribute("data-panel", "united-airlines");
+    await settledOn(page, "united-airlines");
+  });
+
   test("a click springs the playhead to the clip", async ({ page }) => {
     await open(page);
     await scrubTo(page, 0.98);

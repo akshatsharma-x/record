@@ -37,7 +37,7 @@ describe("JSON-LD", () => {
       "@type": "Person",
       "@id": personId(),
       name: content.profile.name,
-      jobTitle: content.profile.role,
+      jobTitle: content.experience.find((role) => role.end === "present")!.role,
       worksFor: { "@type": "Organization", name: "United Airlines" },
       alumniOf: { "@type": "CollegeOrUniversity", name: "Manipal University Jaipur" },
     });

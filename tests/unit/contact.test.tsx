@@ -315,19 +315,25 @@ describe("the live lines", () => {
 });
 
 describe("the dock (components/contact/dock.tsx)", () => {
-  it("holds Email, LinkedIn and GitHub, each a link that works without JavaScript", () => {
+  it("holds Email, LinkedIn and GitHub, each a link that works without JavaScript, and the résumé", () => {
     const { container } = render(<Dock />);
     const items = Array.from(container.querySelectorAll<HTMLAnchorElement>(".dock-item"));
     expect(items.map((item) => [item.dataset.app, item.querySelector(".dock-label")?.textContent, item.getAttribute("href")])).toEqual([
       ["email", "Email", `mailto:${content.profile.email}`],
       ["linkedin", "LinkedIn", content.profile.links.linkedin],
       ["github", "GitHub", content.profile.links.github],
+      ["resume", "Résumé", "#contact"],
     ]);
     expect(items[1].target).toBe("_blank");
     expect(items[1].rel).toBe("noopener");
+    // Until there's a phone-free PDF the résumé is the print edition: it needs JavaScript to
+    // print, so without it, it isn't offered (Part 17).
+    expect(items[3].hasAttribute("data-print")).toBe(true);
+    expect(items[3].hasAttribute("download")).toBe(false);
+    expect(items[3].closest(".dock-slot")?.classList.contains("needs-js")).toBe(true);
   });
 
-  it("adds the résumé only once there's a phone-free PDF", async () => {
+  it("makes the résumé a download once there's a phone-free PDF", async () => {
     expect(content.profile.resumePdf).toBeNull();
     vi.resetModules();
     vi.doMock("@/content", async () => {

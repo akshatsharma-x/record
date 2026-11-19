@@ -46,8 +46,8 @@ export const durations = {
   revealShort: 600,
   reveal: 700,
   revealLong: 900,
-  /** The Counter's ceiling: a count-up never runs longer. */
-  count: 1200,
+  /** The Counter's ceiling: a count-up never runs longer, and no longer than a reveal (Part 17). */
+  count: 900,
   /** §5.3 micro: the Island's name swaps with a blur-crossfade this long. */
   swap: 180,
 } as const;

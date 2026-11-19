@@ -7,6 +7,7 @@ import { HERO, warmthAt } from "@/lib/hero";
 import { type SpringState, springAtRest, springs, stepSpring } from "@/lib/motion";
 import { SCROLLED_STORAGE_KEY } from "@/lib/preferences";
 import { prefersReducedMotion, REDUCED_MOTION_QUERY } from "@/lib/reduced-motion";
+import { jumpTo } from "@/lib/jump";
 
 const PAUSED_KEY = "classyfolio:hero-paused";
 
@@ -60,7 +61,7 @@ interface HeroControllerProps {
  * The hero's behavior (DESIGN.md §7), layered onto server-rendered markup:
  * - Scroll-out: --hero-out runs 0 → 1 as the hero leaves; CSS turns it into motion.
  * - Loops pause off-screen, in a hidden tab, and with the pause button (WCAG 2.2.2).
- * - The scroll cue breathes until the first scroll, then never again (remembered).
+ * - The first scroll is remembered (data-scrolled), so the hero's arrival plays once.
  * - Typographic edition: the light's warmth follows the visitor's time of day.
  * - Portrait edition: the pointer, or a tilt that needs no permission, moves the layers
  *   in depth on the smooth spring.
@@ -78,6 +79,21 @@ export function HeroController({ target, edition }: HeroControllerProps) {
   useEffect(() => {
     document.getElementById(target)?.toggleAttribute("data-paused", paused);
   }, [paused, target]);
+
+  // A chip about one thing jumps to it (lib/jump.ts): the current role's lands the edit's
+  // playhead on that role, not on the timeline's start (Part 17). Without JavaScript it's
+  // the link to its heading.
+  useEffect(() => {
+    const hero = document.getElementById(target);
+    if (!hero) return;
+    const onClick = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest<HTMLAnchorElement>("a[data-jump]");
+      if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (jumpTo(decodeURIComponent(link.hash.slice(1)))) event.preventDefault();
+    };
+    hero.addEventListener("click", onClick);
+    return () => hero.removeEventListener("click", onClick);
+  }, [target]);
 
   useEffect(() => {
     const hero = document.getElementById(target);

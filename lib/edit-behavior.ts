@@ -120,9 +120,8 @@ export function attachEdit(root: HTMLElement, { start, timeZone, clips }: EditDa
   /** A figure's digits, at a share of its stated value. */
   const figure = (element: HTMLElement, share: number) => {
     const target = Number(element.dataset.count) * share;
-    element.textContent = element.hasAttribute("data-group")
-      ? Math.round(target).toLocaleString("en-US")
-      : target.toFixed(Number(element.dataset.decimals ?? 0));
+    const text = element.hasAttribute("data-group") ? Math.round(target).toLocaleString("en-US") : target.toFixed(Number(element.dataset.decimals ?? 0));
+    if (element.textContent !== text) element.textContent = text;
   };
   const figures = Array.from(root.querySelectorAll<HTMLElement>("[data-count]"));
 
@@ -180,7 +179,9 @@ export function attachEdit(root: HTMLElement, { start, timeZone, clips }: EditDa
     // On the overlay, the only thing that reads it: set on the section, every frame of the
     // scrub would restyle every panel too (Part 16).
     overlay?.style.setProperty("--playhead", (t - from).toFixed(4));
-    if (label) label.textContent = monthLabel(t);
+    // Only when the month changes: a rewrite each frame was a layout each frame (Part 17).
+    const month = monthLabel(t);
+    if (label && label.textContent !== month) label.textContent = month;
     // A chosen honor holds while the spring carries the playhead to its year, and lets go
     // once the playhead leaves that year.
     if (chosen && motion?.kind !== "spring" && (t < chosen.from || t >= chosen.to)) chosen = null;
