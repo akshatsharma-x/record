@@ -5,6 +5,19 @@ import { gsapEase, resolve, seconds } from "@/lib/motion";
 import { prefersReducedMotion } from "@/lib/reduced-motion";
 import { useHydrated } from "@/lib/use-hydrated";
 
+/**
+ * GSAP and SplitText, loaded the first time a headline resolves, with the plugin registered
+ * then and only then: once for the page, however many headlines follow (Part 16).
+ */
+let gsapReady: Promise<{ gsap: typeof import("gsap").gsap; SplitText: typeof import("gsap/SplitText").SplitText }> | null = null;
+function loadGsap() {
+  gsapReady ??= Promise.all([import("gsap"), import("gsap/SplitText")]).then(([{ gsap }, { SplitText }]) => {
+    gsap.registerPlugin(SplitText);
+    return { gsap, SplitText };
+  });
+  return gsapReady;
+}
+
 interface ResolveProps extends HTMLAttributes<HTMLElement> {
   as?: ElementType;
   /** "lines" rises each line through a mask (headlines); "block" resolves the element whole. */
@@ -42,9 +55,8 @@ export function Resolve({ as: Tag = "div", split = "lines", children, ...rest }:
       ([entry]) => {
         if (!entry?.isIntersecting) return;
         observer.disconnect();
-        void Promise.all([import("gsap"), import("gsap/SplitText")]).then(([{ gsap }, { SplitText }]) => {
+        void loadGsap().then(({ gsap, SplitText }) => {
           if (cancelled) return;
-          gsap.registerPlugin(SplitText);
           const ease = gsapEase(resolve.curve);
           const blur = `blur(${resolve.blur}px)`;
           if (split === "lines") {

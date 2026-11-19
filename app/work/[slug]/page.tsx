@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/seo/json-ld";
+import { project } from "@/lib/structured-data";
+import { pageMetadata } from "@/lib/site";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container, Section, Stack } from "@/components/ui/layout";
@@ -23,7 +26,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/work/[slug]">): Promise<Metadata> {
   const study = studyFor((await params).slug);
   if (!study) return {};
-  return { title: `${study.name} · ${content.profile.name}`, description: study.tagline.text };
+  return pageMetadata({ path: study.href, title: `${study.name} · ${content.profile.name}`, description: study.tagline.text, type: "article" });
 }
 
 /**
@@ -36,6 +39,7 @@ export default async function WorkPage({ params }: PageProps<"/work/[slug]">) {
   if (!study) notFound();
   return (
     <>
+      <JsonLd data={project(content, study)} />
       <main>
         <Section id="case" name="Work" surface="light" padding="none" className="case-page" aria-labelledby={`page-${study.slug}-title`}>
           <Container className="case-page-head">

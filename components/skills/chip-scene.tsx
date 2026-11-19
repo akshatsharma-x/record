@@ -135,7 +135,17 @@ function Layer({ index, id, colors }: { index: number; id: string; colors: Palet
     // A box's faces: +x, −x, +y (the top), −y, +z, −z.
     return [side, side, top, side, side, side];
   }, [index, colors]);
-  useEffect(() => () => materials.forEach((material) => (material as THREE.MeshStandardMaterial).map?.dispose()), [materials]);
+  // The materials are made here, not by the scene graph, so they're disposed here too, each
+  // once, with the face's texture: when the finish changes and when the chip leaves.
+  useEffect(
+    () => () => {
+      for (const material of new Set(materials) as Set<THREE.MeshStandardMaterial>) {
+        material.map?.dispose();
+        material.dispose();
+      }
+    },
+    [materials],
+  );
   const over = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     if (chipState.progress > PHASES.explode[1] - 0.02) setChip({ active: id });

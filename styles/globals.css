@@ -97,14 +97,15 @@
   }
 
   /* Surfaces (§4.2). A section paints its own surface, so the page reads correctly with
-     no JavaScript and with reduced motion. While the surface controller runs, top-level
-     sections turn transparent and its fixed backdrop crossfades between them. */
+     no JavaScript and with reduced motion. While the surface controller runs, the sections
+     in the light (on screen or nearly, data-surface-near) turn transparent and its fixed
+     backdrop crossfades between them; the rest go on painting their own. */
   [data-surface] {
     background-color: var(--color-surface);
     color: var(--color-fg);
   }
 
-  [data-surface-controller] [data-section] {
+  [data-surface-controller] [data-section][data-surface-near] {
     background-color: transparent;
   }
 

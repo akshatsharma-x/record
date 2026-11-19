@@ -34,6 +34,11 @@ async function open(page: Page) {
   await page.clock.setFixedTime(NOW);
   await page.goto("/");
   await page.waitForLoadState("networkidle");
+  // The edit's behavior loads as the section comes near (components/ui/behavior.tsx), as it
+  // does for a visitor scrolling down to it; then each test starts from the top.
+  await page.locator("#experience").evaluate((section) => section.scrollIntoView());
+  await expect(root(page)).toHaveAttribute("data-today", "");
+  await page.evaluate(() => window.scrollTo(0, 0));
 }
 
 /** Where the pin starts, how far it runs, and the viewport's height. */
@@ -88,7 +93,7 @@ test.describe("pinned, on a wide, tall screen", () => {
       await expect(active(page)).toHaveCount(1);
       // The playhead sits on the real time scale, at the time this scroll stands for.
       const t = timeAt(map, await progress(page));
-      await expect.poll(async () => Number(await root(page).evaluate((element) => element.style.getPropertyValue("--playhead")))).toBeCloseTo(t - from, 1);
+      await expect.poll(async () => Number(await root(page).locator(".edit-overlay").evaluate((element) => element.style.getPropertyValue("--playhead")))).toBeCloseTo(t - from, 1);
       await expect(page.locator(".edit-playhead-time")).toHaveText(`${MONTHS[Math.floor(t % 12)]} ${Math.floor(t / 12)}`);
     }
     // Only the panel on show is reachable; the others are inert.
@@ -367,6 +372,9 @@ test.describe("pinned, on a wide, tall screen", () => {
   test("has no accessibility violations while pinned", async ({ page }) => {
     await open(page);
     await scrubTo(page, 0.5);
+    // The panel that came on fades in: its text mid-fade isn't its own contrast.
+    await expect(active(page)).toHaveCount(1);
+    await page.waitForFunction(() => document.getAnimations().every((animation) => animation.playState !== "running" || animation.effect?.getTiming().iterations === Infinity));
     const { violations } = await new AxeBuilder({ page }).include("#experience").withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
     expect(violations).toEqual([]);
   });

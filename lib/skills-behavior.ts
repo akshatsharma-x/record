@@ -5,6 +5,7 @@ import { type EvidenceKind, evidenceTarget } from "./evidence";
 import { FISHEYE, fisheye } from "./honeycomb";
 import { island } from "./island/store";
 import { jumpTo } from "./jump";
+import { measure as frameRead, mutate } from "./frame";
 import { prefersReducedMotion } from "./reduced-motion";
 
 /**
@@ -58,7 +59,6 @@ function attachChip(chip: HTMLElement, listen: Listen, undo: (() => void)[]) {
   const posterLayers = () => Array.from(chip.querySelectorAll<SVGElement>(".chip-layer"));
   const die = chip.querySelector<HTMLButtonElement>("[data-chip-die]");
   let pinned: string | null = null;
-  let frame = 0;
 
   const scene = () => chip.getAttribute("data-scene") === "3d";
   const frameHeight = () => chip.querySelector<HTMLElement>(".chip-sticky")?.offsetHeight ?? window.innerHeight;
@@ -68,15 +68,19 @@ function attachChip(chip: HTMLElement, listen: Listen, undo: (() => void)[]) {
   };
   const exploded = () => !scene() || progress() >= PHASES.explode[1] - 0.02;
 
+  // Where the scene is, read with the frame's other reads; then written (lib/frame.ts).
+  let at = 1;
+  let gone = false;
+  const write = () => {
+    if (gone) return;
+    chip.toggleAttribute("data-exploded", at >= PHASES.explode[1] - 0.02);
+    if (Math.abs(at - chipState.progress) > 1e-4) setChip({ progress: at });
+  };
   const measure = () => {
-    frame = 0;
-    const p = scene() ? progress() : 1;
-    chip.toggleAttribute("data-exploded", p >= PHASES.explode[1] - 0.02);
-    if (Math.abs(p - chipState.progress) > 1e-4) setChip({ progress: p });
+    at = scene() ? progress() : 1;
+    mutate(write);
   };
-  const schedule = () => {
-    if (!frame) frame = requestAnimationFrame(measure);
-  };
+  const schedule = () => frameRead(measure);
   listen(window, "scroll", schedule, { passive: true });
   listen(window, "resize", schedule);
   // The stage turns tall when the 3D chip takes over from the poster.
@@ -84,7 +88,7 @@ function attachChip(chip: HTMLElement, listen: Listen, undo: (() => void)[]) {
   observer.observe(chip, { attributes: true, attributeFilter: ["data-scene"] });
   undo.push(() => {
     observer.disconnect();
-    cancelAnimationFrame(frame);
+    gone = true;
   });
   measure();
 

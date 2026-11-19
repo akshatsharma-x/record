@@ -7,10 +7,12 @@
  */
 import { data } from "./data.ts";
 import { counts, gaps, warnings } from "./derive.ts";
-import { ContentError, parseContent } from "./schema.ts";
+import { measured } from "./measured.ts";
+import { ContentError, parseContent, parseMeasurement } from "./schema.ts";
 
 try {
   const content = parseContent(data);
+  parseMeasurement(measured);
   const c = counts(content);
   console.log(
     `✓ Content is valid: ${c.internships} internships · ${c.papers} papers · ${c.projects} projects · ` +

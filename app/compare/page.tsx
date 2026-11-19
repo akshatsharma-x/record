@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/site";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CompareTable } from "@/components/compare/compare-table";
@@ -10,8 +11,7 @@ import { SECTIONS } from "@/lib/sections";
 import { comparePage } from "@/lib/surprises/compare-page";
 
 export const metadata: Metadata = {
-  title: `${content.copy.surprises.compare.headline.replace(/\.$/, "")} · ${content.profile.name}`,
-  description: content.copy.surprises.compare.footnote,
+  ...pageMetadata({ path: "/compare", title: `${content.copy.surprises.compare.headline.replace(/\.$/, "")} · ${content.profile.name}`, description: content.copy.surprises.compare.footnote }),
 };
 
 /**

@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/site";
 import Link from "next/link";
+import { Budgets } from "@/components/colophon/budgets";
+import { Statement } from "@/components/colophon/statement";
 import { SpecsSheet } from "@/components/skills/specs-sheet";
 import { Container, Section, Stack } from "@/components/ui/layout";
 import { Footnote } from "@/components/ui/type";
@@ -8,13 +11,13 @@ import { SECTIONS } from "@/lib/sections";
 import { SURPRISES } from "@/lib/surprises";
 
 export const metadata: Metadata = {
-  title: `${content.copy.colophon.headline.replace(/\.$/, "")} · ${content.profile.name}`,
-  description: content.copy.colophon.sub,
+  ...pageMetadata({ path: "/colophon", title: `${content.copy.colophon.headline.replace(/\.$/, "")} · ${content.profile.name}`, description: content.copy.colophon.sub }),
 };
 
 /**
  * How the site is built (DESIGN.md §3.2): a sheet in the same manner as /specs, of facts
- * about the site, never about Akshat, from content.copy.colophon.
+ * about the site, never about Akshat, from content.copy.colophon; then the budgets beside
+ * what was measured, the accessibility statement and the things to find (Part 16).
  */
 export default function ColophonPage() {
   const { copy } = content;
@@ -39,8 +42,14 @@ export default function ColophonPage() {
           <Container>
             <SpecsSheet rows={rows} interactive={false} />
           </Container>
+          <Container>
+            <Budgets />
+          </Container>
+          <Container>
+            <Statement />
+          </Container>
           <Container className="things">
-            <h2 id="things-title" className="things-title">
+            <h2 id="things-title" className="colophon-title">
               {things.label}
             </h2>
             {/* A spoiler: closed until the visitor asks, and a real disclosure without JavaScript. */}

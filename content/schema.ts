@@ -475,6 +475,36 @@ const ColophonCopy = z.strictObject({
   headline: Text,
   sub: Text,
   rows: z.array(z.strictObject({ label: Text, items: z.array(Text).min(1) })).min(1),
+  /**
+   * DESIGN.md §10's budgets beside what was measured (Part 16): the JavaScript by the build
+   * the page is part of, Lighthouse by its latest run (content/measured.ts). The pages are
+   * the columns: the home page by this name, a case study and a paper by their own.
+   */
+  budgets: z.strictObject({
+    label: Text,
+    budget: Text,
+    home: Text,
+    metrics: z.strictObject({
+      javascript: Text,
+      performance: Text,
+      accessibility: Text,
+      bestPractices: Text,
+      seo: Text,
+      lcp: Text,
+      cls: Text,
+    }),
+    units: z.strictObject({ kb: Template("value"), seconds: Template("value") }),
+    /** How Lighthouse measured: on a production build before it was deployed, or on the live site. */
+    measured: z.strictObject({ local: Template("version", "date"), live: Template("version", "date", "host") }),
+    javascript: Text,
+  }),
+  /** The accessibility statement: what it aims for, what's tested, what falls short and who to tell. */
+  accessibility: z.strictObject({
+    label: Text,
+    statement: z.array(Text).min(1),
+    gaps: z.strictObject({ label: Text, items: z.array(Text).min(1) }),
+    contact: Template("email"),
+  }),
   /** The surprises (DESIGN.md §8), behind a spoiler: one per id in lib/surprises. */
   things: z.strictObject({ label: Text, show: Text, hide: Text, items: z.record(z.string(), Thing) }),
 });
@@ -1065,15 +1095,58 @@ function isTimeZone(value: string): boolean {
 export class ContentError extends Error {
   readonly problems: string[];
 
-  constructor(problems: string[]) {
+  constructor(problems: string[], file = "content/data.ts") {
     const count = `${problems.length} problem${problems.length === 1 ? "" : "s"}`;
-    super(`content/data.ts failed validation (${count}):\n${problems.map((p) => `  • ${p}`).join("\n")}`);
+    super(`${file} failed validation (${count}):\n${problems.map((p) => `  • ${p}`).join("\n")}`);
     this.name = "ContentError";
     this.problems = problems;
   }
 }
 
 /** Validates content. On failure it throws a ContentError that names every bad field. */
+// ─── Measurement ─────────────────────────────────────────────────────────────
+
+const Score = z.number().min(0).max(1);
+
+/** One page's Lighthouse run: its four scores, out of 1, and its lab vitals. */
+const MeasuredPage = z.strictObject({
+  path: z.string().startsWith("/"),
+  performance: Score,
+  accessibility: Score,
+  bestPractices: Score,
+  seo: Score,
+  lcpMs: z.number().nonnegative(),
+  tbtMs: z.number().nonnegative(),
+  cls: z.number().nonnegative(),
+});
+
+/**
+ * The latest Lighthouse measurement (DESIGN.md §10, Part 16), which /colophon states:
+ * scripts/measure.ts writes it into content/measured.ts from Lighthouse CI's reports, each
+ * page's median run of three on Lighthouse's phone under DevTools throttling.
+ */
+export const MeasurementSchema = z.strictObject({
+  date: IsoDate,
+  lighthouse: z.string().regex(/^\d+\.\d+\.\d+$/, 'use "major.minor.patch"'),
+  /** Where it ran: the live site's origin, or a production build on localhost. */
+  origin: z.url(),
+  pages: z.array(MeasuredPage).min(1),
+});
+
+export type MeasurementInput = z.input<typeof MeasurementSchema>;
+export type Measurement = z.output<typeof MeasurementSchema>;
+
+/** The measurement, checked, or null before there's been one. */
+export function parseMeasurement(input: unknown): Measurement | null {
+  if (input === null) return null;
+  const result = MeasurementSchema.safeParse(input, { reportInput: true });
+  if (result.success) return result.data;
+  throw new ContentError(
+    result.error.issues.map((issue) => `${issue.path.join(".") || "measured"}: ${issue.message}`),
+    "content/measured.ts",
+  );
+}
+
 export function parseContent(input: unknown): Content {
   const result = ContentSchema.safeParse(input, { reportInput: true });
   if (result.success) return result.data;

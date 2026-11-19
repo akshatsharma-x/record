@@ -1,0 +1,85 @@
+# Every pull request, and every push to main (DESIGN.md §10, Part 16): the checks, the
+# end-to-end tests in WebKit and Chromium, and the budgets, size-limit's and Lighthouse's.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  check:
+    name: Types, lint, unit tests and the history scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The whole history, for the phone-number scan (DESIGN.md §2 rule 2).
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run scan-history
+
+  e2e:
+    name: End to end, WebKit and Chromium
+    # The visual baselines are Chromium's on macOS (tests/e2e/visual.spec.ts), drawn with
+    # the system's own faces, so the runner is the macOS they were made on.
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install webkit chromium
+      # Playwright builds the site and starts it (playwright.config.ts), with a stand-in for
+      # Anthropic's API and the composer's console transport: no secrets needed.
+      - run: npm run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  budgets:
+    name: Budgets, size-limit and Lighthouse CI
+    # Lighthouse throttles the CPU by a fixed factor, so its numbers follow the runner's
+    # speed: Apple silicon, like the machine §10's numbers were first measured on.
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run size
+      - run: npm run lighthouse
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse
+          path: reports/lighthouse/
+          retention-days: 30

@@ -2,6 +2,7 @@
 
 import { Pause, Play } from "lucide-react";
 import { useEffect, useSyncExternalStore } from "react";
+import { measure, mutate } from "@/lib/frame";
 import { HERO, warmthAt } from "@/lib/hero";
 import { type SpringState, springAtRest, springs, stepSpring } from "@/lib/motion";
 import { SCROLLED_STORAGE_KEY } from "@/lib/preferences";
@@ -82,11 +83,17 @@ export function HeroController({ target, edition }: HeroControllerProps) {
     const hero = document.getElementById(target);
     if (!hero) return;
     const root = document.documentElement;
-    let frame = 0;
+    let alive = true;
 
-    // Scroll-out, and the first scroll.
-    const onScroll = () => {
-      if (window.scrollY > 8 && !root.hasAttribute("data-scrolled")) {
+    // Scroll-out, and the first scroll: the scroll position read with the frame's other
+    // reads, against the hero's height measured when it changes, and written after them
+    // (lib/frame.ts).
+    let height = Math.max(1, hero.offsetHeight);
+    let out = 0;
+    let first = false;
+    const write = () => {
+      if (!alive) return;
+      if (first && !root.hasAttribute("data-scrolled")) {
         root.setAttribute("data-scrolled", "");
         try {
           localStorage.setItem(SCROLLED_STORAGE_KEY, "1");
@@ -94,16 +101,22 @@ export function HeroController({ target, edition }: HeroControllerProps) {
           // Storage off: the cue rests for this visit only.
         }
       }
-      if (!frame) {
-        frame = requestAnimationFrame(() => {
-          frame = 0;
-          // With reduced motion the hero stays put as it scrolls away.
-          const out = prefersReducedMotion() ? 0 : Math.min(1, Math.max(0, window.scrollY / Math.max(1, hero.offsetHeight)));
-          hero.style.setProperty("--hero-out", out.toFixed(4));
-        });
-      }
+      hero.style.setProperty("--hero-out", out.toFixed(4));
     };
-    onScroll();
+    const read = () => {
+      const y = window.scrollY;
+      first = y > 8;
+      // With reduced motion the hero stays put as it scrolls away.
+      out = prefersReducedMotion() ? 0 : Math.min(1, Math.max(0, y / height));
+      mutate(write);
+    };
+    const onScroll = () => measure(read);
+    const sized = new ResizeObserver(() => {
+      height = Math.max(1, hero.offsetHeight);
+      measure(read);
+    });
+    sized.observe(hero);
+    read();
     window.addEventListener("scroll", onScroll, { passive: true });
 
     // Loops rest off-screen and in a hidden tab.
@@ -126,7 +139,8 @@ export function HeroController({ target, edition }: HeroControllerProps) {
     if (edition === "type") warm();
 
     return () => {
-      cancelAnimationFrame(frame);
+      alive = false;
+      sized.disconnect();
       window.removeEventListener("scroll", onScroll);
       intersection.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);

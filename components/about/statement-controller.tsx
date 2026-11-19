@@ -8,6 +8,8 @@ import { statementFill } from "@/lib/statement";
  * Drives the statement's fill: --fill follows the scroll through the pin, exactly, in the
  * scroll event itself. Geometry is measured on resize, so a scroll reads no layout. With
  * reduced motion the statement shows fully filled and doesn't pin (styles/components.css).
+ * It writes before the frame's shared reads (lib/frame.ts) on purpose: the fill has to be
+ * right in every callback of the frame, and it restyles only the statement's own words.
  */
 export function StatementController({ target }: { target: string }) {
   useEffect(() => {

@@ -1,11 +1,11 @@
 import { type CSSProperties, Fragment, type ReactNode } from "react";
+import { Behavior } from "@/components/ui/behavior";
 import { Chip } from "@/components/ui/chip";
 import { Container, Section } from "@/components/ui/layout";
 import { Display, Lead } from "@/components/ui/type";
 import { content } from "@/content";
 import { type EditClip, type EditMetricGroup, type EditPanel, edit } from "@/content/derive";
 import { monthsAt } from "@/lib/edit";
-import { EditController } from "./edit-controller";
 import { RoleVisual } from "./visuals";
 
 const ID = "experience";
@@ -241,10 +241,14 @@ export function Experience({ marks }: { marks: EditMarks }) {
           </Container>
         </div>
       </div>
-      <EditController
-        start={data.start}
-        timeZone={content.profile.location.timeZone}
-        clips={data.tracks.flatMap((track) => track.clips.map((clip) => ({ id: clip.id, track: track.id, lane: clip.lane, start: clip.start, end: clip.end, panel: clip.panel })))}
+      <Behavior
+        section="experience"
+        id="edit"
+        data={{
+          start: data.start,
+          timeZone: content.profile.location.timeZone,
+          clips: data.tracks.flatMap((track) => track.clips.map((clip) => ({ id: clip.id, track: track.id, lane: clip.lane, start: clip.start, end: clip.end, panel: clip.panel }))),
+        }}
       />
     </Section>
   );
