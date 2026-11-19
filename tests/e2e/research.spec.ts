@@ -114,7 +114,9 @@ test.describe("pinned, on a wide, tall screen", () => {
       await expect(element.locator(".chapter-keywords li")).toHaveText(paper.keywords);
       // No DOI yet, so no Read.
       await expect(element.getByRole("link", { name: "Read" })).toHaveCount(0);
-      await expect(element.getByRole("button", { name: "Cite" })).toBeVisible();
+      // A citation names every author: Cite waits until content knows them (Part 17).
+      if (paper.citations) await expect(element.getByRole("button", { name: "Cite" })).toBeVisible();
+      else await expect(element.getByRole("button", { name: "Cite" })).toHaveCount(0);
       await expect(element.getByRole("button", { name: "Share" })).toBeVisible();
       await expect(element.locator("figcaption")).toContainText(content.copy.research.caption);
     }
@@ -199,6 +201,8 @@ test.describe("pinned, on a wide, tall screen", () => {
   });
 
   test("Cite flips the card to APA, IEEE and BibTeX, and copying says so in the Island", async ({ page }) => {
+    test.skip(!food.citations, "Cite waits until content names every author (Part 17)");
+    const citations = food.citations!;
     await recordSystem(page, { share: true });
     await open(page);
     await scrubTo(page, 0, 0.9);
@@ -209,13 +213,13 @@ test.describe("pinned, on a wide, tall screen", () => {
     await expect(card.getByRole("heading", { name: "Cite" })).toBeFocused();
     await expect(card.locator('[data-face="front"]')).toHaveAttribute("inert", "");
     const text = card.locator(".citation-text:visible");
-    await expect(text).toHaveText(plain(food.citations.apa));
+    await expect(text).toHaveText(plain(citations.apa));
     await card.getByText("IEEE", { exact: true }).click();
-    await expect(text).toHaveText(plain(food.citations.ieee));
+    await expect(text).toHaveText(plain(citations.ieee));
     await card.getByText("BibTeX", { exact: true }).click();
-    await expect(text).toHaveText(food.citations.bibtex);
+    await expect(text).toHaveText(citations.bibtex);
     await card.getByRole("button", { name: "Copy" }).click();
-    await expect.poll(() => copied(page)).toEqual([food.citations.bibtex]);
+    await expect.poll(() => copied(page)).toEqual([citations.bibtex]);
     await expect(page.locator('[role="status"]', { hasText: "Citation copied" })).toHaveCount(1);
     await expect(card.getByRole("button", { name: "Copied" })).toBeVisible();
     // Escape flips it back, and focus returns to Cite.
@@ -331,6 +335,11 @@ test.describe("without JavaScript", () => {
     await page.goto("/");
     for (const paper of papers) await expect(page.locator("#research")).toContainText(paper.tldr);
     await expect(chapter(page, 0).getByRole("button", { name: "Share" })).toBeHidden();
+    if (!food.citations) {
+      // Until content names every author there's no citation to go to (Part 17).
+      await expect(chapter(page, 0).getByRole("link", { name: "Cite" })).toHaveCount(0);
+      return;
+    }
     await expect(chapter(page, 0).getByRole("link", { name: "Cite" })).toHaveAttribute("href", `${food.href}#cite`);
     await page.goto(`${food.href}#cite`);
     const cite = page.locator("#cite");
@@ -347,13 +356,16 @@ test.describe("a paper's page", () => {
       await expect(page).toHaveTitle(`${paper.title} · ${content.profile.name}`);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(paper.title);
       await expect(page.locator('.paper-author[data-self]')).toHaveText(content.profile.name);
+      // While content doesn't know the co-authors, the byline says who presented it (Part 17).
+      if (!paper.authorsKnown) await expect(page.locator(".paper-authors")).toHaveText(content.copy.research.presentedBy.replace("{name}", content.profile.name));
       await expect(page.locator("#paper .research-venue")).toHaveText(paper.venue);
       await expect(page.locator("#paper .status-pill")).toHaveText(paper.statusLabel);
       await expect(page.locator(".paper-tldr")).toHaveText(paper.tldr);
       await expect(page.getByRole("heading", { name: "Abstract" })).toHaveCount(0);
       await expect(page.locator("#paper .chapter-keywords li")).toHaveText(paper.keywords);
       await expect(page.locator("#paper figcaption")).toContainText(content.copy.research.caption);
-      await expect(page.locator("#cite .citation-text:visible")).toHaveText(plain(paper.citations.apa));
+      if (paper.citations) await expect(page.locator("#cite .citation-text:visible")).toHaveText(plain(paper.citations.apa));
+      else await expect(page.locator("#cite")).toHaveCount(0);
       const related = page.locator(".related-card");
       await expect(related).toHaveCount(paper.related.length);
       for (const [i, project] of paper.related.entries()) {
@@ -370,7 +382,9 @@ test.describe("a paper's page", () => {
       await open(page, paper.href);
       const meta = (name: string) => page.locator(`meta[name="${name}"]`);
       await expect(meta("citation_title")).toHaveAttribute("content", paper.title);
-      await expect(meta("citation_author")).toHaveAttribute("content", "Sharma, Akshat");
+      // Scholar reads its author tags as the whole list: none until content knows it (Part 17).
+      if (paper.authorsKnown) await expect(meta("citation_author").first()).toHaveAttribute("content", "Sharma, Akshat");
+      else await expect(meta("citation_author")).toHaveCount(0);
       await expect(meta("citation_conference_title")).toHaveAttribute("content", "SCI-2026");
       await expect(meta("citation_publication_date")).toHaveAttribute("content", "2026/04/28");
       await expect(meta("citation_doi")).toHaveCount(0);

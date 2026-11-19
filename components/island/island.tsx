@@ -22,11 +22,11 @@ import { cx } from "@/lib/cx";
 import { measure, mutate } from "@/lib/frame";
 import { ISLAND_TIMING, setIslandExpanded, useIsland } from "@/lib/island/store";
 import { durations } from "@/lib/motion";
-import { prefersReducedMotion } from "@/lib/reduced-motion";
 import { openSearch } from "@/lib/search/store";
 import { SECTIONS } from "@/lib/sections";
 import { isApplePlatform } from "@/lib/shortcuts";
 import { useSurface } from "@/lib/stores/surface";
+import { travelTo } from "@/lib/travel";
 
 const NAV = SECTIONS.filter((section) => section.nav);
 
@@ -249,19 +249,8 @@ export function Island({ initials }: { initials: string }) {
     collapse();
     if (pathname !== "/" || event.defaultPrevented || event.button !== 0) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    const target = document.getElementById(id);
-    if (!target) return;
-    event.preventDefault();
-    target.scrollIntoView({
-      behavior: prefersReducedMotion() ? "auto" : "smooth",
-      block: "start",
-    });
-    window.history.pushState(null, "", `#${id}`);
-    const heading = target.querySelector<HTMLElement>("h1, h2");
-    if (heading) {
-      heading.setAttribute("tabindex", "-1");
-      heading.focus({ preventScroll: true });
-    }
+    // The same journey as Search's (lib/travel.ts), so the light changes once, on arrival.
+    if (travelTo(id)) event.preventDefault();
   };
 
   // ─── Scroll progress ───────────────────────────────────────────────────────

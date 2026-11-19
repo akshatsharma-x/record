@@ -1,8 +1,11 @@
 /**
  * The surface controller (DESIGN.md §4.2). One scroll-linked loop crossfades the page
- * background between adjacent sections over the last 20% of each (at most half a viewport), so the lights go down
- * and come up. Text tokens switch at the crossfade's midpoint, when the background is
- * closer to the next surface than to the last.
+ * background between adjacent sections across the outgoing section's own empty foot (its
+ * bottom padding; a quarter of a viewport where it has none), so the lights go down and
+ * come up between two ideas rather than under one. Text tokens switch at the crossfade's
+ * midpoint, when the background is closer to the next surface than to the last, and when
+ * the scroll comes to rest partway, the light settles to the nearer end: no text is left
+ * on a half-lit gray (Part 17).
  *
  * - Sections are top-level elements with data-section and data-surface. A scene that opens
  *   another section says so with data-section-for (the statement opens About), and is
@@ -15,18 +18,25 @@
  *   and the controller only reports which one the visitor is on.
  */
 import { measure as frameRead, mutate } from "../frame.ts";
-import { scrubStep } from "../motion.ts";
+import { durations, scrubStep } from "../motion.ts";
 import { prefersReducedMotion, REDUCED_MOTION_QUERY } from "../reduced-motion.ts";
 import type { SurfaceName, SurfaceState, Tone } from "../stores/surface.ts";
 
 /** Where in the viewport a section counts as current: its middle. */
 const PROBE = 0.5;
-/** The crossfade spans the last fifth of each section, and at most half the viewport, so a
-    tall pinned scene finishes in its own light. */
+/** The crossfade spans at most the last fifth of a section, so a tall pinned scene finishes
+    in its own light; within that, the section's bottom padding, or this share of the
+    viewport where it has none (Part 17: half a viewport left text half-lit for 240px). */
 const ZONE = 0.2;
-const ZONE_MAX = 0.5;
+const ZONE_MAX = 0.25;
+/** How long the scroll rests before a light caught partway settles to the nearer end. */
+const REST_MS = durations.microShort;
+/** The settle's pace: an exponential ease, visibly done within the §5.3 UI durations. */
+const SETTLE_TAU = durations.ui / 3000;
 /** Close enough to the target to stop the loop. */
 const SETTLED = 0.001;
+/** The time a loop's first step stands for, in seconds: one frame at 60 Hz. */
+const FIRST_STEP = 1 / 60;
 /** How far past the viewport, in viewports, a section counts as near and takes the light. */
 const NEAR = 0.5;
 
@@ -36,6 +46,8 @@ interface Measured {
   surface: SurfaceName;
   top: number;
   bottom: number;
+  /** The section's empty foot, where its light hands over: its bottom padding, in px. */
+  fade: number;
 }
 
 export interface Blend {
@@ -45,8 +57,11 @@ export interface Blend {
   progress: number;
 }
 
-/** The pure part: which sections the probe is between, and how far. `most` caps the zone's length. */
-export function blendAt(sections: readonly { top: number; bottom: number }[], probe: number, zone = ZONE, most = Infinity): Blend {
+/**
+ * The pure part: which sections the probe is between, and how far. `most` caps the zone's
+ * length, and a section's own `fade` (its empty foot) narrows it further.
+ */
+export function blendAt(sections: readonly { top: number; bottom: number; fade?: number }[], probe: number, zone = ZONE, most = Infinity): Blend {
   if (sections.length === 0) return { from: -1, to: -1, progress: 0 };
   const last = sections.length - 1;
   if (probe < sections[0].top) return { from: 0, to: 0, progress: 0 };
@@ -54,7 +69,7 @@ export function blendAt(sections: readonly { top: number; bottom: number }[], pr
   if (index === -1) index = last;
   const section = sections[index];
   const height = section.bottom - section.top;
-  const zoneStart = section.bottom - Math.min(height * zone, most);
+  const zoneStart = section.bottom - Math.min(height * zone, section.fade && section.fade > 0 ? section.fade : most);
   if (index === last || probe < zoneStart || height <= 0) return { from: index, to: index, progress: 0 };
   return { from: index, to: index + 1, progress: Math.min(1, (probe - zoneStart) / (section.bottom - zoneStart)) };
 }
@@ -83,6 +98,9 @@ export function createSurfaceController(options: {
   let frame = 0;
   let lastTime = 0;
   let lastReported = "";
+  let rest = 0;
+  /** Whether the light is settling after the scroll came to rest partway. */
+  let settling = false;
 
   const measure = () => {
     nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-section][data-surface]"));
@@ -96,6 +114,7 @@ export function createSurfaceController(options: {
         surface: surface === "dark" || surface === "light-alt" ? surface : "light",
         top: rect.top + scrollY,
         bottom: rect.bottom + scrollY,
+        fade: parseFloat(getComputedStyle(node).paddingBottom) || 0,
       };
     });
   };
@@ -161,14 +180,17 @@ export function createSurfaceController(options: {
 
   const tick = (time: number) => {
     frame = 0;
-    const elapsed = lastTime ? (time - lastTime) / 1000 : 0;
+    // A loop's first frame takes one frame's step: where the light settled, the scroll that
+    // follows eases it back rather than snapping it there.
+    const elapsed = lastTime ? (time - lastTime) / 1000 : FIRST_STEP;
     lastTime = time;
     const samePair = target.from === shown.from && target.to === shown.to;
-    if (!crossfade || !samePair || elapsed === 0) {
+    if (!crossfade || !samePair) {
       // A new pair of sections, or no crossfade: jump straight to the scroll position.
       shown = { ...target };
     } else {
-      shown.progress += (target.progress - shown.progress) * scrubStep(elapsed);
+      const step = settling ? 1 - Math.exp(-elapsed / SETTLE_TAU) : scrubStep(elapsed);
+      shown.progress += (target.progress - shown.progress) * step;
       if (Math.abs(target.progress - shown.progress) < SETTLED) shown.progress = target.progress;
     }
     render();
@@ -184,9 +206,41 @@ export function createSurfaceController(options: {
   const look = () => {
     view = { y: window.scrollY, h: window.innerHeight };
   };
-  const read = () => {
+  /**
+   * A journey's end (lib/travel.ts): the light it held through the trip changes once, to the
+   * destination's, crossfaded by CSS while data-surface-arriving is on (Part 17).
+   */
+  let arriving = 0;
+  const arrive = () => {
+    root.removeAttribute("data-traveling");
     look();
     target = blendAt(sections, view.y + view.h * PROBE, ZONE, view.h * ZONE_MAX);
+    if (!crossfade) return;
+    root.setAttribute("data-surface-arriving", "");
+    shown = { ...target };
+    render();
+    window.clearTimeout(arriving);
+    arriving = window.setTimeout(() => root.removeAttribute("data-surface-arriving"), durations.ui);
+  };
+  /** At rest partway through a crossfade, the light goes the rest of the way to the nearer end. */
+  const settle = () => {
+    rest = 0;
+    if (root.hasAttribute("data-traveling")) return arrive();
+    if (!crossfade || target.progress <= 0 || target.progress >= 1) return;
+    target = { ...target, progress: target.progress < 0.5 ? 0 : 1 };
+    settling = true;
+    // Eased from the next frame on: a first step with no time elapsed would jump there.
+    lastTime = performance.now();
+    if (!frame) frame = requestAnimationFrame(tick);
+  };
+  const read = () => {
+    window.clearTimeout(rest);
+    rest = window.setTimeout(settle, REST_MS);
+    // On a journey the light holds: it changes once, when the page comes to rest.
+    if (root.hasAttribute("data-traveling")) return;
+    look();
+    target = blendAt(sections, view.y + view.h * PROBE, ZONE, view.h * ZONE_MAX);
+    settling = false;
     mutate(start);
   };
   const update = () => frameRead(read);
@@ -207,6 +261,13 @@ export function createSurfaceController(options: {
   resizeObserver.observe(document.body);
   const attributeObserver = new MutationObserver(refresh);
   attributeObserver.observe(root, { attributes: true, attributeFilter: ["data-motion", "data-theme"] });
+  // A journey that never scrolls (it was there already) still ends.
+  const travelObserver = new MutationObserver(() => {
+    if (!root.hasAttribute("data-traveling")) return;
+    window.clearTimeout(rest);
+    rest = window.setTimeout(settle, REST_MS);
+  });
+  travelObserver.observe(root, { attributes: true, attributeFilter: ["data-traveling"] });
   const media = window.matchMedia(REDUCED_MOTION_QUERY);
   media.addEventListener("change", refresh);
   window.addEventListener("scroll", update, { passive: true });
@@ -218,6 +279,11 @@ export function createSurfaceController(options: {
     refresh,
     destroy() {
       cancelAnimationFrame(frame);
+      window.clearTimeout(rest);
+      window.clearTimeout(arriving);
+      travelObserver.disconnect();
+      root.removeAttribute("data-traveling");
+      root.removeAttribute("data-surface-arriving");
       resizeObserver.disconnect();
       attributeObserver.disconnect();
       media.removeEventListener("change", refresh);

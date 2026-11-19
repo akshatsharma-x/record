@@ -17,14 +17,15 @@ Tab moves forward and Shift-Tab back. At every stop the 3px accent ring shows ar
 
 ### The home page, in Tab order
 
-1. **The Island**, 11 stops. The first Tab lands on the Island's toggle, "Overview, sections, button, collapsed". Focus expands it (§6.2).
+0. **Skip to content**, 1 stop (Part 17). The first Tab shows it at the top left; Enter skips the Island's eleven stops, and the next Tab is the page's first.
+1. **The Island**, 11 stops. The next Tab lands on the Island's toggle, "Overview, sections, button, collapsed". Focus expands it (§6.2).
    1. The toggle. Enter or Space toggles it; Escape collapses it and keeps focus on it.
    2. Search. Enter opens Search (see "Search and Ask" below).
    3. The theme toggle, "Use the dark theme" (or the light one). Enter switches; the Island says so.
    4. "Say hello". Enter goes to Contact, and focus moves to its heading.
    5. to 11. The seven section links, the current one marked (`aria-current`). Enter travels to the section and moves focus to its heading, which sits below the Island.
    - Tab past Contact: the Island collapses as focus leaves it.
-2. **The hero**, 7 stops: the three key facts ("Now at United Airlines", the degree, SCI-2026), each a link to its section; "See my work"; "Say hello ›"; the finishes, one stop for the group (the arrow keys choose a finish, and the page re-colors); and "Pause the background motion".
+2. **The hero**, 7 stops: the three key facts ("AI & ML Intern at United Airlines", the degree, SCI-2026), each a link to its section; "See my work"; "Say hello ›"; the finishes, one stop for the group (the arrow keys choose a finish, and the page re-colors); and "Pause the background motion".
 3. **About**, 5 stops: footnote marks 1 and 3 in the bio (Enter jumps to the note in the footer; the note's ↩ comes back to the same mark); the Currently line's "Cartographer"; the Studying tile (Enter flips it to the days to graduation, and again back); the Local time tile (Enter switches 12- and 24-hour time and shows the overlap with your day).
 4. **The highlights**, 3 stops: the card in view, its footnote mark and its +, then "Pause the highlights".
    - On a card, Left and Right move between cards and Home and End go to the first and last; the + of the new card takes the focus.

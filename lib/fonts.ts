@@ -13,10 +13,12 @@ export const inter = Inter({
   variable: "--font-inter",
 });
 
+// The one weight the serif is set in, roman and italic, as static faces: the variable font's
+// optical-size axis cost Chrome 279 KB for a few titles, against about 47 KB (Part 17).
 export const newsreader = Newsreader({
   subsets: ["latin"],
+  weight: "400",
   style: ["normal", "italic"],
-  axes: ["opsz"],
   display: "swap",
   preload: false,
   variable: "--font-newsreader",

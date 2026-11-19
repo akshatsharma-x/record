@@ -51,6 +51,7 @@ export default async function PaperPage({ params }: PageProps<"/research/[slug]"
   const paper = paperFor((await params).slug);
   if (!paper) notFound();
   const { caption } = content.copy.research;
+  const presentedBy = content.copy.research.presentedBy.split("{name}");
 
   // Footnotes, numbered by content; each mention gets its own back-link (§9).
   const mentions = new Map<number, number>();
@@ -71,14 +72,25 @@ export default async function PaperPage({ params }: PageProps<"/research/[slug]"
           {paper.title}
         </h1>
         <p className="paper-authors">
-          {paper.authors.map((author, i) => (
-            <Fragment key={author.name}>
-              {i > 0 ? ", " : null}
-              <span className="paper-author" data-self={author.self || undefined}>
-                {author.name}
+          {paper.authorsKnown ? (
+            paper.authors.map((author, i) => (
+              <Fragment key={author.name}>
+                {i > 0 ? ", " : null}
+                <span className="paper-author" data-self={author.self || undefined}>
+                  {author.name}
+                </span>
+              </Fragment>
+            ))
+          ) : (
+            // Content knows who presented it, not yet who wrote it with Akshat (Part 17).
+            <>
+              {presentedBy[0]}
+              <span className="paper-author" data-self="">
+                {content.profile.name}
               </span>
-            </Fragment>
-          ))}
+              {presentedBy[1]}
+            </>
+          )}
         </p>
         <p className="research-venue">{paper.venue}</p>
         <StatusPill status={paper.status} label={paper.statusLabel} />
@@ -115,12 +127,14 @@ export default async function PaperPage({ params }: PageProps<"/research/[slug]"
       ) : null}
 
       <Container>
-        <section id="cite" className="paper-section" aria-labelledby="cite-title">
-          <h2 id="cite-title" className="paper-section-title">
-            Cite
-          </h2>
-          <Citations citations={paper.citations} name={`cite-${paper.slug}`} />
-        </section>
+        {paper.citations ? (
+          <section id="cite" className="paper-section" aria-labelledby="cite-title">
+            <h2 id="cite-title" className="paper-section-title">
+              Cite
+            </h2>
+            <Citations citations={paper.citations} name={`cite-${paper.slug}`} />
+          </section>
+        ) : null}
         {paper.related.length > 0 ? (
           <section className="paper-section" aria-labelledby="related-title">
             <h2 id="related-title" className="paper-section-title">
@@ -150,7 +164,7 @@ export default async function PaperPage({ params }: PageProps<"/research/[slug]"
   const cited = content.footnotes.filter((note) => mentions.has(note.id));
   return (
     <>
-      <main>{page}</main>
+      <main id="main">{page}</main>
       <Section as="footer" id="footer" surface="light-alt" aria-label="Notes and credits">
         <Container>
           <Stack gap={6}>

@@ -40,7 +40,7 @@ import { loadSearchIndex } from "@/lib/search/load";
 import { prepare } from "@/lib/search/match";
 import { compose, groupOf, GROUPS, type Item } from "@/lib/search/results";
 import { secretFor } from "@/lib/search/secrets";
-import { closeSearch, useSearch } from "@/lib/search/store";
+import { closeSearch, searchReady, takeTyped, useSearch } from "@/lib/search/store";
 import type { SearchEntry, SearchPayload } from "@/lib/search/types";
 import { SECTIONS } from "@/lib/sections";
 import { isApplePlatform } from "@/lib/shortcuts";
@@ -194,11 +194,21 @@ export default function SearchDialog() {
     if (open && !element.open) {
       element.removeAttribute("data-closing");
       element.showModal();
-      input.current?.select();
+      // What was typed while the dialog was on its way is the query (Part 17), given to the
+      // field as its own input, so its change handler takes it from there.
+      const typed = takeTyped();
+      const field = input.current;
+      if (typed && field) {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(field, typed);
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+        field.setSelectionRange(typed.length, typed.length);
+      } else field?.select();
+      searchReady(true);
       return;
     }
     if (!open && element.open) {
       asking.reset();
+      searchReady(false);
       const finish = () => {
         element.removeAttribute("data-closing");
         element.close();
@@ -487,7 +497,8 @@ export default function SearchDialog() {
           ))}
           {count === 0 && query.trim() ? (
             <p className="search-empty">
-              {failed ? "Search couldn't load. Check the connection and try again." : `No results for “${query.trim()}”.`}
+              {/* While the index is on its way it's searching, not empty (Part 17). */}
+              {failed ? "Search couldn't load. Check the connection and try again." : !payload ? "Searching…" : `No results for “${query.trim()}”.`}
             </p>
           ) : null}
         </div>

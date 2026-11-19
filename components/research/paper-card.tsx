@@ -7,8 +7,8 @@ interface PaperCardProps {
   href: string;
   /** The paper's DOI link; Read stays hidden until there is one. */
   read: string | null;
-  /** The back: its citations (./citations.tsx). */
-  cite: ReactNode;
+  /** The back: its citations (./citations.tsx), or null until content knows every author. */
+  cite: ReactNode | null;
   /** The front: the paper's title, status, TL;DR and keywords. */
   children: ReactNode;
 }
@@ -34,24 +34,30 @@ export function PaperCard({ title, tldr, href, read, cite, children }: PaperCard
               Read
             </Button>
           ) : null}{" "}
-          <Button variant="secondary" className="needs-js" data-cite-open="" aria-expanded="false" aria-controls={`${id}-back`}>
-            Cite
-          </Button>{" "}
-          <Button href={`${href}#cite`} variant="secondary" className="without-js">
-            Cite
-          </Button>{" "}
+          {cite ? (
+            <>
+              <Button variant="secondary" className="needs-js" data-cite-open="" aria-expanded="false" aria-controls={`${id}-back`}>
+                Cite
+              </Button>{" "}
+              <Button href={`${href}#cite`} variant="secondary" className="without-js">
+                Cite
+              </Button>{" "}
+            </>
+          ) : null}
           <ShareButton title={title} text={tldr} href={href} />
         </div>
       </div>
-      <div className="paper-face" data-face="back" id={`${id}-back`} inert role="region" aria-labelledby={`${id}-heading`}>
-        <h4 id={`${id}-heading`} tabIndex={-1} className="paper-back-title">
-          Cite
-        </h4>
-        {cite}
-        <Button variant="link" className="paper-done" data-cite-close="">
-          Done
-        </Button>
-      </div>
+      {cite ? (
+        <div className="paper-face" data-face="back" id={`${id}-back`} inert role="region" aria-labelledby={`${id}-heading`}>
+          <h4 id={`${id}-heading`} tabIndex={-1} className="paper-back-title">
+            Cite
+          </h4>
+          {cite}
+          <Button variant="link" className="paper-done" data-cite-close="">
+            Done
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

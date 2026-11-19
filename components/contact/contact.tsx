@@ -7,6 +7,7 @@ import { clockPlace } from "@/content/derive";
 import { LazyContactClock } from "./contact-clock-lazy";
 import { Dock } from "./dock";
 import { Thread } from "./thread";
+import { typeset } from "@/lib/typeset";
 
 /**
  * The close (DESIGN.md §7.9): on a light surface, the headline resolves from blur, then a
@@ -21,7 +22,7 @@ export function Contact() {
       <Container className="contact-body">
         <div className="contact-close">
           <Resolve as="h2" id="contact-title" className="text-display text-fg">
-            {words.headline}
+            {typeset(words.headline)}
           </Resolve>
           {profile.availability ? (
             <Lead tone="fg-2" className="contact-availability">

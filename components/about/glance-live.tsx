@@ -69,7 +69,9 @@ export function StudyingTile({ label, degree, field, institution, start, end, en
             {progress ? `${progress.percent}%` : end.slice(0, 4)}
           </span>
         </span>{" "}
+        {/* "84% through B.Tech CSE": a bare share beside a degree read as a grade (Part 17). */}
         <span className="glance-detail">
+          {progress ? "through " : null}
           {degree} {field}
         </span>{" "}
         <span className="glance-meta">{institution}</span>

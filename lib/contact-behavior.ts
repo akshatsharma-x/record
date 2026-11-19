@@ -135,6 +135,10 @@ export function attachDock(dock: HTMLElement): () => void {
       // The address goes on the clipboard; the mail app is the Island's second offer.
       event.preventDefault();
       copyEmail(item);
+    } else if (item.hasAttribute("data-print")) {
+      // Until there's a phone-free PDF, the résumé is the page's print edition (Part 17).
+      event.preventDefault();
+      window.print();
     }
   };
 

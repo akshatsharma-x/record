@@ -28,7 +28,7 @@ export default function ColophonPage() {
   const findable = SURPRISES.filter((surprise) => surprise.on && (surprise.id !== "command-retro" || content.profile.links.retrograde));
   return (
     <>
-      <main className="specs-page">
+      <main id="main" className="specs-page">
         <Section id="colophon" name={copy.footer.pages.colophon} surface="light" padding="none" className="specs-section" aria-labelledby="colophon-title">
           <Container className="specs-head">
             <Link href="/" className="paper-back">

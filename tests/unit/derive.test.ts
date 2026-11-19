@@ -280,7 +280,7 @@ describe("the hero", () => {
 
   it("derives the three context chips, each pointing at the section that tells the rest", () => {
     expect(heroChips(content)).toEqual([
-      { label: "Now at United Airlines", section: "experience" },
+      { label: "AI & ML Intern at United Airlines", section: "experience", target: "united-airlines-title" },
       { label: "B.Tech CSE \u201927 \u00b7 Manipal University Jaipur", section: "credentials" },
       { label: "SCI-2026 \u00b7 Springer LNNS", section: "research" },
     ]);

@@ -260,6 +260,8 @@ export function attachChapters(): () => void {
   let plays: number[] = [];
   let disposed = false;
   const drawings = chapters.map((chapter) => chapter.querySelector<HTMLElement>(".illustration") ?? chapter);
+  /** What each drawing was last told, so a chapter at rest isn't restyled every frame (Part 17). */
+  const told = chapters.map(() => "");
   const read = () => {
     plays = geometry.map(({ top, length }) => playAt((window.scrollY - top) / length));
   };
@@ -271,10 +273,14 @@ export function attachChapters(): () => void {
       const drawing = drawings[i];
       if (!pinned) {
         drawing.style.removeProperty("--play");
+        told[i] = "";
         tell(chapter, 1);
         return;
       }
-      drawing.style.setProperty("--play", plays[i].toFixed(4));
+      const play = plays[i].toFixed(4);
+      if (play === told[i]) return;
+      told[i] = play;
+      drawing.style.setProperty("--play", play);
       tell(chapter, plays[i]);
     });
   };

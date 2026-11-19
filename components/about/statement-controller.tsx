@@ -18,17 +18,23 @@ export function StatementController({ target }: { target: string }) {
     if (!section || !stage) return;
     let top = 0;
     let pin = 0;
+    let written = "";
 
     const measure = () => {
       top = section.getBoundingClientRect().top + window.scrollY;
       pin = section.offsetHeight - stage.offsetHeight;
     };
+    // Written only when it changes: above and below the pin it rests at 0 or 1, and every
+    // other scroll of the page left the statement's words to restyle for nothing (Part 17).
     const update = () => {
-      const fill = prefersReducedMotion() ? 1 : statementFill(window.scrollY - top, pin);
-      section.style.setProperty("--fill", fill.toFixed(4));
+      const fill = (prefersReducedMotion() ? 1 : statementFill(window.scrollY - top, pin)).toFixed(4);
+      if (fill === written) return;
+      written = fill;
+      section.style.setProperty("--fill", fill);
     };
     const refresh = () => {
       measure();
+      written = "";
       update();
     };
 

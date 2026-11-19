@@ -27,7 +27,7 @@ export default function ComparePage() {
   const overview = SECTIONS.find((section) => section.id === "top")!.name;
   return (
     <>
-      <main className="specs-page">
+      <main id="main" className="specs-page">
         <Section id="compare" name={words.headline} surface="light" padding="none" className="specs-section" aria-labelledby="compare-title">
           <Container className="specs-head">
             <Link href="/" className="paper-back">

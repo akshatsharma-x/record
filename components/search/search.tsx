@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { island, useIsland } from "@/lib/island/store";
 import { togglePageMode, usePageModes } from "@/lib/page-modes";
-import { openSearch, toggleSearch, useSearch } from "@/lib/search/store";
+import { openSearch, toggleSearch, typeAhead, useSearch } from "@/lib/search/store";
 import { isEditable, useShortcuts } from "@/lib/shortcuts";
 import { designGrid } from "@/lib/surprises/design-grid";
 import { focusMode } from "@/lib/surprises/focus-mode";
@@ -39,6 +39,14 @@ export function Search() {
         event.preventDefault();
         warmSearch();
         toggleSearch();
+        return;
+      }
+      // Opening, before its field is there (the first time, its code is still loading): what's
+      // typed is kept for the field, and no shortcut fires on the way (Part 17).
+      const { open: opening, ready } = useSearch.getState();
+      if (opening && !ready && !event.metaKey && !event.ctrlKey && !event.altKey && (event.key.length === 1 || event.key === "Backspace")) {
+        event.preventDefault();
+        typeAhead(event.key);
         return;
       }
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;

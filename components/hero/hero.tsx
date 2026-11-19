@@ -16,6 +16,7 @@ import { Aperture } from "./aperture";
 import { DateLine } from "./date-line";
 import { HeroController } from "./hero-controller";
 import { HeroSwatches } from "./hero-swatches";
+import { typeset } from "@/lib/typeset";
 
 const ID = "top";
 const NAME = SECTIONS.find((section) => section.id === ID)!.name;
@@ -89,7 +90,7 @@ function Intro() {
   return (
     <>
       <p className="hero-role text-eyebrow">{profile.role}</p>
-      <p className="hero-headline text-lead">{profile.headline}</p>
+      <p className="hero-headline text-lead">{typeset(profile.headline, { lastWord: true })}</p>
     </>
   );
 }
@@ -102,7 +103,7 @@ function Actions() {
       <ul className="hero-chips" aria-label="Key facts">
         {heroChips(content).map((chip) => (
           <li key={chip.label}>
-            <Chip as="a" href={`#${chip.section}`}>
+            <Chip as="a" href={`#${chip.target ?? chip.section}`} data-jump={chip.target ? "" : undefined}>
               {chip.label}
             </Chip>
           </li>

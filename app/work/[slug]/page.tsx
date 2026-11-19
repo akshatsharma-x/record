@@ -40,7 +40,7 @@ export default async function WorkPage({ params }: PageProps<"/work/[slug]">) {
   return (
     <>
       <JsonLd data={project(content, study)} />
-      <main>
+      <main id="main">
         <Section id="case" name="Work" surface="light" padding="none" className="case-page" aria-labelledby={`page-${study.slug}-title`}>
           <Container className="case-page-head">
             <Link href="/#work" className="paper-back">

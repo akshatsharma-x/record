@@ -23,10 +23,13 @@ function Word({ word, index }: { word: StatementWord; index: number }) {
  */
 export function Statement() {
   const words = statementWords(content);
+  // The space before a word: a no-break one before a dash and before the last word, so no
+  // line starts with a dash and the statement never ends on a word alone (Part 17).
+  const space = (i: number) => (!words[i].space ? null : i === words.length - 1 || /^[—–]/.test(words[i].text) ? "\u00a0" : " ");
   const nodes: ReactNode[] = [];
   for (let i = 0; i < words.length; ) {
     if (!words[i].emphasis) {
-      nodes.push(words[i].space ? " " : null, <Word key={i} word={words[i]} index={i} />);
+      nodes.push(space(i), <Word key={i} word={words[i]} index={i} />);
       i += 1;
       continue;
     }
@@ -34,10 +37,10 @@ export function Statement() {
     const start = i;
     const phrase: ReactNode[] = [];
     for (; i < words.length && words[i].emphasis; i++) {
-      phrase.push(i > start && words[i].space ? " " : null, <Word key={i} word={words[i]} index={i} />);
+      phrase.push(i > start ? space(i) : null, <Word key={i} word={words[i]} index={i} />);
     }
     nodes.push(
-      words[start].space ? " " : null,
+      space(start),
       <span key={`phrase-${start}`} className="statement-emphasis">
         {phrase}
       </span>,

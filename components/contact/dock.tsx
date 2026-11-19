@@ -1,6 +1,7 @@
 import { FileText, Mail } from "lucide-react";
 import { content } from "@/content";
 import { SKILL_ICONS_URL } from "@/lib/skill-icons";
+import { resumeEdition } from "@/lib/surprises/resume-edition";
 
 interface DockApp {
   id: "email" | "linkedin" | "github" | "resume";
@@ -9,6 +10,8 @@ interface DockApp {
   /** Opens elsewhere: LinkedIn and GitHub, in a new tab. */
   external?: boolean;
   download?: boolean;
+  /** Prints the page's résumé edition, which needs JavaScript, so it's hidden without. */
+  print?: boolean;
 }
 
 /** Each app's tile: its glyph on its own color, as a dock's icons are. */
@@ -32,8 +35,9 @@ function Tile({ id }: { id: DockApp["id"] }) {
 }
 
 /**
- * The dock (DESIGN.md §7.9): Email, LinkedIn and GitHub, and the résumé only once a
- * phone-free PDF exists (§2 rule 2), on a glass shelf. Each is a link that works without
+ * The dock (DESIGN.md §7.9): Email, LinkedIn and GitHub, and the résumé, on a glass shelf:
+ * a download once a phone-free PDF exists (§2 rule 2), until then the print edition, which
+ * is phone-free already (Part 17: a recruiter couldn't find it). Each is a link that works without
  * JavaScript; the behavior adds the magnification, the launch bounce, and Email's copy
  * (lib/contact-behavior.ts). Its label is its name, shown as a tooltip on hover and focus.
  */
@@ -44,14 +48,18 @@ export function Dock() {
     { id: "email", label: words.email, href: `mailto:${profile.email}` },
     { id: "linkedin", label: words.linkedin, href: profile.links.linkedin, external: true },
     { id: "github", label: words.github, href: profile.links.github, external: true },
-    ...(profile.resumePdf ? [{ id: "resume" as const, label: words.resume, href: profile.resumePdf, download: true }] : []),
+    ...(profile.resumePdf
+      ? [{ id: "resume" as const, label: words.resume, href: profile.resumePdf, download: true }]
+      : resumeEdition.on
+        ? [{ id: "resume" as const, label: words.resume, href: "#contact", print: true }]
+        : []),
   ];
   return (
     <nav className="dock" aria-label={words.label} data-copied={words.copied} data-not-copied={words.notCopied} data-open-mail={words.openMail}>
       <span className="dock-glass" aria-hidden="true" />
       <ul className="dock-items">
         {apps.map((app) => (
-          <li key={app.id} className="dock-slot">
+          <li key={app.id} className={app.print ? "dock-slot needs-js" : "dock-slot"}>
             <a
               className="dock-item"
               data-app={app.id}
@@ -59,6 +67,7 @@ export function Dock() {
               {...(app.external ? { target: "_blank", rel: "noopener" } : {})}
               {...(app.download ? { download: "" } : {})}
               {...(app.id === "email" ? { "data-email": profile.email } : {})}
+              {...(app.print ? { "data-print": "" } : {})}
               data-cursor="default"
             >
               <span className="dock-tile">

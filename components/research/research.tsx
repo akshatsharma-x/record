@@ -23,7 +23,7 @@ function Chapter({ paper, index, count, caption }: { paper: ResearchPaper; index
             tldr={paper.tldr}
             href={paper.href}
             read={paper.doiUrl}
-            cite={<Citations citations={paper.citations} name={`cite-${paper.slug}`} />}
+            cite={paper.citations ? <Citations citations={paper.citations} name={`cite-${paper.slug}`} /> : null}
           >
             <p className="chapter-eyebrow">
               Paper {index + 1} of {count}
@@ -65,7 +65,7 @@ export function Research() {
 
   return (
     <Section id={ID} name="Research" surface="dark" padding="none" aria-labelledby={`${ID}-title`} className="research">
-      <Container width="wide" className="research-head">
+      <Container className="research-head">
         <h2 id={`${ID}-title`} className="research-title">
           {headline}
         </h2>

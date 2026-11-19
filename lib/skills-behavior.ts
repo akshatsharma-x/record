@@ -67,6 +67,18 @@ function attachChip(chip: HTMLElement, listen: Listen, undo: (() => void)[]) {
     return sceneProgress({ top: box.top, height: box.height }, frameHeight());
   };
   const exploded = () => !scene() || progress() >= PHASES.explode[1] - 0.02;
+  /**
+   * Tabbing in skips the scroll scene to the exploded chip, at once: the chip's own easing
+   * shows the explosion, and a smooth scroll still running as the keyboard moves on would
+   * carry the page away from what has focus next (Safari doesn't stop it; Part 15). The die
+   * too: until the chip has exploded it's invisible, and focus there showed nothing (Part 17).
+   */
+  const skipToExploded = () => {
+    if (exploded()) return;
+    const box = chip.getBoundingClientRect();
+    const travel = box.height - frameHeight();
+    window.scrollTo({ top: window.scrollY + box.top + travel * PHASES.explode[1], behavior: "instant" });
+  };
 
   // Where the scene is, read with the frame's other reads; then written (lib/frame.ts).
   let at = 1;
@@ -123,14 +135,7 @@ function attachChip(chip: HTMLElement, listen: Listen, undo: (() => void)[]) {
       if (event.pointerType !== "touch" && chipState.active === id && pinned !== id && document.activeElement !== label) activate(pinned);
     });
     listen(label, "focus", () => {
-      // Tabbing in skips the scroll scene to the exploded chip, at once: the chip's own
-      // easing shows the explosion, and a smooth scroll still running as the keyboard moves
-      // on would carry the page away from what has focus next (Safari doesn't stop it; Part 15).
-      if (!exploded()) {
-        const box = chip.getBoundingClientRect();
-        const travel = box.height - frameHeight();
-        window.scrollTo({ top: window.scrollY + box.top + travel * PHASES.explode[1], behavior: "instant" });
-      }
+      skipToExploded();
       activate(id);
     });
     listen(label, "blur", () => {
@@ -149,6 +154,7 @@ function attachChip(chip: HTMLElement, listen: Listen, undo: (() => void)[]) {
   });
 
   if (die) {
+    listen(die, "focus", skipToExploded);
     listen(die, "click", () => {
       setChip({ ripple: performance.now() });
       // The poster ripples in CSS; restarting the attribute restarts it.

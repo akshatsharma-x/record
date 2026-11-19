@@ -26,7 +26,7 @@ function stop(page: Page): Promise<Stop | null> {
     // (Next's own overlay, under next dev only, isn't the page.)
     if (!element || element === document.body || element.tagName === "NEXTJS-PORTAL") return null;
     const holder = element.closest<HTMLElement>(".island, [data-section], footer");
-    const section = holder?.classList.contains("island") ? "island" : holder?.tagName === "FOOTER" ? "footer" : (holder?.id ?? "?");
+    const section = element.classList.contains("skip-link") ? "skip" : holder?.classList.contains("island") ? "island" : holder?.tagName === "FOOTER" ? "footer" : (holder?.id ?? "?");
     // A visually hidden radio or checkbox shows its ring on its label (styles/components.css).
     const ringed = (target: Element) => {
       const style = getComputedStyle(target);
@@ -72,12 +72,14 @@ test.describe("the keyboard walkthrough", () => {
         await page.waitForTimeout(600);
         at = (await stop(page)) ?? at;
       }
-      if (at.section === "island" && stops.some((entry) => entry.section !== "island")) break;
+      // Round again to the top: the skip link and the Island, once the page has been through.
+      if ((at.section === "skip" || at.section === "island") && stops.some((entry) => entry.section !== "skip" && entry.section !== "island")) break;
       stops.push(at);
     }
 
     const sections = stops.map((entry) => entry.section).filter((section, i, all) => section !== all[i - 1]);
-    expect(sections).toEqual(["island", "top", "about", "highlights", "experience", "research", "work", "skills", "credentials", "contact", "footer"]);
+    // First, the way past the Island's stops (WCAG 2.4.1, Part 17).
+    expect(sections).toEqual(["skip", "island", "top", "about", "highlights", "experience", "research", "work", "skills", "credentials", "contact", "footer"]);
 
     const unseen = stops.filter((entry) => !entry.ring || !entry.inView || entry.covered);
     expect(unseen.map((entry) => `${entry.section}: ${entry.name}${entry.ring ? "" : " (no ring)"}${entry.inView ? "" : " (out of view)"}${entry.covered ? " (under the Island)" : ""}`)).toEqual([]);
@@ -103,7 +105,11 @@ test.describe("the keyboard walkthrough", () => {
     await page.goto("/");
     await page.locator(".island-shell[data-measured]").waitFor();
     const toggle = page.locator(".island-toggle");
-    await page.keyboard.press(browserName === "webkit" ? "Alt+Tab" : "Tab");
+    const tab = browserName === "webkit" ? "Alt+Tab" : "Tab";
+    // The skip link first, then the Island (Part 17).
+    await page.keyboard.press(tab);
+    await expect(page.locator(".skip-link")).toBeFocused();
+    await page.keyboard.press(tab);
     await expect(toggle).toBeFocused();
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
     await page.keyboard.press("Escape");

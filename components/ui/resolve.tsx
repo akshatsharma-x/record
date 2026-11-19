@@ -60,7 +60,9 @@ export function Resolve({ as: Tag = "div", split = "lines", children, ...rest }:
           const ease = gsapEase(resolve.curve);
           const blur = `blur(${resolve.blur}px)`;
           if (split === "lines") {
-            const text = SplitText.create(element, { type: "lines", mask: "lines", aria: "auto" });
+            // Words split on a plain space alone, so a headline's no-break spaces (lib/typeset.ts)
+            // hold in the split lines too, and the text doesn't reflow when it reverts (Part 17).
+            const text = SplitText.create(element, { type: "lines", mask: "lines", aria: "auto", wordDelimiter: " ", reduceWhiteSpace: false });
             const tween = gsap.from(text.lines, {
               yPercent: 100,
               opacity: 0,
