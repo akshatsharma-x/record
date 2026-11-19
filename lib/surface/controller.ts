@@ -14,6 +14,7 @@
  * - With reduced motion there's no crossfade (§5.7): sections paint their own surfaces,
  *   and the controller only reports which one the visitor is on.
  */
+import { measure as frameRead, mutate } from "../frame.ts";
 import { scrubStep } from "../motion.ts";
 import { prefersReducedMotion, REDUCED_MOTION_QUERY } from "../reduced-motion.ts";
 import type { SurfaceName, SurfaceState, Tone } from "../stores/surface.ts";
@@ -26,6 +27,8 @@ const ZONE = 0.2;
 const ZONE_MAX = 0.5;
 /** Close enough to the target to stop the loop. */
 const SETTLED = 0.001;
+/** How far past the viewport, in viewports, a section counts as near and takes the light. */
+const NEAR = 0.5;
 
 interface Measured {
   id: string | null;
@@ -68,6 +71,12 @@ export function createSurfaceController(options: {
 }): SurfaceController {
   const root = document.documentElement;
   let sections: Measured[] = [];
+  let nodes: HTMLElement[] = [];
+  // The sections in the light: on screen or nearly, and the two being crossfaded. Only these
+  // turn transparent and take the active surface's tokens; the rest paint their own surface,
+  // so a change of light restyles a section or three, not the whole page (Part 16).
+  let near = new Set<HTMLElement>();
+  let view = { y: 0, h: 0 };
   let crossfade = false;
   let shown = { from: -1, to: -1, progress: 0 };
   let target: Blend = { from: -1, to: -1, progress: 0 };
@@ -76,7 +85,7 @@ export function createSurfaceController(options: {
   let lastReported = "";
 
   const measure = () => {
-    const nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-section][data-surface]"));
+    nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-section][data-surface]"));
     const scrollY = window.scrollY;
     sections = nodes.map((node) => {
       const rect = node.getBoundingClientRect();
@@ -91,13 +100,32 @@ export function createSurfaceController(options: {
     });
   };
 
+  /** Marks the sections in the light, changing only those that come or go. */
+  const light = (next: Set<HTMLElement>) => {
+    for (const node of near) if (!next.has(node)) node.removeAttribute("data-surface-near");
+    for (const node of next) if (!near.has(node)) node.setAttribute("data-surface-near", "");
+    near = next;
+  };
+
   const updateMode = () => {
     crossfade = sections.length > 0 && !prefersReducedMotion();
     if (crossfade) root.setAttribute("data-surface-controller", "");
     else {
       root.removeAttribute("data-surface-controller");
       root.removeAttribute("data-surface-active");
+      light(new Set());
     }
+  };
+
+  /** On screen or within half a viewport of it, and the pair being crossfaded. */
+  const nearby = (): Set<HTMLElement> => {
+    const next = new Set<HTMLElement>();
+    const margin = view.h * NEAR;
+    sections.forEach((section, i) => {
+      if (section.bottom > view.y - margin && section.top < view.y + view.h + margin) next.add(nodes[i]);
+    });
+    for (const i of [shown.from, shown.to]) if (nodes[i]) next.add(nodes[i]);
+    return next;
   };
 
   const toneOf = (surface: SurfaceName): Tone =>
@@ -113,6 +141,7 @@ export function createSurfaceController(options: {
       options.from.setAttribute("data-backdrop-surface", from.surface);
       options.to.setAttribute("data-backdrop-surface", to.surface);
       options.to.style.opacity = String(shown.progress);
+      light(nearby());
       if (root.getAttribute("data-surface-active") !== surface) root.setAttribute("data-surface-active", surface);
     }
 
@@ -147,10 +176,20 @@ export function createSurfaceController(options: {
     else lastTime = 0;
   };
 
-  const update = () => {
-    target = blendAt(sections, window.scrollY + window.innerHeight * PROBE, ZONE, window.innerHeight * ZONE_MAX);
-    if (!frame) frame = requestAnimationFrame(tick);
+  // A scroll reads with the frame's other reads, and the first step of the crossfade writes
+  // after them, in the same frame (lib/frame.ts); the smoothing goes on from there.
+  const start = () => {
+    if (!frame) tick(performance.now());
   };
+  const look = () => {
+    view = { y: window.scrollY, h: window.innerHeight };
+  };
+  const read = () => {
+    look();
+    target = blendAt(sections, view.y + view.h * PROBE, ZONE, view.h * ZONE_MAX);
+    mutate(start);
+  };
+  const update = () => frameRead(read);
 
   const refresh = () => {
     measure();
@@ -158,7 +197,8 @@ export function createSurfaceController(options: {
     lastTime = 0;
     // Paint the surface in the same task that made the sections transparent, so nothing
     // (a frame, a screen reader, axe) ever sees a section without its background.
-    target = blendAt(sections, window.scrollY + window.innerHeight * PROBE, ZONE, window.innerHeight * ZONE_MAX);
+    look();
+    target = blendAt(sections, view.y + view.h * PROBE, ZONE, view.h * ZONE_MAX);
     shown = { ...target };
     render();
   };
@@ -185,6 +225,7 @@ export function createSurfaceController(options: {
       window.removeEventListener("resize", refresh);
       root.removeAttribute("data-surface-controller");
       root.removeAttribute("data-surface-active");
+      light(new Set());
     },
   };
 }

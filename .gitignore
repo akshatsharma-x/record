@@ -51,3 +51,6 @@ next-env.d.ts
 
 # The stand-in portrait for the hero (scripts/portrait-fixture.mjs). Never committed or shipped.
 /public/_fixtures/
+
+# Lighthouse CI's runs (lighthouserc.json); its reports go to /reports/lighthouse.
+/.lighthouseci/

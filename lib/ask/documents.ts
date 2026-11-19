@@ -239,6 +239,8 @@ export function askDocuments(content: Content): AskDocument[] {
       "How this portfolio site is built.",
       // Its items have commas of their own.
       ...content.copy.colophon.rows.map((row) => `${row.label}: ${row.items.join("; ")}.`),
+      `${content.copy.colophon.accessibility.label}: ${content.copy.colophon.accessibility.statement.join(" ")}`,
+      `${content.copy.colophon.accessibility.gaps.label}: ${content.copy.colophon.accessibility.gaps.items.join(" ")}`,
     ),
   });
 

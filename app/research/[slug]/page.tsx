@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/seo/json-ld";
+import { paper as paperJsonLd } from "@/lib/structured-data";
+import { pageMetadata } from "@/lib/site";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Fragment } from "react";
@@ -12,7 +15,7 @@ import { Chip } from "@/components/ui/chip";
 import { Container, Section, Stack } from "@/components/ui/layout";
 import { Footnote, FootnoteBackLink, FootnoteRef } from "@/components/ui/type";
 import { content } from "@/content";
-import { research, scholarlyArticle, scholarMeta } from "@/content/derive";
+import { research, scholarMeta } from "@/content/derive";
 
 const paperFor = (slug: string) => research(content).find((paper) => paper.slug === slug);
 
@@ -33,8 +36,7 @@ export async function generateMetadata({ params }: PageProps<"/research/[slug]">
   const paper = paperFor((await params).slug);
   if (!paper) return {};
   return {
-    title: `${paper.title} · ${content.profile.name}`,
-    description: paper.tldr,
+    ...pageMetadata({ path: paper.href, title: `${paper.title} · ${content.profile.name}`, description: paper.tldr, type: "article" }),
     other: scholarMeta(paper),
   };
 }
@@ -49,8 +51,6 @@ export default async function PaperPage({ params }: PageProps<"/research/[slug]"
   const paper = paperFor((await params).slug);
   if (!paper) notFound();
   const { caption } = content.copy.research;
-  // Escaped as the JSON-LD guide says: no "<" can close the script early.
-  const jsonLd = JSON.stringify(scholarlyArticle(content, paper)).replace(/</g, "\\u003c");
 
   // Footnotes, numbered by content; each mention gets its own back-link (§9).
   const mentions = new Map<number, number>();
@@ -173,7 +173,7 @@ export default async function PaperPage({ params }: PageProps<"/research/[slug]"
           </Stack>
         </Container>
       </Section>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      <JsonLd data={paperJsonLd(content, paper)} />
       <Behavior section="paper" />
     </>
   );

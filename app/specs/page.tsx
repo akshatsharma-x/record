@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/site";
 import Link from "next/link";
 import { Container, Section, Stack } from "@/components/ui/layout";
 import { Footnote } from "@/components/ui/type";
@@ -8,8 +9,7 @@ import { skillsSection } from "@/content/derive";
 import { formatYearMonth } from "@/lib/dates";
 
 export const metadata: Metadata = {
-  title: `${content.copy.specs.headline.replace(/\.$/, "")} · ${content.profile.name}`,
-  description: content.copy.specs.sub ?? content.profile.headline,
+  ...pageMetadata({ path: "/specs", title: `${content.copy.specs.headline.replace(/\.$/, "")} · ${content.profile.name}`, description: content.copy.specs.sub ?? content.profile.headline }),
 };
 
 /**

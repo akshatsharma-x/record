@@ -5,7 +5,8 @@ import type { ReactNode } from "react";
 import { StageView } from "@/components/three/stage";
 import { useNearScene } from "@/components/three/use-near-scene";
 
-const ChipScene = dynamic(() => import("./chip-scene"), { ssr: false });
+// From the one 3D chunk (components/three/bundle.ts).
+const ChipScene = dynamic(() => import("@/components/three/bundle").then((bundle) => bundle.ChipScene), { ssr: false });
 
 /**
  * The chip's window onto the shared stage (DESIGN.md §7.7, §10): the 3D scene on HIGH and

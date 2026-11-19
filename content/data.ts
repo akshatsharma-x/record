@@ -841,15 +841,73 @@ export const data = {
       rows: [
         { label: "Framework", items: ["Next.js 16, with the App Router, Cache Components and Partial Prefetching", "React 19", "TypeScript, in strict mode"] },
         { label: "Styling", items: ["Tailwind CSS 4, on CSS variables", "Continuous corners, where the browser supports them"] },
-        { label: "Type", items: ["SF Pro, New York and SF Mono on Apple devices", "Inter, Newsreader and JetBrains Mono elsewhere"] },
+        { label: "Type", items: ["SF Pro, New York and SF Mono on Apple devices", "Inter, Newsreader and JetBrains Mono elsewhere", "Every face served from this site, never from a font service"] },
         { label: "Motion", items: ["GSAP's SplitText for the Resolve", "Springs driven by time, never by frames"] },
-        { label: "3D", items: ["three.js, React Three Fiber and drei", "One WebGL context for the whole site", "Procedural models in studio light: nothing downloaded"] },
+        {
+          label: "Cursor",
+          items: [
+            "Always findable: a dot in whichever ink shows against what's under it",
+            "No lag: the dot is where the pointer is, and only the shape around it springs",
+            "The system's own cursor for typing, for touch, in forced colors and whenever it's asked for",
+          ],
+        },
+        {
+          label: "3D",
+          items: [
+            "three.js, React Three Fiber and drei",
+            "One WebGL context for the whole site",
+            "Procedural models in studio light: nothing downloaded",
+            "Only where the device draws it smoothly, with posters everywhere else",
+          ],
+        },
         { label: "Content", items: ["One typed file, checked with zod at every build", "Every number with its footnote"] },
         { label: "Contact", items: ["Resend for delivery", "Upstash for the rate limit"] },
         { label: "Ask", items: ["Claude, through Anthropic's API", "Answers from the site's own content, each claim cited", "The site's own text when it can't answer"] },
-        { label: "Privacy", items: ["No cookies", "No phone number, anywhere"] },
-        { label: "Testing", items: ["Vitest", "Playwright, in WebKit first", "axe-core"] },
+        {
+          label: "Privacy",
+          items: [
+            "No cookies",
+            "No phone number, anywhere",
+            "Vercel Web Analytics, without cookies: visits, and when a section is reached, a case study opened, a message sent or Ask used, never what was written",
+          ],
+        },
+        { label: "Security", items: ["A strict content security policy: only the site's own scripts run", "Keys only in the server's environment"] },
+        { label: "Testing", items: ["Vitest", "Playwright, in WebKit first", "axe-core", "Lighthouse CI and size-limit on every pull request"] },
       ],
+      budgets: {
+        label: "Budgets",
+        budget: "Budget",
+        home: "Home page",
+        metrics: {
+          javascript: "First-load JavaScript",
+          performance: "Performance",
+          accessibility: "Accessibility",
+          bestPractices: "Best practices",
+          seo: "SEO",
+          lcp: "Largest Contentful Paint",
+          cls: "Cumulative Layout Shift",
+        },
+        units: { kb: "{value} KB", seconds: "{value} s" },
+        measured: {
+          local: "Lighthouse {version} on its phone profile, with throttling, on a production build, {date}.",
+          live: "Lighthouse {version} on its phone profile, with throttling, at {host}, {date}.",
+        },
+        javascript: "JavaScript as this build counts it, in KB of gzip.",
+      },
+      accessibility: {
+        label: "Accessibility",
+        statement: [
+          "This site aims for WCAG 2.2 at level AA, and every pull request is tested for it.",
+          "axe finds nothing on any page, in either theme, on a phone or a desktop, with motion or without. Every pairing of text and its background is tested for contrast, and every target is at least 44 points.",
+          "The whole site works with a keyboard, along a written path that runs as a test in Safari's engine and in Chrome's. Anything that moves for more than five seconds can be paused.",
+          "Reduced motion, reduced transparency, increased contrast and forced colors each get an edition of their own, and so do phones, print, reader views and browsers without JavaScript.",
+        ],
+        gaps: {
+          label: "Known gaps",
+          items: ["A reader view leaves out five of the seven highlights and the skills' lists. Experience and /specs give both in full."],
+        },
+        contact: "If something here doesn't work for you, write to {email}.",
+      },
       things: {
         label: "Things to find",
         show: "Show the things to find",

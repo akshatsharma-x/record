@@ -19,6 +19,7 @@ import {
 import { warmSearch } from "@/components/search/warm";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { cx } from "@/lib/cx";
+import { measure, mutate } from "@/lib/frame";
 import { ISLAND_TIMING, setIslandExpanded, useIsland } from "@/lib/island/store";
 import { durations } from "@/lib/motion";
 import { prefersReducedMotion } from "@/lib/reduced-motion";
@@ -265,25 +266,35 @@ export function Island({ initials }: { initials: string }) {
 
   // ─── Scroll progress ───────────────────────────────────────────────────────
 
+  // The page's length is measured when it changes, never as it scrolls: a scroll reads only
+  // the scroll position, before anything writes (lib/frame.ts).
   useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const root = document.documentElement;
-      const range = root.scrollHeight - window.innerHeight;
-      const progress = range > 0 ? Math.min(1, Math.max(0, window.scrollY / range)) : 0;
-      ring.current?.style.setProperty("--island-progress", progress.toFixed(4));
+    const root = document.documentElement;
+    let range = 0;
+    let progress = 0;
+    let alive = true;
+    const write = () => {
+      if (alive) ring.current?.style.setProperty("--island-progress", progress.toFixed(4));
     };
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(update);
+    const read = () => {
+      progress = range > 0 ? Math.min(1, Math.max(0, window.scrollY / range)) : 0;
+      mutate(write);
     };
-    update();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
+    const size = () => {
+      range = root.scrollHeight - window.innerHeight;
+      measure(read);
+    };
+    const onScroll = () => measure(read);
+    size();
+    const resize = new ResizeObserver(size);
+    resize.observe(root);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", size);
     return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
+      alive = false;
+      resize.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", size);
     };
   }, [pathname]);
 

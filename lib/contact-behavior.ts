@@ -4,6 +4,7 @@
  * this magnifies the dock, bounces what it launches and copies the email, and checks,
  * sends and threads the visitor's message. Each part returns what undoes it.
  */
+import { track } from "@vercel/analytics";
 import { Check, CircleAlert } from "lucide-react";
 import { checkField, type ContactInput, type Field, type FieldCode, mailtoFor } from "./contact";
 import { magnify } from "./dock";
@@ -336,6 +337,8 @@ export function attachComposer(form: HTMLFormElement): () => void {
       inputs.message.value = "";
       touched.delete("message");
       island.show({ icon: Check, title: form.dataset.sent ?? "", tone: "success" });
+      // Counted, and nothing more: not who, not what (Part 16).
+      track("Message sent");
       return;
     }
     if (status === 400 && body?.fields) {

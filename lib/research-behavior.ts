@@ -5,6 +5,7 @@
  * what undoes it.
  */
 import { Check, CircleAlert } from "lucide-react";
+import { measure as frameRead, mutate } from "./frame";
 import { ISLAND_TIMING, island } from "./island/store";
 import { createHazeEngine } from "./haze";
 import { announceClearSkies, clearSkies } from "./surprises/clear-skies";
@@ -227,9 +228,9 @@ export function attachChain(root: HTMLElement): () => void {
 
 /**
  * Plays #research's chapters from the scroll (DESIGN.md §7.5). While a chapter is pinned,
- * --play on it follows the scroll exactly, 0 to 1 over the first three quarters of its
- * pin, and a "chapterplay" event carries the same number to the illustrations that need
- * it in script. Unpinned (phones, reduced motion), --play is left unset, so CSS shows
+ * --play on its illustration follows the scroll exactly, 0 to 1 over the first three
+ * quarters of its pin, and a "chapterplay" event carries the same number to the
+ * illustrations that need it in script. Unpinned (phones, reduced motion), --play is left unset, so CSS shows
  * every illustration's final frame, and each hears 1 once.
  */
 export function attachChapters(): () => void {
@@ -254,19 +255,38 @@ export function attachChapters(): () => void {
     chapter.dispatchEvent(new CustomEvent("chapterplay", { detail: play }));
   };
 
-  const update = () => {
+  // A scroll reads where each chapter is with the frame's other reads, and writes after them
+  // (lib/frame.ts); a resize or a change of mode does both at once.
+  let plays: number[] = [];
+  let disposed = false;
+  const drawings = chapters.map((chapter) => chapter.querySelector<HTMLElement>(".illustration") ?? chapter);
+  const read = () => {
+    plays = geometry.map(({ top, length }) => playAt((window.scrollY - top) / length));
+  };
+  const write = () => {
+    if (disposed) return;
     chapters.forEach((chapter, i) => {
+      // On the illustration, the only thing that reads it, so the scrub restyles the drawing
+      // and not the paper's card beside it (Part 16).
+      const drawing = drawings[i];
       if (!pinned) {
-        chapter.style.removeProperty("--play");
+        drawing.style.removeProperty("--play");
         tell(chapter, 1);
         return;
       }
-      const { top, length } = geometry[i];
-      const play = playAt((window.scrollY - top) / length);
-      chapter.style.setProperty("--play", play.toFixed(4));
-      tell(chapter, play);
+      drawing.style.setProperty("--play", plays[i].toFixed(4));
+      tell(chapter, plays[i]);
     });
   };
+  const update = () => {
+    read();
+    write();
+  };
+  const scrolled = () => {
+    read();
+    mutate(write);
+  };
+  const onScroll = () => frameRead(scrolled);
 
   /** Pinned, does every chapter's card fit its stage? Where one doesn't, they stay a column. */
   const fits = () =>
@@ -305,7 +325,6 @@ export function attachChapters(): () => void {
   });
   resize.observe(document.body);
   window.addEventListener("resize", mode);
-  let disposed = false;
   void document.fonts?.ready.then(() => {
     if (!disposed) mode();
   });
@@ -313,7 +332,7 @@ export function attachChapters(): () => void {
   for (const query of queries) query.addEventListener("change", mode);
   const forced = new MutationObserver(mode);
   forced.observe(document.documentElement, { attributes: true, attributeFilter: ["data-motion"] });
-  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("scroll", onScroll, { passive: true });
   return () => {
     disposed = true;
     near.disconnect();
@@ -321,8 +340,8 @@ export function attachChapters(): () => void {
     resize.disconnect();
     forced.disconnect();
     for (const query of queries) query.removeEventListener("change", mode);
-    window.removeEventListener("scroll", update);
-    for (const chapter of chapters) chapter.style.removeProperty("--play");
+    window.removeEventListener("scroll", onScroll);
+    for (const drawing of drawings) drawing.style.removeProperty("--play");
     section.removeAttribute("data-unfit");
   };
 }

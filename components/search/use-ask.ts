@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@vercel/analytics";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AskSource } from "@/lib/ask/documents";
 import { localAnswer } from "@/lib/ask/fallback";
@@ -67,6 +68,8 @@ export function useAsk(payload: SearchPayload | null) {
       };
 
       setAnswer({ ...IDLE, phase: "asking", question });
+      // Counted, never the question itself (§6.3's guardrails, Part 16).
+      track("Ask used");
       let response: Response;
       try {
         response = await fetch("/api/ask", {

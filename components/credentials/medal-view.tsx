@@ -6,7 +6,8 @@ import { StageView } from "@/components/three/stage";
 import { useNearScene } from "@/components/three/use-near-scene";
 import type { MedalShape } from "@/lib/medals";
 
-const MedalScene = dynamic(() => import("./medal-scene"), { ssr: false });
+// From the one 3D chunk (components/three/bundle.ts).
+const MedalScene = dynamic(() => import("@/components/three/bundle").then((bundle) => bundle.MedalScene), { ssr: false });
 
 export interface MedalSceneProps {
   id: string;

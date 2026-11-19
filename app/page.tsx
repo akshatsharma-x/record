@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { About } from "@/components/about/about";
 import { Contact } from "@/components/contact/contact";
 import { Credentials } from "@/components/credentials/credentials";
@@ -10,11 +11,14 @@ import { Highlights } from "@/components/highlights/highlights";
 import { Research } from "@/components/research/research";
 import { Skills } from "@/components/skills/skills";
 import { Work, type WorkMarks } from "@/components/work/work";
+import { JsonLd } from "@/components/seo/json-ld";
 import { FootnoteRef } from "@/components/ui/type";
 import { content } from "@/content";
 import { edit, medals, wallet, work } from "@/content/derive";
 import type { Claim } from "@/content/schema";
 import { portraitFor } from "@/lib/portrait-fixture";
+import { pageMetadata } from "@/lib/site";
+import { person } from "@/lib/structured-data";
 
 /**
  * The story (DESIGN.md §3.1), in order. Part 4 laid down its structure so the Island and
@@ -24,6 +28,9 @@ import { portraitFor } from "@/lib/portrait-fixture";
  * work bento Part 9's, the chip Part 10's, the wallet and the medals Part 11's, and the
  * close, the dock, the thread and the footer Part 12's.
  */
+/** The home page's canonical address and share card, as a person's profile (lib/site.ts). */
+export const metadata: Metadata = pageMetadata({ path: "/", title: content.profile.name, description: content.profile.headline, type: "profile" });
+
 export default function Home() {
   const { profile, highlights } = content;
 
@@ -108,6 +115,7 @@ export default function Home() {
     .map((note) => ({ id: note.id, note: note.note, source: note.source ?? null, mentions: mentions.get(note.id) ?? 0 }));
   return (
     <>
+      <JsonLd data={person(content)} />
       <main>{story}</main>
       <Footer notes={cited} />
     </>

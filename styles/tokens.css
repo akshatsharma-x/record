@@ -16,7 +16,8 @@
  * Contexts: data-theme="light|dark" and data-finish on <html>; data-surface="light|
  * light-alt|dark" on sections; data-tone="light|dark" for a local override; and, while the
  * surface controller runs, data-surface-active on <html>, which sets the text tokens of
- * every section at once (DESIGN.md §4.2).
+ * every section in the light at once: those on screen or nearly, which it marks
+ * data-surface-near (DESIGN.md §4.2; Part 16).
  */
 
 /* ─── 1. Palette ──────────────────────────────────────────────────────────── */
@@ -154,8 +155,8 @@
   [data-tone="light"],
   [data-theme="light"] [data-surface="light"],
   [data-theme="light"] [data-surface="light-alt"],
-  [data-theme="light"][data-surface-active="light"] [data-section],
-  [data-theme="light"][data-surface-active="light-alt"] [data-section] {
+  [data-theme="light"][data-surface-active="light"] [data-section][data-surface-near],
+  [data-theme="light"][data-surface-active="light-alt"] [data-section][data-surface-near] {
     --tone-dark: 0;
     --color-bg: var(--neutral-light-bg);
     --color-bg-alt: var(--neutral-light-bg-alt);
@@ -178,7 +179,7 @@
   [data-tone="dark"],
   [data-theme="dark"] [data-surface],
   [data-theme="light"] [data-surface="dark"],
-  [data-theme="light"][data-surface-active="dark"] [data-section] {
+  [data-theme="light"][data-surface-active="dark"] [data-section][data-surface-near] {
     --tone-dark: 1;
     --color-bg: var(--neutral-dark-bg);
     --color-bg-alt: var(--neutral-dark-bg-alt);
@@ -220,13 +221,13 @@
      become bg-alt, so the rhythm between light and dark survives. */
   :root,
   [data-theme="light"] [data-surface="light"],
-  [data-theme="light"][data-surface-active="light"] [data-section] {
+  [data-theme="light"][data-surface-active="light"] [data-section][data-surface-near] {
     --color-surface: var(--neutral-light-bg);
     --color-card: var(--neutral-light-bg-alt);
   }
 
   [data-theme="light"] [data-surface="light-alt"],
-  [data-theme="light"][data-surface-active="light-alt"] [data-section] {
+  [data-theme="light"][data-surface-active="light-alt"] [data-section][data-surface-near] {
     --color-surface: var(--neutral-light-bg-alt);
     --color-card: var(--neutral-light-card);
   }
@@ -234,16 +235,16 @@
   [data-theme="dark"],
   [data-theme="dark"] [data-surface="dark"],
   [data-theme="light"] [data-surface="dark"],
-  [data-theme="dark"][data-surface-active="dark"] [data-section],
-  [data-theme="light"][data-surface-active="dark"] [data-section] {
+  [data-theme="dark"][data-surface-active="dark"] [data-section][data-surface-near],
+  [data-theme="light"][data-surface-active="dark"] [data-section][data-surface-near] {
     --color-surface: var(--neutral-dark-bg);
     --color-card: var(--neutral-dark-card);
   }
 
   [data-theme="dark"] [data-surface="light"],
   [data-theme="dark"] [data-surface="light-alt"],
-  [data-theme="dark"][data-surface-active="light"] [data-section],
-  [data-theme="dark"][data-surface-active="light-alt"] [data-section] {
+  [data-theme="dark"][data-surface-active="light"] [data-section][data-surface-near],
+  [data-theme="dark"][data-surface-active="light-alt"] [data-section][data-surface-near] {
     --color-surface: var(--neutral-dark-bg-alt);
     --color-card: var(--neutral-dark-card);
   }
@@ -850,7 +851,7 @@
 @custom-variant tile-compact (@container work-tile (height < 26rem));
 
 /* When a figure in an edit visual starts counting, so it counts as the visual shows it
-   (components/experience/edit-controller.tsx reads it). */
+   (lib/edit-behavior.ts reads it). */
 @property --count-delay {
   syntax: "<time>";
   inherits: true;

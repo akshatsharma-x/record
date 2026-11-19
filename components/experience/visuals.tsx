@@ -24,7 +24,7 @@ function Svg({ kind, children }: { kind: string; children: ReactNode }) {
   );
 }
 
-/** A figure as SVG text whose digits the edit's counter can count (components/experience/edit-controller.tsx). */
+/** A figure as SVG text whose digits the edit's counter can count (lib/edit-behavior.ts). */
 function Figure({ token, className, ...position }: { token: string; className: string; x: number; y: number; textAnchor?: "start" | "middle" | "end" }) {
   return (
     <text className={className} {...position}>
