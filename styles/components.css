@@ -1796,16 +1796,26 @@
     opacity: 1;
   }
 
-  /* With reduced motion: no glint, no lit dots, no rule drawing out. */
-  @variant reduced-motion {
-    .hero-type .hero-name::after,
-    .hero-type .hero-facts::before {
+  /* With reduced motion: no glint, no lit dots, no rule drawing out. (Pseudo-elements can't
+     sit inside :is(), so each is named.) */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .hero-type .hero-name::after,
+    :root:not([data-motion="full"]) .hero-type .hero-facts::before {
       animation: none;
     }
 
-    .hero-spot {
+    :root:not([data-motion="full"]) .hero-spot {
       display: none;
     }
+  }
+
+  :root[data-motion="reduce"] .hero-type .hero-name::after,
+  :root[data-motion="reduce"] .hero-type .hero-facts::before {
+    animation: none;
+  }
+
+  :root[data-motion="reduce"] .hero-spot {
+    display: none;
   }
 
   /* ─── The portrait edition ─── */
