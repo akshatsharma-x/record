@@ -6,10 +6,16 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { content } from "@/content";
+import { heroFacts } from "@/content/derive";
 import { parseCss, rootTokens } from "@/lib/css-tokens";
-import { APERTURE, apertureBlur, apertureIndex, formatStop, type Light, untilNextMinute, warmthAt } from "@/lib/hero";
+import { APERTURE, apertureBlur, apertureIndex, formatStop, HERO, type Light, untilNextMinute, warmthAt } from "@/lib/hero";
 
-const tokens = rootTokens(parseCss(readFileSync(path.join(process.cwd(), "styles", "tokens.css"), "utf8")));
+const css = readFileSync(path.join(process.cwd(), "styles", "tokens.css"), "utf8");
+const rules = parseCss(css);
+const tokens = rootTokens(rules);
+/** The tokens the reduced-motion edition sets (the data-motion="reduce" twin of the media query). */
+const reduced = new Map(rules.find((rule) => rule.selector.trim() === ':root[data-motion="reduce"]')!.tokens);
 
 function token(name: string): string {
   const value = tokens.get(name);
@@ -124,6 +130,43 @@ describe("the CSS twins (the brief's numbers)", () => {
     expect(Number(token("--hero-register-scale"))).toBeGreaterThan(1);
     // A few pixels of depth under the mouse, never a whole step of the grid.
     expect(px("--hero-field-shift")).toBeLessThan(px("--hero-pitch"));
+  });
+
+  it("brings the UI in turn: the links, each key fact 30ms after the one before, then the finish, all within 1.2s (Part 19)", () => {
+    const last = heroFacts(content).length + 1;
+    expect(ms("--hero-ui-delay") + last * ms("--hero-ui-stagger") + ms("--hero-ui-fade")).toBeLessThanOrEqual(1200);
+    expect(px("--hero-ui-rise")).toBeGreaterThan(0);
+  });
+
+  it("glints across the name within the arrival, and rests where the controller parks it (Part 19)", () => {
+    expect(ms("--hero-glint-sweep")).toBeLessThanOrEqual(900);
+    expect(ms("--hero-glint-delay") + ms("--hero-glint-sweep")).toBeLessThanOrEqual(1200);
+    // The registered property's first value is the controller's resting place: off to the
+    // right, as far as a pointer can draw it, so the glint never shows before anything moves.
+    const initial = /@property --hero-glint-x \{[^}]*initial-value: (-?[\d.]+)/.exec(css);
+    expect(Number(initial?.[1])).toBe(HERO.glint.parked);
+    expect(HERO.glint.parked).toBe(HERO.glint.max);
+    expect(HERO.glint.min).toBeLessThan(0);
+  });
+
+  it("lights a pool of the field's own dots, a little larger, and tilts the field back as the hero goes (Part 19)", () => {
+    expect(px("--hero-spot-dot-size")).toBeGreaterThan(px("--hero-dot-size"));
+    expect(px("--hero-spot-radius")).toBeGreaterThan(px("--hero-pitch") * 4);
+    const tilt = parseFloat(token("--hero-tilt"));
+    expect(tilt).toBeGreaterThan(0);
+    expect(tilt).toBeLessThan(90);
+    expect(HERO.outReach).toBeGreaterThan(0);
+    expect(HERO.outReach).toBeLessThanOrEqual(1);
+  });
+
+  it("with reduced motion, recedes, tilts, rises and staggers nothing (Part 19)", () => {
+    expect(reduced.get("--hero-tilt")).toBe("0deg");
+    expect(reduced.get("--hero-out-recede")).toBe("0");
+    expect(reduced.get("--hero-light-rise")).toBe("0vh");
+    expect(reduced.get("--hero-light-swell")).toBe("0");
+    expect(reduced.get("--hero-foot-drop")).toBe("0vh");
+    expect(reduced.get("--hero-ui-rise")).toBe("0px");
+    expect(reduced.get("--hero-ui-stagger")).toBe("0ms");
   });
 
   it("draws the loupe as a 120px lens at 1.35×", () => {
