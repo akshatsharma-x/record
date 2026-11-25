@@ -1,55 +1,11 @@
 "use client";
 
-import { Pause, Play } from "lucide-react";
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect } from "react";
 import { measure, mutate } from "@/lib/frame";
 import { HERO, warmthAt } from "@/lib/hero";
-import { type SpringState, springAtRest, springs, stepSpring } from "@/lib/motion";
-import { SCROLLED_STORAGE_KEY } from "@/lib/preferences";
-import { prefersReducedMotion, REDUCED_MOTION_QUERY } from "@/lib/reduced-motion";
 import { jumpTo } from "@/lib/jump";
-
-const PAUSED_KEY = "classyfolio:hero-paused";
-
-// The pause choice, for this session: a tiny store, so it hydrates as "playing".
-let pausedValue: boolean | null = null;
-const pausedListeners = new Set<() => void>();
-function readPaused(): boolean {
-  if (pausedValue === null) {
-    try {
-      pausedValue = sessionStorage.getItem(PAUSED_KEY) === "1";
-    } catch {
-      pausedValue = false;
-    }
-  }
-  return pausedValue;
-}
-function writePaused(next: boolean) {
-  pausedValue = next;
-  try {
-    if (next) sessionStorage.setItem(PAUSED_KEY, "1");
-    else sessionStorage.removeItem(PAUSED_KEY);
-  } catch {
-    // Storage off: the choice lasts for this page.
-  }
-  for (const listener of pausedListeners) listener();
-}
-function subscribePaused(listener: () => void) {
-  pausedListeners.add(listener);
-  return () => pausedListeners.delete(listener);
-}
-
-/** Whether anything in the hero loops right now: the light field, or the cue before the first scroll. */
-function subscribeLoops(listener: () => void) {
-  const motion = window.matchMedia(REDUCED_MOTION_QUERY);
-  const observer = new MutationObserver(listener);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-scrolled", "data-motion"] });
-  motion.addEventListener("change", listener);
-  return () => {
-    observer.disconnect();
-    motion.removeEventListener("change", listener);
-  };
-}
+import { type SpringState, springAtRest, springs, stepSpring } from "@/lib/motion";
+import { prefersReducedMotion } from "@/lib/reduced-motion";
 
 interface HeroControllerProps {
   /** The hero section's id. */
@@ -58,29 +14,17 @@ interface HeroControllerProps {
 }
 
 /**
- * The hero's behavior (DESIGN.md §7), layered onto server-rendered markup:
+ * The hero's behavior (DESIGN.md §7.1), layered onto server-rendered markup:
  * - Scroll-out: --hero-out runs 0 → 1 as the hero leaves; CSS turns it into motion.
- * - Loops pause off-screen, in a hidden tab, and with the pause button (WCAG 2.2.2).
- * - The first scroll is remembered (data-scrolled), so the hero's arrival plays once.
  * - Typographic edition: the light's warmth follows the visitor's time of day.
- * - Portrait edition: the pointer, or a tilt that needs no permission, moves the layers
- *   in depth on the smooth spring.
- * With reduced motion there's no scroll-out, parallax or loop.
+ * - Depth: the pointer, or a tilt that needs no permission, moves the layers on the smooth
+ *   spring: the portrait's plate, name and subject, the typographic edition's upper dot
+ *   grid and its light (Part 18).
+ * Nothing loops, so there's nothing to pause (Part 18). With reduced motion there's no
+ * scroll-out or parallax.
  */
 export function HeroController({ target, edition }: HeroControllerProps) {
-  const paused = useSyncExternalStore(subscribePaused, readPaused, () => false);
-  // The pause button shows only while something loops.
-  const loops = useSyncExternalStore(
-    subscribeLoops,
-    () => !prefersReducedMotion() && (edition === "type" || !document.documentElement.hasAttribute("data-scrolled")),
-    () => false,
-  );
-
-  useEffect(() => {
-    document.getElementById(target)?.toggleAttribute("data-paused", paused);
-  }, [paused, target]);
-
-  // A chip about one thing jumps to it (lib/jump.ts): the current role's lands the edit's
+  // A fact about one thing jumps to it (lib/jump.ts): the current role's lands the edit's
   // playhead on that role, not on the timeline's start (Part 17). Without JavaScript it's
   // the link to its heading.
   useEffect(() => {
@@ -98,32 +42,18 @@ export function HeroController({ target, edition }: HeroControllerProps) {
   useEffect(() => {
     const hero = document.getElementById(target);
     if (!hero) return;
-    const root = document.documentElement;
     let alive = true;
 
-    // Scroll-out, and the first scroll: the scroll position read with the frame's other
-    // reads, against the hero's height measured when it changes, and written after them
-    // (lib/frame.ts).
+    // Scroll-out: the scroll position read with the frame's other reads, against the hero's
+    // height measured when it changes, and written after them (lib/frame.ts).
     let height = Math.max(1, hero.offsetHeight);
     let out = 0;
-    let first = false;
     const write = () => {
-      if (!alive) return;
-      if (first && !root.hasAttribute("data-scrolled")) {
-        root.setAttribute("data-scrolled", "");
-        try {
-          localStorage.setItem(SCROLLED_STORAGE_KEY, "1");
-        } catch {
-          // Storage off: the cue rests for this visit only.
-        }
-      }
-      hero.style.setProperty("--hero-out", out.toFixed(4));
+      if (alive) hero.style.setProperty("--hero-out", out.toFixed(4));
     };
     const read = () => {
-      const y = window.scrollY;
-      first = y > 8;
       // With reduced motion the hero stays put as it scrolls away.
-      out = prefersReducedMotion() ? 0 : Math.min(1, Math.max(0, y / height));
+      out = prefersReducedMotion() ? 0 : Math.min(1, Math.max(0, window.scrollY / height));
       mutate(write);
     };
     const onScroll = () => measure(read);
@@ -134,12 +64,6 @@ export function HeroController({ target, edition }: HeroControllerProps) {
     sized.observe(hero);
     read();
     window.addEventListener("scroll", onScroll, { passive: true });
-
-    // Loops rest off-screen and in a hidden tab.
-    const intersection = new IntersectionObserver(([entry]) => hero.toggleAttribute("data-offscreen", !entry.isIntersecting));
-    intersection.observe(hero);
-    const onVisibility = () => hero.toggleAttribute("data-hidden-tab", document.visibilityState === "hidden");
-    document.addEventListener("visibilitychange", onVisibility);
 
     // The light's warmth, from the visitor's clock.
     let warmthTimer = 0;
@@ -158,15 +82,12 @@ export function HeroController({ target, edition }: HeroControllerProps) {
       alive = false;
       sized.disconnect();
       window.removeEventListener("scroll", onScroll);
-      intersection.disconnect();
-      document.removeEventListener("visibilitychange", onVisibility);
       window.clearTimeout(warmthTimer);
     };
   }, [target, edition]);
 
-  // Portrait parallax: one sprung offset (-1…1 on each axis); each layer scales it by its depth.
+  // Depth: one sprung offset (-1…1 on each axis); each layer scales it by its own depth.
   useEffect(() => {
-    if (edition !== "portrait") return;
     const hero = document.getElementById(target);
     if (!hero) return;
     let goal = { x: 0, y: 0 };
@@ -220,18 +141,7 @@ export function HeroController({ target, edition }: HeroControllerProps) {
       hero.removeEventListener("pointerleave", onLeave);
       window.removeEventListener("deviceorientation", onTilt);
     };
-  }, [target, edition]);
+  }, [target]);
 
-  if (!loops) return null;
-  return (
-    <button
-      type="button"
-      className="hero-pause"
-      aria-pressed={paused}
-      aria-label={paused ? "Play the background motion" : "Pause the background motion"}
-      onClick={() => writePaused(!paused)}
-    >
-      {paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
-    </button>
-  );
+  return null;
 }

@@ -389,13 +389,28 @@
   --print-caps-tracking: 0.06em;
   --print-qr: 20mm;
 
-  /* The hero (§7, Part 5). */
+  /* The hero (§7, Parts 5 and 18). */
   --hero-height: 100svh;
   --hero-light-alpha: 0.22;
-  --hero-light-size: 72vmax;
-  --hero-light-loop: 20s;
-  --hero-cue-width: 134px;
-  --hero-cue-height: 5px;
+  /* The stage light rises from below the name, and moves this far against the field under a mouse. */
+  --hero-light-travel: 12px;
+  /* The field (Part 18): two dot grids, the upper one arriving out of register, turned and
+     scaled, and sliding into it as the name comes into focus. */
+  --hero-pitch: 14px;
+  --hero-dot-size: 1.15px;
+  /* The dot's soft edge, so it draws round at every pixel density. */
+  --hero-dot-edge: 0.6px;
+  --hero-dot: rgb(255 255 255 / 0.17);
+  --hero-field-at: 50% 42%;
+  --hero-field-reach: 62% 56%;
+  --hero-field-shift: 6px;
+  --hero-register: var(--duration-reveal-long);
+  --hero-register-turn: 12deg;
+  --hero-register-scale: 1.12;
+  /* The name's sheen: white, to a little less at the foot of each line. */
+  --hero-name-sheen: rgb(255 255 255 / 0.74);
+  /* The key facts' rule, at the first screen's foot. */
+  --hero-hairline: rgb(255 255 255 / 0.14);
   --hero-out-name: -14vh;
   --hero-out-subject: 9vh;
   --hero-out-scale: 0.92;
@@ -405,10 +420,10 @@
   --hero-parallax-plate: 8px;
   --hero-parallax-name: 4px;
   --hero-parallax-subject: 12px;
-  /* The portrait's name starts just under the date line, so a head framed about 15–20%
-     from the top covers only the lower part of the letters, as on the Lock Screen. */
+  /* The portrait's name starts under the Island, so a head framed about 15–20% from the
+     top covers only the lower part of the letters, as on the Lock Screen. */
   --hero-name-top: calc(var(--island-clearance) + var(--text-eyebrow) * 2);
-  /* Room at the foot of the first screen for the scroll cue and the pause button. */
+  /* Room at the foot of the first screen. */
   --hero-foot: calc(env(safe-area-inset-bottom) + var(--spacing) * 2 + var(--target-min));
   --aperture-width: 300px;
   /* The photo sets these two inline (components/hero/hero.tsx); these are the stand-in's. */
@@ -777,6 +792,8 @@
   :root:not([data-motion="full"]) {
     --motion-press-scale: 1;
     --hero-ui-delay: 0ms;
+    --hero-register-turn: 0deg;
+    --hero-register-scale: 1;
     --hero-out-name: 0vh;
     --hero-out-subject: 0vh;
     --hero-out-scale: 1;
@@ -798,6 +815,8 @@
 :root[data-motion="reduce"] {
   --motion-press-scale: 1;
   --hero-ui-delay: 0ms;
+  --hero-register-turn: 0deg;
+  --hero-register-scale: 1;
   --hero-out-name: 0vh;
   --hero-out-subject: 0vh;
   --hero-out-scale: 1;

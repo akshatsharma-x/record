@@ -235,7 +235,7 @@ test.describe("without JavaScript", () => {
     const top = hero(page);
     await expect(top.getByRole("heading", { level: 1 })).toHaveText("Akshat Sharma");
     await expect(top.getByRole("img", { name: /stand-in studio portrait/ })).toBeVisible();
-    for (const text of ["AI & ML Engineer", "AI & ML Intern at United Airlines"]) await expect(top.getByText(text)).toBeVisible();
+    for (const text of ["AI & ML Engineer", "AI & ML Intern, United Airlines"]) await expect(top.getByText(text)).toBeVisible();
     await expect(top.getByRole("link", { name: "See my work" })).toBeVisible();
   });
 });

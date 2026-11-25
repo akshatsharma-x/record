@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { APERTURE } from "@/lib/hero";
 import { durations } from "@/lib/motion";
-import { FINISH_STORAGE_KEY, PREFERENCES_SCRIPT, SCROLLED_STORAGE_KEY, THEME_STORAGE_KEY } from "@/lib/preferences";
+import { FINISH_STORAGE_KEY, PREFERENCES_SCRIPT, THEME_STORAGE_KEY } from "@/lib/preferences";
 import { applyFinish, applyThemeChoice } from "@/lib/theme";
 
 function prefersDark(dark: boolean, reducedMotion = false) {
@@ -25,7 +25,7 @@ const root = () => document.documentElement;
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
-  for (const name of ["data-theme", "data-theme-choice", "data-finish", "data-motion", "data-scrolled"]) root().removeAttribute(name);
+  for (const name of ["data-theme", "data-theme-choice", "data-finish", "data-motion"]) root().removeAttribute(name);
   root().style.removeProperty("--aperture-blur");
 });
 
@@ -62,15 +62,6 @@ describe("the head script (before first paint)", () => {
     runHeadScript();
     expect(root().hasAttribute("data-finish")).toBe(false);
     expect(root().getAttribute("data-theme-choice")).toBe("system");
-  });
-
-  it("rests the scroll cue for good once the visitor has scrolled", () => {
-    prefersDark(false);
-    runHeadScript();
-    expect(root().hasAttribute("data-scrolled")).toBe(false);
-    localStorage.setItem(SCROLLED_STORAGE_KEY, "1");
-    runHeadScript();
-    expect(root().hasAttribute("data-scrolled")).toBe(true);
   });
 
   it("restores the aperture for the session, so the plate never flashes the default blur", () => {

@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseCss, rootTokens } from "@/lib/css-tokens";
-import { APERTURE, apertureBlur, apertureIndex, dateLine, formatStop, type Light, untilNextMinute, warmthAt } from "@/lib/hero";
+import { APERTURE, apertureBlur, apertureIndex, formatStop, type Light, untilNextMinute, warmthAt } from "@/lib/hero";
 
 const tokens = rootTokens(parseCss(readFileSync(path.join(process.cwd(), "styles", "tokens.css"), "utf8")));
 
@@ -21,6 +21,14 @@ function px(name: string): number {
   const match = /^(-?[\d.]+)px$/.exec(token(name));
   if (!match) throw new Error(`${name} isn't in px: ${token(name)}`);
   return Number(match[1]);
+}
+
+/** A duration token in ms, itself or through the var() it names. */
+function ms(name: string): number {
+  const value = token(name);
+  const alias = /^var\((--[\w-]+)\)$/.exec(value);
+  if (alias) return ms(alias[1]);
+  return Number(/^(\d+)ms$/.exec(value)![1]);
 }
 
 describe("the aperture dial", () => {
@@ -49,28 +57,8 @@ describe("the aperture dial", () => {
   });
 });
 
-describe("the date line", () => {
-  const jaipur = { label: "IST", timeZone: "Asia/Kolkata" };
-  // 04:11 UTC is 9:41 AM in India.
-  const now = new Date(Date.UTC(2026, 10, 16, 4, 11));
-
-  it("reads like a Lock Screen: Akshat's date and time, and where that is", () => {
-    expect(dateLine(now, jaipur, "en-US")).toBe("Monday, November 16 · 9:41 AM IST");
-    expect(dateLine(now, { label: "in Jaipur", timeZone: "Asia/Kolkata" }, "en-US")).toMatch(/ · 9:41 AM in Jaipur$/);
-  });
-
-  it("is Akshat's day wherever the visitor is: never the visitor's date beside Akshat's time", () => {
-    // 22:20 on Sunday the 15th in Chicago is 9:50 on Monday the 16th in India.
-    const evening = new Date(Date.UTC(2026, 10, 16, 4, 20));
-    expect(dateLine(evening, jaipur, "en-US")).toBe("Monday, November 16 · 9:50 AM IST");
-  });
-
-  it("follows the visitor's locale for both halves", () => {
-    expect(dateLine(now, jaipur, "en-GB")).toMatch(/^\w+ \d{1,2} \w+ · 9:41 IST$/);
-    expect(dateLine(now, jaipur, "de-DE")).toMatch(/^\w+, \d{1,2}\. \w+ · 0?9:41 IST$/);
-  });
-
-  it("ticks on the minute", () => {
+describe("the clocks", () => {
+  it("tick on the minute", () => {
     expect(untilNextMinute(0)).toBe(60_000);
     expect(untilNextMinute(59_999)).toBe(1);
     expect(untilNextMinute(61_000)).toBe(59_000);
@@ -121,15 +109,21 @@ describe("the CSS twins (the brief's numbers)", () => {
     expect(px("--portrait-blur-far")).toBe(24);
     expect(px("--portrait-blur-near")).toBe(8);
     expect(px("--portrait-blur-subject")).toBe(12);
-    const ms = (name: string) => Number(/^(\d+)ms$/.exec(token(name))![1]);
     expect(ms("--portrait-pull")).toBeLessThanOrEqual(1200);
     expect(ms("--hero-ui-delay") + ms("--hero-ui-fade")).toBeLessThanOrEqual(1200);
   });
 
-  it("scrolls out with the subject at .92 and loops the light over 20s; the cue is still", () => {
+  it("scrolls out with the subject at .92, and loops nothing: no drifting light, no cue (Part 18)", () => {
     expect(Number(token("--hero-out-scale"))).toBe(0.92);
-    expect(token("--hero-light-loop")).toBe("20s");
-    expect(tokens.has("--hero-cue-breath")).toBe(false);
+    for (const gone of ["--hero-light-loop", "--hero-cue-breath", "--hero-cue-width"]) expect(tokens.has(gone)).toBe(false);
+  });
+
+  it("slides the field into register within a reveal, from a turn and a scale that read as noise (Part 18)", () => {
+    expect(ms("--hero-register")).toBeLessThanOrEqual(900);
+    expect(parseFloat(token("--hero-register-turn"))).toBeGreaterThan(0);
+    expect(Number(token("--hero-register-scale"))).toBeGreaterThan(1);
+    // A few pixels of depth under the mouse, never a whole step of the grid.
+    expect(px("--hero-field-shift")).toBeLessThan(px("--hero-pitch"));
   });
 
   it("draws the loupe as a 120px lens at 1.35×", () => {

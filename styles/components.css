@@ -1343,7 +1343,6 @@
     }
   }
 
-  .hero-date,
   .hero-role,
   .hero-headline {
     animation: hero-fade var(--motion-resolve-duration) var(--ease-out) backwards;
@@ -1351,10 +1350,9 @@
   }
 
   /* The UI arrives last. */
-  .hero-chips,
   .hero-ctas,
-  .hero-ui,
-  .hero-pause {
+  .hero-facts,
+  .hero-ui {
     animation: hero-fade var(--hero-ui-fade) var(--ease-out) var(--hero-ui-delay) backwards;
   }
 
@@ -1369,33 +1367,24 @@
     text-wrap: nowrap;
   }
 
-  /* Full width, so the box stays put when the live date replaces the fallback. */
-  .hero-date {
-    align-self: stretch;
-    color: var(--color-fg);
-    font-size: var(--text-eyebrow);
-    font-weight: var(--font-weight-semibold);
-    line-height: var(--text-eyebrow--line-height);
-    letter-spacing: var(--text-eyebrow--letter-spacing);
-    font-variant-numeric: tabular-nums;
+  /* The name's sheen (Part 18): white, falling to a little less at the foot of each line,
+     like light across a surface. Per line, so each one's focus pull blurs its own text. */
+  .hero-line {
+    background-image: linear-gradient(to bottom, var(--neutral-dark-fg) 38%, var(--hero-name-sheen));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   .hero-role {
     color: var(--color-fg);
+    font-weight: var(--font-weight-semibold);
   }
 
   .hero-headline {
     max-width: var(--container-measure);
     color: var(--color-fg);
     text-wrap: balance;
-  }
-
-  /* Rows far enough apart that the chips' 44pt targets never overlap when they wrap. */
-  .hero-chips {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: calc(var(--spacing) * 3) calc(var(--spacing) * 2);
   }
 
   .hero-ctas {
@@ -1414,159 +1403,275 @@
     gap: calc(var(--spacing) * 4);
   }
 
-  /* Like a product's colors: each swatch with its name beneath, in one row even on phones. */
-  .hero-swatches {
-    justify-content: center;
-  }
-
-  .hero-swatches > label {
-    flex-direction: column;
-    min-width: calc(var(--target-min) * 1.5);
-  }
-
-  /* The scroll cue: a slim home-indicator bar, still. It breathed every 4s until the first
-     scroll, a loop at the screen's foot that §2 rule 4 keeps out of the periphery, and that
-     restyled the page 60 times a second while the visitor read (Part 17). */
-  .hero-cue {
-    position: absolute;
-    bottom: calc(env(safe-area-inset-bottom) + var(--spacing) * 3);
-    left: 50%;
-    z-index: 3;
-    width: var(--hero-cue-width);
-    height: var(--hero-cue-height);
-    border-radius: var(--radius-pill);
-    background-color: var(--neutral-dark-fg);
-    opacity: 0.45;
-    translate: -50% 0;
-    animation: hero-fade var(--hero-ui-fade) var(--ease-out) var(--hero-ui-delay) backwards;
-  }
-
-  .hero-pause {
-    position: absolute;
-    right: var(--spacing-page);
-    bottom: calc(env(safe-area-inset-bottom) + var(--spacing) * 2);
-    z-index: 4;
+  /* The key facts (Part 18): each a label over its value, a link to its section; then the
+     finish. A list on phones, a row of specs from tablets up. */
+  .hero-facts {
     display: grid;
-    width: var(--target-min);
-    height: var(--target-min);
-    place-items: center;
-    border-radius: var(--radius-pill);
-    background-color: var(--color-control-track);
+    gap: calc(var(--spacing) * 4);
+    text-align: start;
+  }
+
+  /* On phones, a list: more room between facts than inside one, so each label reads with
+     its own value. */
+  .hero-fact-list {
+    display: grid;
+    gap: calc(var(--spacing) * 3);
+  }
+
+  /* A step between each label and its value leaves the chosen finish's ring room under its
+     label. */
+  .hero-fact,
+  .hero-finish {
+    row-gap: calc(var(--spacing) * 1.5);
+  }
+
+  .hero-fact {
+    display: grid;
+    min-height: var(--target-min);
+    align-content: center;
+    border-radius: var(--radius-control);
     color: var(--color-fg);
   }
 
-  /* Loops rest off-screen, in a hidden tab and when paused. */
-  :is(.hero[data-paused], .hero[data-offscreen], .hero[data-hidden-tab]) :is(.hero-light-blob, .hero-cue) {
-    animation-play-state: paused;
+  /* Every word in the light's reach is white: fg-2 fails where the glows meet (Part 5). The
+     label steps down in size and up in weight instead. */
+  .hero-fact-label {
+    color: var(--color-fg);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--text-caption--line-height);
   }
 
-  /* ─── The typographic edition ─── */
+  .hero-fact-value {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    text-wrap: balance;
+  }
+
+  @media (hover: hover) {
+    .hero-fact:hover .hero-fact-value {
+      text-decoration: underline;
+      text-underline-offset: var(--underline-offset);
+    }
+  }
+
+  .hero-fact:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .hero-fact:active {
+    scale: var(--motion-press-scale);
+  }
+
+  .hero-finish {
+    display: grid;
+  }
+
+  /* Four dots and the chosen one's name, as a product's color picker shows them. The row
+     takes a value's line: its targets reach past it, half above and half below, so the
+     label reads on the facts' line and the dots center on their values. */
+  .hero-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: calc(var(--spacing) * 3);
+    margin-block: calc((1lh - var(--target-min)) / 2);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  .hero-swatches label {
+    justify-content: center;
+    min-width: var(--target-min);
+  }
+
+  .hero-finish-name {
+    color: var(--color-fg);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* The chosen finish's ring, white too: a state that has to show over the light. Focus
+     keeps its own ring. */
+  .hero-swatches input:checked:not(:focus-visible) + .swatch {
+    outline-color: var(--color-fg);
+  }
+
+  .hero-finish-name > span {
+    display: none;
+  }
+
+  html[data-finish="contrail"] .hero-finish-name > [data-finish-name="contrail"],
+  html[data-finish="pink-city"] .hero-finish-name > [data-finish-name="pink-city"],
+  html[data-finish="saffron"] .hero-finish-name > [data-finish-name="saffron"],
+  html[data-finish="monsoon"] .hero-finish-name > [data-finish-name="monsoon"] {
+    display: inline;
+  }
+
+  /* ─── The typographic edition: "Into focus" (Part 18) ─── */
+
+  /* The first screen: the stack in the middle, the key facts at its foot (each inside its
+     container's gutter, which is the grid's item). */
+  .hero-type {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .hero-type > :has(> .hero-stack) {
+    align-self: center;
+  }
+
+  .hero-type > :has(> .hero-foot) {
+    align-self: end;
+  }
 
   .hero-type .hero-stack {
-    padding-block: var(--island-clearance) calc(var(--spacing) * 16);
+    padding-block: var(--island-clearance) calc(var(--spacing) * 10);
     translate: 0 calc(var(--hero-out) * var(--hero-out-name));
     opacity: calc(1 - var(--hero-out) * 1.25);
   }
 
-  /* The light field: soft discs of the finish's hues and the hour's warmth, drifting on a
-     20s loop. Radial gradients, so nothing needs a blur filter. Its strength is capped so
-     every line of hero text keeps its contrast (tests/unit/contrast.test.ts). */
+  /* The line under the name reads as a subhead, a step up from body copy. */
+  .hero-type .hero-headline {
+    font-size: calc(var(--text-lead) * 1.2);
+    letter-spacing: var(--text-lead--letter-spacing);
+  }
+
+  /* The role over the name, in the finish's two hues. */
+  .hero-type .hero-role {
+    background-image: linear-gradient(to right, var(--accent-on-dark), var(--accent-2-on-dark));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-foot {
+    position: relative;
+    z-index: 3;
+    padding-block-end: calc(env(safe-area-inset-bottom) + var(--spacing) * 8);
+    opacity: calc(1 - var(--hero-out) * 1.5);
+  }
+
+  .hero-type .hero-facts {
+    padding-block-start: calc(var(--spacing) * 4);
+    border-block-start: var(--hairline-width) solid var(--hero-hairline);
+  }
+
+  /* From tablets up the facts are a row of specs, each column as wide as what it says,
+     or, where the row is short of room, a little narrower, its value on two balanced lines.
+     In the typographic edition the finish closes the row where it fits and starts the next
+     where it doesn't; the portrait's centers them all. */
+  @variant md {
+    .hero-fact-list {
+      grid-auto-columns: auto;
+      grid-auto-flow: column;
+      justify-content: start;
+      column-gap: calc(var(--grid-gutter) * 2);
+    }
+
+    .hero-type .hero-facts {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: start;
+      justify-content: space-between;
+      column-gap: calc(var(--grid-gutter) * 2);
+    }
+
+    .hero-portrait .hero-facts {
+      justify-items: center;
+      text-align: center;
+    }
+  }
+
+  /* The stage light (Part 18): the finish's two hues and the hour's warmth, rising from
+     below the name. Still; under a mouse it moves a little against the field, for depth.
+     Radial gradients, capped so every line of text keeps its contrast where all three meet
+     (tests/unit/contrast.test.ts). */
   .hero-light {
     position: absolute;
-    inset: 0;
+    inset: calc(var(--hero-light-travel) * -1);
     z-index: 0;
     overflow: hidden;
     pointer-events: none;
     opacity: calc(1 - var(--hero-out) * var(--hero-out-dim));
+    translate: calc(var(--px) * var(--hero-light-travel) * -1) calc(var(--py) * var(--hero-light-travel) * -1);
     animation: hero-fade var(--duration-count) var(--ease-out) backwards;
   }
 
-  .hero-light-blob {
+  .hero-light-glow {
     position: absolute;
-    width: var(--hero-light-size);
-    height: var(--hero-light-size);
     border-radius: var(--radius-pill);
     background-image: radial-gradient(
       closest-side,
-      color-mix(in srgb, var(--blob) calc(var(--hero-light-alpha) * 100%), transparent),
+      color-mix(in srgb, var(--glow) calc(var(--hero-light-alpha) * 100%), transparent),
       transparent
     );
-    animation: hero-drift-a var(--hero-light-loop) var(--ease-in-out) infinite;
-    will-change: translate, scale;
   }
 
-  [data-blob="a"] {
-    --blob: var(--accent-on-dark);
-    top: calc(var(--hero-light-size) * -0.35);
-    left: calc(var(--hero-light-size) * -0.3);
+  /* A horizon under the name, a second hue to one side, the hour's warmth to the other. */
+  [data-light="a"] {
+    --glow: var(--accent-on-dark);
+    bottom: -38%;
+    left: -15%;
+    width: 130%;
+    height: 90%;
   }
 
-  [data-blob="b"] {
-    --blob: var(--accent-2-on-dark);
-    top: calc(var(--hero-light-size) * 0.1);
-    right: calc(var(--hero-light-size) * -0.35);
-    animation-name: hero-drift-b;
+  [data-light="b"] {
+    --glow: var(--accent-2-on-dark);
+    right: -20%;
+    bottom: -20%;
+    width: 70%;
+    height: 70%;
   }
 
-  [data-blob="c"] {
-    --blob: color-mix(in oklab, var(--warmth-from, var(--light-noon)), var(--warmth-to, var(--light-noon)) var(--warmth-mix, 0%));
-    bottom: calc(var(--hero-light-size) * -0.5);
-    left: calc(var(--hero-light-size) * 0.15);
+  [data-light="c"] {
+    --glow: color-mix(in oklab, var(--warmth-from, var(--light-noon)), var(--warmth-to, var(--light-noon)) var(--warmth-mix, 0%));
+    bottom: -24%;
+    left: -22%;
+    width: 64%;
+    height: 64%;
     opacity: 0;
     transition: opacity var(--duration-count) var(--ease-out);
-    animation-name: hero-drift-c;
   }
 
-  .hero[data-warm] [data-blob="c"] {
+  .hero[data-warm] [data-light="c"] {
     opacity: 1;
   }
 
-  @keyframes hero-drift-a {
-    0%,
-    100% {
-      translate: 0 0;
-      scale: 1;
-    }
-
-    33% {
-      translate: calc(var(--hero-light-size) * 0.22) calc(var(--hero-light-size) * 0.12);
-      scale: 1.12;
-    }
-
-    66% {
-      translate: calc(var(--hero-light-size) * 0.08) calc(var(--hero-light-size) * 0.26);
-      scale: 0.92;
-    }
+  /* The field (Part 18): two fine dot grids. The upper one arrives turned and scaled, out of
+     register with the other, the noise of an unclear system, and slides into register as
+     the name comes into focus: one calm grid, complexity turned to order. Under a mouse it
+     follows the pointer a few pixels, and the grid takes on depth. Transforms only, so the
+     compositor does it; a mask keeps it to the middle of the stage. */
+  .hero-field {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: calc(1 - var(--hero-out) * 1.25);
+    -webkit-mask-image: radial-gradient(var(--hero-field-reach) at var(--hero-field-at), var(--neutral-dark-bg) 18%, transparent 78%);
+    mask-image: radial-gradient(var(--hero-field-reach) at var(--hero-field-at), var(--neutral-dark-bg) 18%, transparent 78%);
   }
 
-  @keyframes hero-drift-b {
-    0%,
-    100% {
-      translate: 0 0;
-      scale: 1;
-    }
-
-    40% {
-      translate: calc(var(--hero-light-size) * -0.2) calc(var(--hero-light-size) * 0.18);
-      scale: 0.9;
-    }
-
-    75% {
-      translate: calc(var(--hero-light-size) * -0.08) calc(var(--hero-light-size) * -0.1);
-      scale: 1.1;
-    }
+  .hero-field-layer {
+    position: absolute;
+    inset: calc(var(--hero-pitch) * -4);
+    background-image: radial-gradient(circle, var(--hero-dot) var(--hero-dot-size), transparent calc(var(--hero-dot-size) + var(--hero-dot-edge)));
+    background-position: center;
+    background-size: var(--hero-pitch) var(--hero-pitch);
   }
 
-  @keyframes hero-drift-c {
-    0%,
-    100% {
-      translate: 0 0;
-      scale: 1.05;
-    }
+  [data-field="upper"] {
+    translate: calc(var(--px) * var(--hero-field-shift)) calc(var(--py) * var(--hero-field-shift));
+    animation: hero-register var(--hero-register) var(--ease-out) backwards;
+  }
 
-    50% {
-      translate: calc(var(--hero-light-size) * 0.18) calc(var(--hero-light-size) * -0.12);
-      scale: 0.95;
+  @keyframes hero-register {
+    from {
+      rotate: var(--hero-register-turn);
+      scale: var(--hero-register-scale);
     }
   }
 
@@ -1663,15 +1768,6 @@
     inset: 0;
     background-color: var(--neutral-dark-bg);
     opacity: calc(var(--hero-out) * var(--hero-out-dim));
-  }
-
-  .hero-top {
-    position: absolute;
-    top: var(--island-clearance);
-    right: 0;
-    left: 0;
-    z-index: 3;
-    text-align: center;
   }
 
   .hero-name-layer {
@@ -1806,13 +1902,9 @@
       gap: calc(var(--spacing) * 3);
     }
 
-    .hero-swatches > label {
-      min-width: var(--target-min);
-    }
-
-    /* The first screen is the portrait, like a Lock Screen: the date, the name behind the
-       head, and the role and headline at its foot. The chips, links and finishes follow
-       on the dark floor. */
+    /* The first screen is the portrait, like a Lock Screen: the name behind the head, and
+       the role and headline at its foot. The links and the key facts follow on the dark
+       floor. */
     .hero-portrait {
       display: block;
       min-height: var(--hero-height);
@@ -1878,34 +1970,20 @@
       gap: calc(var(--spacing) * 4);
     }
 
-    /* The cue and the pause button close the first screen. */
-    .hero-portrait .hero-cue {
-      top: calc(var(--hero-height) - env(safe-area-inset-bottom) - var(--spacing) * 3 - var(--hero-cue-height));
-      bottom: auto;
-    }
-
-    .hero-portrait .hero-pause {
-      top: calc(var(--hero-height) - var(--hero-foot));
-      bottom: auto;
-    }
   }
 
-  /* Without JavaScript nothing can pause the light, so it holds still; the swatches,
-     pause button and dial need a script, so they wait for one. */
+  /* Without JavaScript the finish and the dial need a script, so they wait for one. */
   @media (scripting: none) {
-    .hero-light-blob,
-    .hero-cue {
-      animation: hero-fade var(--hero-ui-fade) var(--ease-out) backwards;
-    }
-
+    .hero-finish,
     .hero-ui {
       display: none;
     }
   }
 
-  /* Reduced motion: no drift, no breath, no scroll-out; the light holds still. */
+  /* Reduced motion: the field arrives in register (its turn and scale are none, in the
+     tokens), with no scroll-out, and the portrait's focus pull is a fade. */
   @media (prefers-reduced-motion: reduce) {
-    :root:not([data-motion="full"]) :is(.hero-light-blob, .hero-cue, .hero-plate-far, .hero-subject-soft) {
+    :root:not([data-motion="full"]) :is(.hero-plate-far, .hero-subject-soft) {
       animation: none;
     }
 
@@ -1914,7 +1992,7 @@
     }
   }
 
-  :root[data-motion="reduce"] :is(.hero-light-blob, .hero-cue, .hero-plate-far, .hero-subject-soft) {
+  :root[data-motion="reduce"] :is(.hero-plate-far, .hero-subject-soft) {
     animation: none;
   }
 

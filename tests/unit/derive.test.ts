@@ -12,7 +12,7 @@ import {
   gaps,
   glance,
   graduation,
-  heroChips,
+  heroFacts,
   initialism,
   mentions,
   nowRole,
@@ -278,12 +278,18 @@ describe("the hero", () => {
     expect(initialism("Artificial Intelligence & Machine Learning")).toBe("AIML");
   });
 
-  it("derives the three context chips, each pointing at the section that tells the rest", () => {
-    expect(heroChips(content)).toEqual([
-      { label: "AI & ML Intern at United Airlines", section: "experience", target: "united-airlines-title" },
-      { label: "B.Tech CSE \u201927 \u00b7 Manipal University Jaipur", section: "credentials" },
-      { label: "SCI-2026 \u00b7 Springer LNNS", section: "research" },
+  it("derives the hero's three key facts, each under its label and pointing at the section that tells the rest", () => {
+    expect(heroFacts(content)).toEqual([
+      { id: "now", label: "Now", value: "AI & ML Intern, United Airlines", section: "experience", target: "united-airlines-title" },
+      { id: "studying", label: "Studying", value: "B.Tech CSE \u201927, Manipal University Jaipur", section: "credentials" },
+      { id: "presented", label: "Presented", value: "SCI-2026, Springer LNNS", section: "research" },
     ]);
+  });
+
+  it("says nothing on the first screen about where Akshat is (Part 18)", () => {
+    const { location } = content.profile;
+    const said = heroFacts(content).map((fact) => fact.value).join(" ");
+    for (const place of [location.country, location.timeZone, "IST"]) expect(said).not.toContain(place);
   });
 
   it("names Akshat's clock by its time zone until the city is confirmed, then by the city", () => {

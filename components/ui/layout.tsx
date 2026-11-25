@@ -23,7 +23,11 @@ interface SectionProps extends BaseProps {
   padding?: "section" | "none";
 }
 
-/** A top-level part of the story. The surface controller crossfades between these. */
+/**
+ * A top-level part of the story. The surface controller crossfades between these, and
+ * marks the ones in the light (data-surface-near) as soon as it runs, which can be before
+ * a section has hydrated: that attribute is the controller's, so React isn't told to mind.
+ */
 export function Section({ id, surface, name, padding = "section", as: Tag = "section", className, ...rest }: SectionProps) {
   return (
     <Tag
@@ -32,6 +36,7 @@ export function Section({ id, surface, name, padding = "section", as: Tag = "sec
       data-surface={surface}
       data-section-name={name}
       className={cx(padding === "section" && "py-section", className)}
+      suppressHydrationWarning
       {...rest}
     />
   );

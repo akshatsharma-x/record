@@ -271,9 +271,10 @@ test.describe("Search's secret commands", () => {
   test("[surprise:command-941] 9:41: every clock on the site shows 9:41 for five seconds", async ({ page, isMobile }) => {
     await page.clock.setFixedTime(AFTERNOON);
     await open(page);
-    // Every clock there is: the hero's date line, the glance's Local time and the close's.
+    // Every clock there is: the glance's Local time and the close's. The first screen has
+    // none (Part 18).
     await toSection(page, "contact", "data-contact-ready");
-    const clocks = [page.locator(".hero-date"), page.locator('[data-tile="time"]'), page.locator(".contact-clock-line").first()];
+    const clocks = [page.locator('[data-tile="time"]'), page.locator(".contact-clock-line").first()];
     for (const clock of clocks) await expect(clock).toContainText("3:30");
     await command(page, isMobile, commands.nineFortyOne.phrase, commands.nineFortyOne.label);
     for (const clock of clocks) await expect(clock).toContainText("9:41");

@@ -557,8 +557,16 @@ const SurprisesCopy = z.strictObject({
 const Copy = z.strictObject({
   /** The first Tab stop on every page, past the Island to the page's own content (Part 17). */
   skip: Text,
-  /** The hero's name, role and headline come from profile; its date line is live (Part 5). */
-  hero: z.strictObject({ ctaWork: Text, ctaHello: Text }),
+  /** The hero's name, role and headline come from profile (Part 5). */
+  hero: z.strictObject({
+    ctaWork: Text,
+    ctaHello: Text,
+    /**
+     * The key facts at the first screen's foot (Part 18): the list's name, each fact's label
+     * and the finish picker's. The facts themselves are derived (content/derive.ts, heroFacts).
+     */
+    facts: z.strictObject({ label: Text, now: Text, studying: Text, presented: Text, finish: Text }),
+  }),
   statement: z.strictObject({
     headline: Text,
     /** The section's one gradient phrase (DESIGN.md §4.4). It must appear in the headline once. */

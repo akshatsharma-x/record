@@ -208,7 +208,18 @@ describe("the hero (Part 5)", () => {
     }
   });
 
-  it("keeps the portrait's date line and name readable over even a white wall", () => {
+  // The role is in the finish's two hues (Part 18): the light rises no higher than half the
+  // hero, and the role sits above it (tests/e2e/hero.spec.ts), so it's on black, even over a
+  // dot of the field. Everything lower is white.
+  it.each(FINISHES)("keeps the role's two hues readable on the black above the light, even over a dot ($name)", ({ id }) => {
+    const dot = over(color("--hero-dot"), black);
+    for (const hue of [color(`--finish-${id}-on-dark`), color(`--finish-${id}-2-on-dark`)]) {
+      expect(ratio(hue, black)).toBeGreaterThanOrEqual(AA);
+      expect(ratio(hue, dot)).toBeGreaterThanOrEqual(AA);
+    }
+  });
+
+  it("keeps the portrait's name readable over even a white wall", () => {
     expect(ratio(fg, over(color("--portrait-scrim"), paper))).toBeGreaterThanOrEqual(AA);
   });
 
