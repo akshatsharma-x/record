@@ -1,9 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PRODUCTION = 3100;
-const DEVELOPMENT = 3220;
+// Each port can move, for a machine where another app already holds it: E2E_PORT,
+// E2E_DEV_PORT and E2E_MOCK_PORT.
+const PRODUCTION = Number(process.env.E2E_PORT ?? 3100);
+const DEVELOPMENT = Number(process.env.E2E_DEV_PORT ?? 3220);
 /** The stand-in for the Messages API that Ask asks in these tests (tests/support/anthropic-mock.ts). */
-const ANTHROPIC_MOCK = 3199;
+const ANTHROPIC_MOCK = Number(process.env.E2E_MOCK_PORT ?? 3199);
 const production = `http://localhost:${PRODUCTION}`;
 const development = `http://localhost:${DEVELOPMENT}`;
 

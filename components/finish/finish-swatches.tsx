@@ -32,7 +32,8 @@ export function FinishSwatches({
 
   return (
     <fieldset
-      className={cx("flex flex-wrap items-center gap-x-4 gap-y-2", className)}
+      // Compact, the 44-point targets sit side by side, so the dots read as one control.
+      className={cx("flex flex-wrap items-center gap-y-2", compact ? "gap-x-0" : "gap-x-4", className)}
     >
       <legend className="sr-only">Finish</legend>
       {FINISHES.map((option) => (

@@ -2,10 +2,9 @@ import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
 import { Behavior } from "@/components/ui/behavior";
 import { Button } from "@/components/ui/button";
-import { Chip } from "@/components/ui/chip";
 import { Container, Section } from "@/components/ui/layout";
 import { content } from "@/content";
-import { clockPlace, heroChips, publicLocation } from "@/content/derive";
+import { heroFacts } from "@/content/derive";
 import type { Portrait } from "@/content/schema";
 import { cx } from "@/lib/cx";
 import { HERO } from "@/lib/hero";
@@ -13,7 +12,6 @@ import { SECTIONS } from "@/lib/sections";
 import { devanagariName } from "@/lib/surprises/devanagari-name";
 import { heroLens } from "@/lib/surprises/hero-lens";
 import { Aperture } from "./aperture";
-import { DateLine } from "./date-line";
 import { HeroController } from "./hero-controller";
 import { HeroSwatches } from "./hero-swatches";
 import { typeset } from "@/lib/typeset";
@@ -22,11 +20,11 @@ const ID = "top";
 const NAME = SECTIONS.find((section) => section.id === ID)!.name;
 
 /**
- * The hero (DESIGN.md §7, Part 5), in two editions. The portrait edition switches on by
- * itself when content has a photo; until then the typographic edition ships. Both read
- * fully without JavaScript and with reduced motion: the arrival is CSS from the first
- * paint, the name is the LCP element (or the portrait's subject is), and nothing waits on
- * a script to appear.
+ * The hero (DESIGN.md §7.1, Parts 5 and 18), in two editions. The portrait edition switches
+ * on by itself when content has a photo; until then the typographic edition ships. Both
+ * read fully without JavaScript and with reduced motion: the arrival is CSS from the first
+ * paint, the name is the LCP element (or the portrait's subject is), and nothing waits on a
+ * script to appear. Neither says where Akshat is (Part 18).
  */
 export function Hero({ photo }: { photo: Portrait | null }) {
   return photo ? <PortraitHero photo={photo} /> : <TypeHero />;
@@ -73,81 +71,95 @@ function Name({ loupe }: { loupe?: boolean }) {
   );
 }
 
-function DateLineSlot() {
-  const location = publicLocation(content);
-  return (
-    <DateLine
-      className="hero-date"
-      place={clockPlace(content)}
-      fallback={`${location.place} · ${location.timeZoneLabel}`}
-    />
-  );
+/** The role: the typographic edition's eyebrow, over the name, in the finish's gradient. */
+function Role() {
+  return <p className="hero-role text-eyebrow">{content.profile.role}</p>;
 }
 
-/** The role and the one line about Akshat. */
-function Intro() {
-  const { profile } = content;
-  return (
-    <>
-      <p className="hero-role text-eyebrow">{profile.role}</p>
-      <p className="hero-headline text-lead">{typeset(profile.headline, { lastWord: true })}</p>
-    </>
-  );
+/** The one line about Akshat. */
+function Headline() {
+  return <p className="hero-headline text-lead">{typeset(content.profile.headline, { lastWord: true })}</p>;
 }
 
-/** The context chips and the two ways forward. */
-function Actions() {
+/** The two ways forward. */
+function Ctas() {
   const { copy } = content;
   return (
-    <>
-      <ul className="hero-chips" aria-label="Key facts">
-        {heroChips(content).map((chip) => (
-          <li key={chip.label}>
-            <Chip as="a" href={`#${chip.target ?? chip.section}`} data-jump={chip.target ? "" : undefined}>
-              {chip.label}
-            </Chip>
+    <div className="hero-ctas">
+      <Button href="#work">{copy.hero.ctaWork}</Button>{" "}
+      {/* The link style draws its own ›. White on the dark hero, so it reads over the light. */}
+      <Button variant="link" href="#contact" className="hero-hello text-fg!">
+        {copy.hero.ctaHello.replace(/\s*›\s*$/, "")}
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * The key facts (Part 18): each a label over its value and a link to its section, the
+ * current role's to its panel in the edit (lib/jump.ts); then the finish. Like a product
+ * page's specs at the foot of its first screen.
+ */
+function Facts() {
+  const words = content.copy.hero.facts;
+  return (
+    <div className="hero-facts">
+      <ul className="hero-fact-list" aria-label={words.label}>
+        {heroFacts(content).map((fact) => (
+          <li key={fact.id}>
+            {/* Read as one phrase, its label first: "Now: AI & ML Intern, United Airlines". */}
+            <a
+              className="hero-fact"
+              href={`#${fact.target ?? fact.section}`}
+              aria-label={`${fact.label}: ${fact.value}`}
+              data-jump={fact.target ? "" : undefined}
+            >
+              <span className="hero-fact-label">{fact.label}</span>{" "}
+              <span className="hero-fact-value">{fact.value}</span>
+            </a>
           </li>
         ))}
       </ul>
-      <div className="hero-ctas">
-        <Button href="#work">{copy.hero.ctaWork}</Button>{" "}
-        {/* The link style draws its own ›. White on the dark hero, so it reads over the light field. */}
-        <Button variant="link" href="#contact" className="hero-hello text-fg!">
-          {copy.hero.ctaHello.replace(/\s*›\s*$/, "")}
-        </Button>
+      <div className="hero-finish">
+        <p className="hero-fact-label" aria-hidden="true">
+          {words.finish}
+        </p>
+        <HeroSwatches className="hero-swatches" />
       </div>
-    </>
+    </div>
   );
-}
-
-function Cue() {
-  return <span className="hero-cue" aria-hidden="true" />;
 }
 
 // ─── The typographic edition ─────────────────────────────────────────────────
 
 /**
- * The name huge and centered on a dark surface, over a slow light field in the finish's
- * hues. The loupe magnifies the letters under the cursor (DESIGN.md §6.1).
+ * "Into focus" (Part 18): the name on a dark stage, lit from below in the finish's hues,
+ * over two fine dot grids that arrive out of register, the noise of an unclear system,
+ * and slide into register as the name comes into focus: complexity turned to order. Then
+ * nothing moves on its own; under a mouse the upper grid follows the pointer a few pixels
+ * and the light moves against it. The loupe magnifies the name (DESIGN.md §6.1).
  */
 function TypeHero() {
   return (
     <Section id={ID} name={NAME} surface="dark" padding="none" aria-labelledby={`${ID}-title`} className="hero hero-type">
       <div className="hero-light" aria-hidden="true">
-        <span className="hero-light-blob" data-blob="a" />
-        <span className="hero-light-blob" data-blob="b" />
-        <span className="hero-light-blob" data-blob="c" />
+        <span className="hero-light-glow" data-light="a" />
+        <span className="hero-light-glow" data-light="b" />
+        <span className="hero-light-glow" data-light="c" />
+      </div>
+      <div className="hero-field" aria-hidden="true">
+        <span className="hero-field-layer" data-field="base" />
+        <span className="hero-field-layer" data-field="upper" />
       </div>
       <Container width="wide" className="hero-stack">
-        <DateLineSlot />
+        <Role />
         <Name loupe={heroLens.on} />
-        <Intro />
-        <Actions />
-        <div className="hero-ui">
-          <HeroSwatches className="hero-swatches" />
-        </div>
+        <Headline />
+        <Ctas />
       </Container>
-      <Cue />
+      <Container width="wide" className="hero-foot">
+        <Facts />
+      </Container>
       <HeroController target={ID} edition="type" />
     </Section>
   );
@@ -220,12 +232,6 @@ function PortraitHero({ photo }: { photo: Portrait }) {
         <span className="hero-dim" />
       </Layer>
 
-      <div className="hero-top">
-        <Container width="wide">
-          <DateLineSlot />
-        </Container>
-      </div>
-
       <Layer depth="name" className="hero-name-layer">
         <Name />
       </Layer>
@@ -261,18 +267,20 @@ function PortraitHero({ photo }: { photo: Portrait }) {
       <div className="hero-bottom">
         <Container width="wide" className="hero-stack hero-stack-portrait">
           <div className="hero-intro">
-            <Intro />
+            <Role />
+            <Headline />
           </div>
           <div className="hero-more">
-            <Actions />
-            <div className="hero-ui">
-              <HeroSwatches className="hero-swatches" />
-              {heroLens.on ? <Aperture target={ID} /> : null}
-            </div>
+            <Ctas />
+            <Facts />
+            {heroLens.on ? (
+              <div className="hero-ui">
+                <Aperture target={ID} />
+              </div>
+            ) : null}
           </div>
         </Container>
       </div>
-      <Cue />
       <HeroController target={ID} edition="portrait" />
     </Section>
   );

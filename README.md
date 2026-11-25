@@ -17,7 +17,7 @@ npm run dev        # then open /dev/content to proofread the content
 | `npm run build` | Checks content, builds for production, writes each page's script policy, then scans the output for phone-shaped numbers. |
 | `npm run start` | Serves the production build. |
 | `npm run check` | Typecheck, lint and unit tests. |
-| `npm run test:e2e` | Builds, serves on port 3100 and runs Playwright in Safari (desktop and iPhone) and Chrome. |
+| `npm run test:e2e` | Builds, serves on port 3100 (or `E2E_PORT`, where another app holds it) and runs Playwright in Safari (desktop and iPhone) and Chrome. |
 | `npm run size` | After a build: holds every route's first-load JavaScript to the 170 KB budget (size-limit). |
 | `npm run lighthouse` | Lighthouse CI on the home page, a case study and a paper, on port 3240, held to DESIGN.md §10. |
 | `npm run measure` | Lighthouse CI, then writes its numbers into `content/measured.ts` for /colophon. |

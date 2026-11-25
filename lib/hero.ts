@@ -42,30 +42,7 @@ export function apertureBlur(index: number): number {
   return APERTURE.blur[apertureIndex(index)];
 }
 
-// ─── The date line ───────────────────────────────────────────────────────────
-
-const formatters = new Map<string, Intl.DateTimeFormat>();
-
-function formatter(locale: string | undefined, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
-  const key = `${locale ?? ""}|${JSON.stringify(options)}`;
-  let format = formatters.get(key);
-  if (!format) {
-    format = new Intl.DateTimeFormat(locale, options);
-    formatters.set(key, format);
-  }
-  return format;
-}
-
-/**
- * The Lock Screen line: Akshat's date and time, and where that is, in the visitor's locale.
- * "Monday 16 November · 9:41 PM IST". Both halves are Akshat's: the visitor's date beside
- * Akshat's time read as Akshat's day, and was a day out for half the world (Part 17).
- */
-export function dateLine(now: Date, place: { label: string; timeZone: string }, locale?: string): string {
-  const date = formatter(locale, { weekday: "long", day: "numeric", month: "long", timeZone: place.timeZone }).format(now);
-  const time = formatter(locale, { hour: "numeric", minute: "2-digit", timeZone: place.timeZone }).format(now);
-  return `${date} · ${time} ${place.label}`;
-}
+// ─── Clocks ──────────────────────────────────────────────────────────────────
 
 /** Milliseconds until the next minute begins, so a clock ticks on the minute. */
 export function untilNextMinute(now: number): number {

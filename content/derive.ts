@@ -666,8 +666,11 @@ export function initialism(field: string): string {
     .join("");
 }
 
-export interface HeroChip {
+export interface HeroFact {
+  id: "now" | "studying" | "presented";
+  /** Its label, over it: "Now", "Studying", "Presented". */
   label: string;
+  value: string;
   /** The home section that tells the rest. */
   section: SectionId;
   /**
@@ -678,27 +681,25 @@ export interface HeroChip {
 }
 
 /**
- * The hero's context chips (DESIGN.md §7): where Akshat works now, the degree, and the
- * conference. Each is derived; a chip whose facts are missing is left out.
+ * The hero's key facts (DESIGN.md §7.1, Part 18): the role Akshat holds now and where, the
+ * degree, and the conference, each under its label. Each is derived; a fact whose facts are
+ * missing is left out. No place among them: the first screen says nothing about where.
  */
-export function heroChips(content: Content): HeroChip[] {
-  const chips: HeroChip[] = [];
+export function heroFacts(content: Content): HeroFact[] {
+  const words = content.copy.hero.facts;
+  const facts: HeroFact[] = [];
   const now = content.experience.find((role) => role.id === content.profile.now);
-  // The role itself, not only the company: beside "AI & ML Engineer" a bare "Now at" read as
-  // that title at that company (Part 17). The parenthesis is the role's detail, for Experience.
-  if (now) chips.push({ label: `${now.role.replace(/\s*\([^)]*\)$/, "")} at ${now.org}`, section: "experience", target: `${now.id}-title` });
+  // The role itself, not only the company (Part 17); the parenthesis is its detail, for Experience.
+  if (now) facts.push({ id: "now", label: words.now, value: `${now.role.replace(/\s*\([^)]*\)$/, "")}, ${now.org}`, section: "experience", target: `${now.id}-title` });
   const degree = content.education.find((entry) => entry.kind === "degree");
   if (degree?.kind === "degree") {
     const year = degree.end.slice(2, 4);
-    chips.push({
-      label: `${degree.degree} ${initialism(degree.field)} \u2019${year} \u00b7 ${degree.institution}`,
-      section: "credentials",
-    });
+    facts.push({ id: "studying", label: words.studying, value: `${degree.degree} ${initialism(degree.field)} \u2019${year}, ${degree.institution}`, section: "credentials" });
   }
   const paper = content.publications[0];
   const conference = paper && content.conferences.find((entry) => entry.id === paper.presentedAt);
-  if (conference) chips.push({ label: `${conference.name} \u00b7 ${conference.proceedings}`, section: "research" });
-  return chips;
+  if (conference) facts.push({ id: "presented", label: words.presented, value: `${conference.name}, ${conference.proceedings}`, section: "research" });
+  return facts;
 }
 
 /**

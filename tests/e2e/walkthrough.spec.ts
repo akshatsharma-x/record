@@ -87,6 +87,17 @@ test.describe("the keyboard walkthrough", () => {
     // The Island: the toggle, Search, the theme, Say hello and the seven sections.
     const island = stops.filter((entry) => entry.section === "island");
     expect(island).toHaveLength(4 + SECTIONS.filter((section) => section.nav).length);
+    // The hero: its two ways on, its three facts, read with their labels, then the finishes,
+    // one stop for the group. Nothing on it loops, so there's no pause (Part 18).
+    const first = stops.filter((entry) => entry.section === "top").map((entry) => entry.name);
+    expect(first.slice(0, 5)).toEqual([
+      "See my work",
+      "Say hello›",
+      "Now: AI & ML Intern, United Airlines",
+      "Studying: B.Tech CSE \u201927, Manipal University Jaipur",
+      "Presented: SCI-2026, Springer LNNS",
+    ]);
+    expect(first).toHaveLength(6);
     // The highlights: the card in view, its footnote and its +, then the pause.
     const reel = stops.filter((entry) => entry.section === "highlights").map((entry) => entry.name);
     expect(reel).toHaveLength(3);

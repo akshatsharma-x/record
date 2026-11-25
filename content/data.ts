@@ -694,7 +694,11 @@ export const data = {
 
   copy: {
     skip: "Skip to content",
-    hero: { ctaWork: "See my work", ctaHello: "Say hello ›" },
+    hero: {
+      ctaWork: "See my work",
+      ctaHello: "Say hello ›",
+      facts: { label: "Key facts", now: "Now", studying: "Studying", presented: "Presented", finish: "Finish" },
+    },
     statement: {
       headline:
         "Intelligent systems are everywhere. Clear ones are rare. I build the clear kind — LLM pipelines that document code, models that explain their predictions, and software that works for everyone.",
