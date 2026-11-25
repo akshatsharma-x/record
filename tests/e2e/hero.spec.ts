@@ -12,6 +12,15 @@ const cursor = (page: Page) => page.locator("[data-cursor-root]");
 /** Scrolls by script: mobile WebKit has no wheel. */
 const scrollBy = (page: Page, y: number) => page.evaluate((dy) => window.scrollBy(0, dy), y);
 
+/** Once the arrival is over: the key facts rise in turn (Part 19), so they line up only then. */
+const settled = (page: Page) =>
+  page.waitForFunction(() =>
+    document
+      .getElementById("top")!
+      .getAnimations({ subtree: true })
+      .every((animation) => animation.playState !== "running"),
+  );
+
 interface Arrival {
   ends: number[];
   opacities: string[];
@@ -99,6 +108,7 @@ test("the key facts sit on one line on a wide screen: each label over its value,
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
+  await settled(page);
   const top = hero(page);
   const tops = await top.locator(".hero-fact-label").evaluateAll((labels) => labels.map((label) => label.getBoundingClientRect().top));
   expect(tops).toHaveLength(4);
