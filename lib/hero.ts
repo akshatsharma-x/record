@@ -9,6 +9,18 @@ export const HERO = {
   /** How often the light field rechecks the visitor's hour (ms). */
   warmthRefresh: 10 * 60_000,
   /**
+   * The glint across the name (Part 19), in the name's widths: 0 at its left edge, 1 at its
+   * right. It rests off to the right (--hero-glint-x's initial value in styles/tokens.css),
+   * and under a mouse follows the pointer, as far off either side as its band is wide.
+   */
+  glint: { parked: 1.6, min: -0.6, max: 1.6 },
+  /**
+   * How far the scroll-out runs (--hero-out 0 → 1), in the hero's heights (Part 19): it's
+   * done by the time 60% of the hero has gone, so the tilt and the recede play while most
+   * of it is still on screen.
+   */
+  outReach: 0.6,
+  /**
    * Image slots for the portrait's layers: a full-height 3:4 frame from tablets up, the
    * full width on phones. The plate is always blurred, so it comes at half resolution:
    * fewer bytes, and too soft to compete with the subject for LCP.

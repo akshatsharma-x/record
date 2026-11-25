@@ -12,11 +12,22 @@ const cursor = (page: Page) => page.locator("[data-cursor-root]");
 /** Scrolls by script: mobile WebKit has no wheel. */
 const scrollBy = (page: Page, y: number) => page.evaluate((dy) => window.scrollBy(0, dy), y);
 
+/** Once the arrival is over: the key facts rise in turn (Part 19), so they line up only then. */
+const settled = (page: Page) =>
+  page.waitForFunction(() =>
+    document
+      .getElementById("top")!
+      .getAnimations({ subtree: true })
+      .every((animation) => animation.playState !== "running"),
+  );
+
 interface Arrival {
   ends: number[];
   opacities: string[];
   /** Each animation on the upper dot grid, by name. */
   field: string[];
+  /** Each animation on the name's glint (its ::after), by name. */
+  glint: string[];
 }
 
 /**
@@ -39,7 +50,13 @@ async function watchArrival(page: Page) {
         const field = ours
           .filter((animation) => ((animation.effect as KeyframeEffect).target as Element).matches('[data-field="upper"]'))
           .map((animation) => (animation as CSSAnimation).animationName);
-        (window as unknown as { __arrival: Arrival }).__arrival = { ends, opacities, field };
+        const glint = ours
+          .filter((animation) => {
+            const effect = animation.effect as KeyframeEffect;
+            return effect.pseudoElement === "::after" && (effect.target as Element).matches(".hero-name");
+          })
+          .map((animation) => (animation as CSSAnimation).animationName);
+        (window as unknown as { __arrival: Arrival }).__arrival = { ends, opacities, field, glint };
       }),
     );
   });
@@ -91,6 +108,7 @@ test("the key facts sit on one line on a wide screen: each label over its value,
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
+  await settled(page);
   const top = hero(page);
   const tops = await top.locator(".hero-fact-label").evaluateAll((labels) => labels.map((label) => label.getBoundingClientRect().top));
   expect(tops).toHaveLength(4);
@@ -211,6 +229,54 @@ test("choosing a finish recolors the site from the swatch and says so in the Isl
   await expect(page.locator("html")).toHaveAttribute("data-finish", "pink-city");
 });
 
+test("a glint crosses the name as it settles, drawn on a copy nothing reads or finds (Part 19)", async ({ page }) => {
+  await watchArrival(page);
+  await page.goto("/");
+  await page.waitForFunction(() => "__arrival" in window);
+  expect((await arrival(page)).glint).toEqual(["hero-glint"]);
+  const name = hero(page).getByRole("heading", { level: 1 });
+  // The copy is the heading's generated content, with empty alternative text: it reads once.
+  await expect(name).toHaveAccessibleName("Akshat Sharma");
+  await expect(name).toHaveText("Akshat Sharma");
+  await expect(name).toHaveAttribute("data-glint", "Akshat Sharma");
+  // Once it has crossed, it rests off the name, to the right.
+  await expect
+    .poll(() => name.evaluate((h1) => getComputedStyle(h1, "::after").getPropertyValue("--hero-glint-x").trim()), { timeout: 3000 })
+    .toBe("1.6");
+});
+
+test("under a mouse, the dots near the pointer light up, and the glint follows the pointer across the name (Part 19)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "a mouse");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  const top = hero(page);
+  const spot = top.locator(".hero-spot");
+  await expect(spot).toHaveCSS("opacity", "0");
+  // Off to the headline's right, clear of the name and its loupe.
+  await page.mouse.move(720, 450);
+  await page.mouse.move(1100, 560, { steps: 8 });
+  await expect(top).toHaveAttribute("data-pointer", "");
+  await expect.poll(() => spot.evaluate((element) => Number(getComputedStyle(element).opacity))).toBe(1);
+  // The pool settles under the pointer, on the spring.
+  await expect
+    .poll(async () => {
+      const box = (await spot.boundingBox())!;
+      return Math.hypot(box.x + box.width / 2 - 1100, box.y + box.height / 2 - 560);
+    })
+    .toBeLessThan(3);
+  // Under the name's middle, the glint is halfway across it.
+  const name = (await top.locator("#top-title").boundingBox())!;
+  await page.mouse.move(Math.round(name.x + name.width / 2), Math.round(name.y + name.height + 24), { steps: 8 });
+  const glint = () => top.evaluate((element) => Number(element.style.getPropertyValue("--hero-glint-x")));
+  await expect.poll(glint).toBeCloseTo(0.5, 1);
+  // Onto the Island, out of the hero: the pool goes out and the glint slides away.
+  const island = (await page.locator(".island-shell").boundingBox())!;
+  await page.mouse.move(Math.round(island.x + island.width / 2), Math.round(island.y + island.height / 2), { steps: 4 });
+  await expect(top).not.toHaveAttribute("data-pointer", "");
+  await expect.poll(glint).toBeCloseTo(1.6, 1);
+});
+
 test("nothing loops: once it has arrived the hero holds still, so there's nothing to pause (Part 18)", async ({ page }) => {
   await page.goto("/");
   await page.waitForLoadState("networkidle");
@@ -243,11 +309,25 @@ test("under a mouse, the upper grid follows the pointer and the light moves agai
   expect(await x('.hero-field-layer[data-field="upper"]')).toBeLessThan(14);
 });
 
-test("scrolling away lifts and fades the name", async ({ page }) => {
+test("scrolling away, the name lifts, recedes and fades, and the field tilts back into a floor (Part 19)", async ({ page }) => {
   await page.goto("/");
-  const stack = hero(page).locator(".hero-stack");
-  await scrollBy(page, 400);
-  await expect.poll(() => stack.evaluate((element) => Number(getComputedStyle(element).opacity))).toBeLessThan(1);
+  await page.waitForLoadState("networkidle");
+  // Measured once the faces are in: the hero's height is what they make it.
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  const top = hero(page);
+  const height = await top.evaluate((element) => (element as HTMLElement).offsetHeight);
+  const out = () => top.evaluate((element) => Number(element.style.getPropertyValue("--hero-out")));
+  // Halfway out when 30% of the hero has gone.
+  await scrollBy(page, Math.round(height * 0.3));
+  await expect.poll(out).toBeCloseTo(0.5, 1);
+  const stack = top.locator(".hero-stack");
+  expect(await stack.evaluate((element) => Number(getComputedStyle(element).opacity))).toBeLessThan(1);
+  expect(await stack.evaluate((element) => Number(getComputedStyle(element).scale))).toBeLessThan(1);
+  // The field turns about its foot, away from the viewer.
+  expect(await top.locator(".hero-field").evaluate((element) => new DOMMatrix(getComputedStyle(element).transform).m22)).toBeLessThan(0.99);
+  // It's all done by the time 60% of the hero has gone.
+  await scrollBy(page, Math.round(height * 0.35));
+  await expect.poll(out).toBe(1);
 });
 
 test("the loupe magnifies the name under the cursor, and the dot stays visible at its center", async ({ page, isMobile }) => {
@@ -303,7 +383,7 @@ test.describe("without JavaScript", () => {
 test.describe("with reduced motion", () => {
   test.use({ reducedMotion: "reduce" });
 
-  test("the hero is complete and still: the grids already in register, no parallax, no scroll-out", async ({ page, isMobile }) => {
+  test("the hero is complete and still: the grids already in register, no glint, no lit dots, no parallax, no scroll-out", async ({ page, isMobile }) => {
     await page.goto("/");
     const top = hero(page);
     await expect(top.getByRole("heading", { level: 1 })).toHaveText("Akshat Sharma");
@@ -311,12 +391,17 @@ test.describe("with reduced motion", () => {
     const upper = top.locator('.hero-field-layer[data-field="upper"]');
     expect(await upper.evaluate((element) => getComputedStyle(element).getPropertyValue("--hero-register-turn").trim())).toBe("0deg");
     expect(await upper.evaluate((element) => getComputedStyle(element).getPropertyValue("--hero-register-scale").trim())).toBe("1");
+    // No glint across the name, and no pool of lit dots.
+    expect(await top.locator("#top-title").evaluate((h1) => getComputedStyle(h1, "::after").animationName)).toBe("none");
+    await expect(top.locator(".hero-spot")).toBeHidden();
     await page.waitForLoadState("networkidle");
     if (!isMobile) {
       await page.mouse.move(40, 450);
       await page.mouse.move(1000, 450, { steps: 6 });
       await page.waitForTimeout(300);
       expect(await top.evaluate((element) => element.style.getPropertyValue("--px"))).toBe("");
+      expect(await top.evaluate((element) => element.style.getPropertyValue("--hero-glint-x"))).toBe("");
+      await expect(top).not.toHaveAttribute("data-pointer", "");
     }
     await scrollBy(page, 400);
     await page.waitForTimeout(300);
