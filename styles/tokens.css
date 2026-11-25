@@ -389,7 +389,7 @@
   --print-caps-tracking: 0.06em;
   --print-qr: 20mm;
 
-  /* The hero (§7, Parts 5 and 18). */
+  /* The hero (§7, Parts 5, 18 and 19). */
   --hero-height: 100svh;
   --hero-light-alpha: 0.22;
   /* The stage light rises from below the name, and moves this far against the field under a mouse. */
@@ -407,16 +407,41 @@
   --hero-register: var(--duration-reveal-long);
   --hero-register-turn: 12deg;
   --hero-register-scale: 1.12;
-  /* The name's sheen: white, to a little less at the foot of each line. */
-  --hero-name-sheen: rgb(255 255 255 / 0.74);
+  /* The name's sheen: white, falling to two-thirds at the foot of each line, so the glint
+     has somewhere to shine (Part 19). Large text: 8:1 on black even at its foot. */
+  --hero-name-sheen: rgb(255 255 255 / 0.64);
+  /* The glint (Part 19): a band of light that crosses the name once as it comes into
+     focus, and then follows a mouse across it. Its place is --hero-glint-x, 0 at the name's
+     left edge and 1 at its right; it rests off to the right (lib/hero.ts, HERO.glint). */
+  --hero-glint: rgb(255 255 255 / 0.95);
+  --hero-glint-angle: 104deg;
+  --hero-glint-delay: 500ms;
+  --hero-glint-sweep: var(--duration-reveal);
+  /* The lit dots (Part 19): under a mouse, the field's dots near the pointer take the
+     finish's hue, a pool of light that follows it. */
+  --hero-spot-radius: 200px;
+  --hero-spot-dot-size: 1.6px;
+  --hero-spot-halo: 12%;
   /* The key facts' rule, at the first screen's foot. */
   --hero-hairline: rgb(255 255 255 / 0.14);
   --hero-out-name: -14vh;
   --hero-out-subject: 9vh;
   --hero-out-scale: 0.92;
   --hero-out-dim: 0.6;
-  --hero-ui-delay: 700ms;
-  --hero-ui-fade: 450ms;
+  /* Scrolling away (Part 19): the name recedes, the field tilts back into a floor under it,
+     the light rises and swells, and the key facts drop away. */
+  --hero-out-recede: 0.1;
+  --hero-out-field: 0.55;
+  --hero-tilt: 56deg;
+  --hero-depth: 900px;
+  --hero-light-rise: -16vh;
+  --hero-light-swell: 0.25;
+  --hero-foot-drop: 6vh;
+  /* The UI arrives last, rising into place: the links, then each key fact in turn. */
+  --hero-ui-delay: 650ms;
+  --hero-ui-fade: 420ms;
+  --hero-ui-rise: 10px;
+  --hero-ui-stagger: 30ms;
   --hero-parallax-plate: 8px;
   --hero-parallax-name: 4px;
   --hero-parallax-subject: 12px;
@@ -797,6 +822,13 @@
     --hero-out-name: 0vh;
     --hero-out-subject: 0vh;
     --hero-out-scale: 1;
+    --hero-out-recede: 0;
+    --hero-tilt: 0deg;
+    --hero-light-rise: 0vh;
+    --hero-light-swell: 0;
+    --hero-foot-drop: 0vh;
+    --hero-ui-rise: 0px;
+    --hero-ui-stagger: 0ms;
     --island-swap-blur: 0px;
     --search-resolve-y: 0px;
     --search-resolve-blur: 0px;
@@ -820,6 +852,13 @@
   --hero-out-name: 0vh;
   --hero-out-subject: 0vh;
   --hero-out-scale: 1;
+  --hero-out-recede: 0;
+  --hero-tilt: 0deg;
+  --hero-light-rise: 0vh;
+  --hero-light-swell: 0;
+  --hero-foot-drop: 0vh;
+  --hero-ui-rise: 0px;
+  --hero-ui-stagger: 0ms;
   --island-swap-blur: 0px;
   --search-resolve-y: 0px;
   --search-resolve-blur: 0px;
@@ -888,6 +927,15 @@
   syntax: "<number>";
   inherits: true;
   initial-value: 1;
+}
+
+/* Where the glint crosses the hero's name (Part 19), registered so its arrival can sweep it.
+   Inherited: the hero's controller sets it, and the name's glint reads it. It starts off to
+   the right, where HERO.glint.parked rests it (lib/hero.ts). */
+@property --hero-glint-x {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1.6;
 }
 
 /* The finish wipe's radius (styles/globals.css), registered so it can animate. */

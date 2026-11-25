@@ -19,9 +19,11 @@ interface HeroControllerProps {
  * - Typographic edition: the light's warmth follows the visitor's time of day.
  * - Depth: the pointer, or a tilt that needs no permission, moves the layers on the smooth
  *   spring: the portrait's plate, name and subject, the typographic edition's upper dot
- *   grid and its light (Part 18).
+ *   grid and its light (Part 18), and the pool of lit dots under a mouse (Part 19).
+ * - The glint: under a mouse, the band of light on the name follows the pointer across it,
+ *   on the same spring, and slides off when it leaves (Part 19).
  * Nothing loops, so there's nothing to pause (Part 18). With reduced motion there's no
- * scroll-out or parallax.
+ * scroll-out, parallax, glint or lit dots.
  */
 export function HeroController({ target, edition }: HeroControllerProps) {
   // A fact about one thing jumps to it (lib/jump.ts): the current role's lands the edit's
@@ -53,7 +55,7 @@ export function HeroController({ target, edition }: HeroControllerProps) {
     };
     const read = () => {
       // With reduced motion the hero stays put as it scrolls away.
-      out = prefersReducedMotion() ? 0 : Math.min(1, Math.max(0, window.scrollY / height));
+      out = prefersReducedMotion() ? 0 : Math.min(1, Math.max(0, window.scrollY / (height * HERO.outReach)));
       mutate(write);
     };
     const onScroll = () => measure(read);
@@ -87,12 +89,16 @@ export function HeroController({ target, edition }: HeroControllerProps) {
   }, [target, edition]);
 
   // Depth: one sprung offset (-1…1 on each axis); each layer scales it by its own depth.
+  // The glint's place across the name rides a spring of its own, in the name's widths.
   useEffect(() => {
     const hero = document.getElementById(target);
     if (!hero) return;
-    let goal = { x: 0, y: 0 };
+    const name = hero.querySelector<HTMLElement>(".hero-name");
+    const { parked } = HERO.glint;
+    let goal: { x: number; y: number; glint: number } = { x: 0, y: 0, glint: parked };
     let x: SpringState = { value: 0, velocity: 0 };
     let y: SpringState = { value: 0, velocity: 0 };
+    let glint: SpringState = { value: parked, velocity: 0 };
     let frame = 0;
     let last = 0;
 
@@ -102,23 +108,40 @@ export function HeroController({ target, edition }: HeroControllerProps) {
       last = time;
       x = stepSpring(x, goal.x, elapsed, springs.smooth);
       y = stepSpring(y, goal.y, elapsed, springs.smooth);
+      glint = stepSpring(glint, goal.glint, elapsed, springs.smooth);
       hero.style.setProperty("--px", x.value.toFixed(4));
       hero.style.setProperty("--py", y.value.toFixed(4));
-      if (springAtRest(x, goal.x, 0.001) && springAtRest(y, goal.y, 0.001)) last = 0;
+      hero.style.setProperty("--hero-glint-x", glint.value.toFixed(4));
+      if (springAtRest(x, goal.x, 0.001) && springAtRest(y, goal.y, 0.001) && springAtRest(glint, goal.glint, 0.001)) last = 0;
       else frame = requestAnimationFrame(step);
     };
-    const aim = (nx: number, ny: number) => {
+    const aim = (nx: number, ny: number, nglint: number = parked) => {
       if (prefersReducedMotion()) return;
-      goal = { x: Math.max(-1, Math.min(1, nx)), y: Math.max(-1, Math.min(1, ny)) };
+      goal = {
+        x: Math.max(-1, Math.min(1, nx)),
+        y: Math.max(-1, Math.min(1, ny)),
+        glint: Math.max(HERO.glint.min, Math.min(HERO.glint.max, nglint)),
+      };
       if (!frame) frame = requestAnimationFrame(step);
     };
 
+    // A mouse lights the dots under it (data-pointer) and draws the glint to it: the band
+    // sits under the pointer while it's over the name, and off to that side beyond it.
     const onPointer = (event: PointerEvent) => {
-      if (event.pointerType !== "mouse") return;
+      if (event.pointerType !== "mouse" || prefersReducedMotion()) return;
+      if (edition === "type" && !hero.hasAttribute("data-pointer")) hero.setAttribute("data-pointer", "");
       const rect = hero.getBoundingClientRect();
-      aim((event.clientX - rect.left) / rect.width - 0.5, (event.clientY - rect.top) / rect.height - 0.5);
+      const box = edition === "type" ? name?.getBoundingClientRect() : undefined;
+      aim(
+        (event.clientX - rect.left) / rect.width - 0.5,
+        (event.clientY - rect.top) / rect.height - 0.5,
+        box?.width ? (event.clientX - box.left) / box.width : parked,
+      );
     };
-    const onLeave = () => aim(0, 0);
+    const onLeave = () => {
+      hero.removeAttribute("data-pointer");
+      aim(0, 0);
+    };
     hero.addEventListener("pointermove", onPointer);
     hero.addEventListener("pointerleave", onLeave);
 
@@ -141,7 +164,7 @@ export function HeroController({ target, edition }: HeroControllerProps) {
       hero.removeEventListener("pointerleave", onLeave);
       window.removeEventListener("deviceorientation", onTilt);
     };
-  }, [target]);
+  }, [target, edition]);
 
   return null;
 }

@@ -35,14 +35,23 @@ export function Hero({ photo }: { photo: Portrait | null }) {
 /**
  * The name, one span per line: two lines on phones, one on wider screens. With its flag on
  * (DESIGN.md §8), a click morphs the first name into Devanagari, with what it means; the
- * heading still reads "Akshat Sharma" to assistive tech.
+ * heading still reads "Akshat Sharma" to assistive tech. With a glint (the typographic
+ * edition, Part 19), the name rides along in two data attributes, one line and two, for the
+ * copy the glint draws in CSS.
  */
-function Name({ loupe }: { loupe?: boolean }) {
+function Name({ loupe, glint }: { loupe?: boolean; glint?: boolean }) {
   const [first, ...rest] = content.profile.name.split(" ");
   const morph = devanagariName.on ? content.copy.surprises.devanagari : null;
   return (
     <>
-      <h1 id={`${ID}-title`} className="hero-name text-hero" data-cursor={loupe ? "loupe" : undefined} data-morph={morph ? "" : undefined}>
+      <h1
+        id={`${ID}-title`}
+        className="hero-name text-hero"
+        data-cursor={loupe ? "loupe" : undefined}
+        data-morph={morph ? "" : undefined}
+        data-glint={glint ? content.profile.name : undefined}
+        data-glint-lines={glint ? `${first}\n${rest.join(" ")}` : undefined}
+      >
         <span className="hero-line" style={{ "--line": 0 } as CSSProperties}>
           {morph ? (
             <span className="hero-morph">
@@ -105,8 +114,9 @@ function Facts() {
   return (
     <div className="hero-facts">
       <ul className="hero-fact-list" aria-label={words.label}>
-        {heroFacts(content).map((fact) => (
-          <li key={fact.id}>
+        {heroFacts(content).map((fact, i) => (
+          // Each in turn as the UI arrives (styles/components.css, --i).
+          <li key={fact.id} style={{ "--i": i } as CSSProperties}>
             {/* Read as one phrase, its label first: "Now: AI & ML Intern, United Airlines". */}
             <a
               className="hero-fact"
@@ -120,7 +130,7 @@ function Facts() {
           </li>
         ))}
       </ul>
-      <div className="hero-finish">
+      <div className="hero-finish" style={{ "--i": heroFacts(content).length } as CSSProperties}>
         <p className="hero-fact-label" aria-hidden="true">
           {words.finish}
         </p>
@@ -133,11 +143,14 @@ function Facts() {
 // ─── The typographic edition ─────────────────────────────────────────────────
 
 /**
- * "Into focus" (Part 18): the name on a dark stage, lit from below in the finish's hues,
- * over two fine dot grids that arrive out of register, the noise of an unclear system,
- * and slide into register as the name comes into focus: complexity turned to order. Then
- * nothing moves on its own; under a mouse the upper grid follows the pointer a few pixels
- * and the light moves against it. The loupe magnifies the name (DESIGN.md §6.1).
+ * "Into focus" (Parts 18 and 19): the name on a dark stage, lit from below in the finish's
+ * hues, over two fine dot grids that arrive out of register, the noise of an unclear
+ * system, and slide into register as the name comes into focus: complexity turned to
+ * order. A glint crosses the name as it settles. Then nothing moves on its own. Under a
+ * mouse the dots near the pointer light in the finish's hue, the glint follows it across
+ * the name, the upper grid shifts a few pixels and the light moves against it; scrolling
+ * away, the field tilts back into a floor as the name recedes. The loupe magnifies the name
+ * (DESIGN.md §6.1).
  */
 function TypeHero() {
   return (
@@ -151,9 +164,12 @@ function TypeHero() {
         <span className="hero-field-layer" data-field="base" />
         <span className="hero-field-layer" data-field="upper" />
       </div>
+      <div className="hero-spots" aria-hidden="true">
+        <span className="hero-spot" />
+      </div>
       <Container width="wide" className="hero-stack">
         <Role />
-        <Name loupe={heroLens.on} />
+        <Name loupe={heroLens.on} glint />
         <Headline />
         <Ctas />
       </Container>
