@@ -290,7 +290,13 @@ describe("the résumé edition", () => {
     expect(text).toContain("github.com/");
     for (const role of content.experience) expect(text).toContain(role.org);
     for (const paper of content.publications) expect(text).toContain(paper.title);
-    for (const project of content.projects) expect(text).toContain(project.name);
+    // The bento's first four projects and the two latest certificates: all of them ran to a second page (Part 20).
+    for (const project of content.projects.slice(0, 4)) expect(text).toContain(project.name);
+    for (const project of content.projects.slice(4)) expect(text).not.toContain(project.name);
+    const { latestCertificates } = await import("@/components/print/resume-edition");
+    const latest = latestCertificates(content.certificates);
+    expect(latest.map((certificate) => certificate.id)).toEqual(["claude-code-in-action", "aws-cloud-practitioner-essentials"]);
+    for (const certificate of latest) expect(text).toContain(certificate.title);
     for (const achievement of content.achievements) expect(text).toContain(achievement.title);
     expect(text).toContain("Manipal University Jaipur");
     expect(Array.from(container.querySelectorAll("h2"), (heading) => heading.textContent)).toEqual([

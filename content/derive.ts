@@ -237,12 +237,15 @@ export function timeline(content: Content, now: Date) {
   const work = content.experience.map((role): Omit<Clip, "lane"> => {
     const start = parseYearMonth(role.start);
     const ongoing = role.end === "present";
+    const begins = toIsoDate(utcDate(start.year, start.month));
+    // A role that hasn't begun yet runs through its first month, so its clip has a length.
+    const sofar = afterToday > begins ? afterToday : toIsoDate(endOfMonthExclusive(start));
     return {
       id: role.id,
       title: role.org,
       subtitle: role.role,
-      start: toIsoDate(utcDate(start.year, start.month)),
-      end: ongoing ? afterToday : toIsoDate(endOfMonthExclusive(parseYearMonth(role.end))),
+      start: begins,
+      end: ongoing ? sofar : toIsoDate(endOfMonthExclusive(parseYearMonth(role.end))),
       ongoing,
       precision: "month",
       ref: { section: "experience", id: role.id },
@@ -579,8 +582,11 @@ export function edit(content: Content) {
     lanes("honors", "Honors", honors),
   ];
   const clips = tracks.flatMap((track) => track.clips);
-  // The latest date content knows has passed: where the scale ends until the browser knows today.
-  const known = [...work.flatMap((clip) => [clip.start, clip.end]), ...research.map((clip) => clip.end)]
+  // The latest date content knows has passed: where the scale ends until the browser knows
+  // today. A role that hasn't begun yet (Part 20) is known through its first month, so its clip
+  // is on the scale; one long under way has passed its first month already.
+  const firstMonths = work.filter((clip) => clip.end === null).map((clip) => toIsoDate(endOfMonthExclusive(parseYearMonth(clip.start.slice(0, 7)))));
+  const known = [...work.flatMap((clip) => [clip.start, clip.end]), ...firstMonths, ...research.map((clip) => clip.end)]
     .filter((date): date is string => date !== null)
     .sort()
     .at(-1)!;
@@ -605,7 +611,9 @@ export type CompareRowId = "studying" | "internships" | "papers" | "honors" | "s
  */
 export function compareTable(content: Content, now?: Date) {
   const firstYear = Number(edit(content).start.slice(0, 4));
-  const lastYear = now ? todayFor(content, now).year : Number(edit(content).known.slice(0, 4));
+  // The edit's known date is an exclusive end: 2027-01-01 closes December 2026.
+  const known = parseIsoDate(edit(content).known);
+  const lastYear = now ? todayFor(content, now).year : known.month === 1 && known.day === 1 ? known.year - 1 : known.year;
   const years = range(firstYear, lastYear);
   const labels = content.copy.surprises.compare.rows;
   const conferences = new Map(content.conferences.map((conference) => [conference.id, conference]));
@@ -928,7 +936,8 @@ export interface WorkTile {
   metric: WorkMetric | null;
   /** The filters it shows under. */
   filters: string[];
-  preview: WorkPreview;
+  /** null when the project has screenshots and no living preview: its cover is the first. */
+  preview: WorkPreview | null;
   /** Once content has screenshots, the first one is the cover. */
   screenshot: { src: string; alt: string } | null;
   /** Where it sits on desktop (lg) and tablets (md) under each filter it shows under. */
@@ -953,7 +962,8 @@ export interface CaseStudy {
   /** Its architecture, drawn top to bottom (lib/architecture.ts), and the boxes with no arrows. */
   diagram: { down: DiagramLayout; apart: DiagramNode[]; footnotes: number[] };
   links: { repo: string | null; live: string | null };
-  preview: WorkPreview;
+  /** null when the project has screenshots and no living preview: its cover is the first. */
+  preview: WorkPreview | null;
   screenshot: { src: string; alt: string } | null;
   /** The next project, for the peek card that ends a case study. */
   next: Pick<WorkTile, "slug" | "href" | "name" | "category" | "tagline" | "preview" | "screenshot">;
@@ -975,8 +985,9 @@ function metricsOf(content: Content, project: Project): WorkMetric[] {
   });
 }
 
-function previewOf(content: Content, project: Project): WorkPreview {
+function previewOf(content: Content, project: Project): WorkPreview | null {
   const { preview } = project;
+  if (!preview) return null;
   if (preview.kind !== "roc") return preview;
   const stated = statedBy(content, project);
   // The schema checks that both figures are the project's metrics; they're named as those are.
@@ -1286,7 +1297,7 @@ export function wallet(content: Content): { headline: string; passes: Pass[] } {
       title: certificate.title,
       subtitle: certificate.issuer,
       fields: [
-        { label: words.issued, value: formatYearMonth(certificate.issued), mono: false, footnotes: [] },
+        ...(certificate.issued ? [{ label: words.issued, value: formatYearMonth(certificate.issued), mono: false, footnotes: [] }] : []),
         ...(certificate.credentialId ? [{ label: words.credentialId, value: certificate.credentialId, mono: true, footnotes: [] }] : []),
       ],
       verifyUrl: certificate.verifyUrl,

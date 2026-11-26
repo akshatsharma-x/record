@@ -23,11 +23,13 @@ import { useNow, useVisitorTimeZone } from "@/lib/use-now";
  * the static HTML never holds a stale number and the tile's size never changes.
  */
 
-/** " · 6 months": how long the current role has run. */
+/** " · 6 months": how long the current role has run; nothing before it starts (Part 20). */
 export function LiveMonths({ since, timeZone }: { since: string; timeZone: string }) {
   const now = useNow();
   if (!now) return null;
-  return <span data-live="">{` · ${monthsLabel(monthsSince(since, timeZone, now))}`}</span>;
+  const months = monthsSince(since, timeZone, now);
+  if (months === 0) return null;
+  return <span data-live="">{` · ${monthsLabel(months)}`}</span>;
 }
 
 // ─── Studying ────────────────────────────────────────────────────────────────

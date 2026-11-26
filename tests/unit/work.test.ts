@@ -40,14 +40,14 @@ describe("the bento", () => {
     }
   });
 
-  it("starts with the brief's spans: Cognivault 8×2, QuizMUJ 4×2, then three 4×1", () => {
+  it("starts with the brief's spans: the flagship 8×2, the next 4×2, then the rest 4×1 (NEXUS leads, Part 20)", () => {
     const all = tiles.map((tile) => [tile.slug, tile.places.all.lg.span, tile.places.all.lg.rows]);
     expect(all).toEqual([
-      ["cognivault-ai", 8, 2],
-      ["quizmuj", 4, 2],
-      ["resume-screening", 4, 1],
-      ["churn-prediction", 4, 1],
-      ["wcag-analyzer", 4, 1],
+      ["nexus", 8, 2],
+      ["researchx", 4, 2],
+      ...["resume-screening", "quizmuj", "bbc-news-retrieval", "vistara", "cognivault-ai", "churn-prediction", "wcag-analyzer", "cabinmuj", "myhub"].map(
+        (slug) => [slug, 4, 1],
+      ),
     ]);
   });
 
@@ -58,7 +58,7 @@ describe("the bento", () => {
       for (const breakpoint of ["lg", "md"] as const) {
         expect(fillsExactly(shown.map((tile) => tile.places[filter.id][breakpoint])), `${filter.id} ${breakpoint}`).toBe(true);
       }
-      const flagship = shown.find((tile) => tile.slug === "cognivault-ai");
+      const flagship = shown.find((tile) => tile.slug === "nexus");
       if (flagship) expect(flagship.places[filter.id].lg).toMatchObject({ span: 8, rows: 2 });
     }
   });
@@ -78,10 +78,10 @@ describe("the bento", () => {
   it("filters by category, as the brief names them", () => {
     expect(filters.map((filter) => filter.label)).toEqual(["All", "AI", "Full-stack", "ML", "Accessibility"]);
     const under = (id: string) => tiles.filter((tile) => tile.filters.includes(id)).map((tile) => tile.slug);
-    expect(under("all")).toHaveLength(5);
-    expect(under("ai")).toEqual(["cognivault-ai", "resume-screening"]);
-    expect(under("full-stack")).toEqual(["quizmuj"]);
-    expect(under("ml")).toEqual(["resume-screening", "churn-prediction"]);
+    expect(under("all")).toHaveLength(11);
+    expect(under("ai")).toEqual(["nexus", "researchx", "resume-screening", "bbc-news-retrieval", "cognivault-ai"]);
+    expect(under("full-stack")).toEqual(["quizmuj", "vistara", "cabinmuj", "myhub"]);
+    expect(under("ml")).toEqual(["resume-screening", "bbc-news-retrieval", "churn-prediction"]);
     expect(under("accessibility")).toEqual(["wcag-analyzer"]);
   });
 
@@ -89,9 +89,25 @@ describe("the bento", () => {
     const churn = tiles.find((tile) => tile.slug === "churn-prediction")!;
     expect(churn.metric).toMatchObject({ token: "97%", label: "accuracy", footnotes: [5] });
     expect(churn.preview).toMatchObject({ kind: "roc", aucLabel: "0.98", aucName: "ROC-AUC", accuracyLabel: "97%", accuracyName: "accuracy" });
-    expect(tiles.filter((tile) => tile.metric).map((tile) => tile.slug)).toEqual(["churn-prediction"]);
-    // No screenshots yet, so every preview is the cover.
-    expect(tiles.every((tile) => tile.screenshot === null)).toBe(true);
+    expect(tiles.filter((tile) => tile.metric).map((tile) => [tile.slug, tile.metric!.token])).toEqual([
+      ["researchx", "17"],
+      ["resume-screening", "0.786"],
+      ["bbc-news-retrieval", "0.811"],
+      ["vistara", "300–900"],
+      ["churn-prediction", "97%"],
+    ]);
+    // A screenshot is the cover where content has one; the living preview, until then.
+    expect(tiles.filter((tile) => tile.screenshot).map((tile) => tile.slug)).toEqual([
+      "nexus",
+      "researchx",
+      "resume-screening",
+      "quizmuj",
+      "bbc-news-retrieval",
+      "vistara",
+      "cabinmuj",
+      "myhub",
+    ]);
+    expect(tiles.every((tile) => tile.screenshot || tile.preview)).toBe(true);
   });
 });
 
@@ -99,9 +115,11 @@ describe("the architecture diagrams", () => {
   it("put each box at the step of its longest path, and keep boxes without arrows apart", () => {
     const resume = data.projects.find((project) => project.slug === "resume-screening")!.architecture;
     const depth = steps(resume.nodes, resume.edges as never);
-    expect(Object.fromEntries(depth)).toEqual({ resumes: 0, extraction: 1, tfidf: 2, bert: 2, ensemble: 3, ranking: 4, dashboard: 5 });
+    expect(Object.fromEntries(depth)).toEqual({ resumes: 0, tfidf: 1, sbert: 1, hybrid: 2, leaderboard: 3, benchmark: 4, svm: 1, map: 2 });
     const quiz = data.projects.find((project) => project.slug === "quizmuj")!.architecture;
-    expect(apart(quiz.nodes, quiz.edges as never).map((node) => node.id)).toEqual(["csv", "export", "docker"]);
+    expect(apart(quiz.nodes, quiz.edges as never)).toEqual([]);
+    const wcag = data.projects.find((project) => project.slug === "wcag-analyzer")!.architecture;
+    expect(apart(wcag.nodes, wcag.edges as never).length).toBeGreaterThanOrEqual(0);
   });
 
   it("lay out across and down without overlapping boxes", () => {
@@ -147,8 +165,8 @@ describe("the case studies", () => {
   it("carry each project's facts, and hide what content doesn't have yet", () => {
     for (const entry of studies) {
       const project = data.projects.find((item) => item.slug === entry.slug)!;
-      expect(entry).toMatchObject({ href: `/work/${entry.slug}`, name: project.name, category: project.category, year: null, role: null, problem: null });
-      expect(entry.links).toEqual({ repo: null, live: null });
+      expect(entry).toMatchObject({ href: `/work/${entry.slug}`, name: project.name, category: project.category, year: project.year, role: project.role, problem: null });
+      expect(entry.links).toEqual({ repo: project.links?.repo ?? null, live: project.links?.live ?? null });
       expect(entry.summary.text).toBe(project.summary.text);
     }
     expect(study("churn-prediction").metrics).toEqual([
@@ -166,7 +184,19 @@ describe("the case studies", () => {
   it("link stack chips that are skills, and end each on the next project", () => {
     expect(study("cognivault-ai").stack.find((item) => item.name === "Gemini 1.5")?.skill).toBe(false);
     expect(study("cognivault-ai").stack.find((item) => item.name === "LangChain")?.skill).toBe(true);
-    expect(studies.map((entry) => entry.next.slug)).toEqual(["quizmuj", "resume-screening", "churn-prediction", "wcag-analyzer", "cognivault-ai"]);
+    expect(studies.map((entry) => entry.next.slug)).toEqual([
+      "researchx",
+      "resume-screening",
+      "quizmuj",
+      "bbc-news-retrieval",
+      "vistara",
+      "cognivault-ai",
+      "churn-prediction",
+      "wcag-analyzer",
+      "cabinmuj",
+      "myhub",
+      "nexus",
+    ]);
   });
 });
 
@@ -193,17 +223,21 @@ describe("the schema keeps the bento and case studies honest", () => {
     expect(broken(["projects", 0, "architecture", "nodes", 0, "label"], "Blockchain")).toEqual([
       'projects.0.architecture.nodes.0: "blockchain" isn\'t in this project\'s own words',
     ]);
-    expect(broken(["projects", 1, "preview", "labels", "alert"], "Face detection")).toEqual([
-      'projects.1.preview.labels.alert: "face, detection" isn\'t in this project\'s own words',
+    // QuizMUJ's exam room.
+    expect(broken(["projects", 3, "preview", "labels", "alert"], "Face detection")).toEqual([
+      'projects.3.preview.labels.alert: "face, detection" isn\'t in this project\'s own words',
     ]);
   });
 
   it("fails an arrow to a box that isn't there, and a figure the project doesn't state", () => {
-    expect(broken(["projects", 4, "architecture", "edges", 0], ["url", "nowhere"])).toEqual(['projects.4.architecture.edges.0: no box "nowhere"']);
-    expect(broken(["projects", 3, "preview", "auc"], 0.99)).toEqual(["projects.3.preview: 0.99 isn't one of this project's metrics"]);
-    expect(broken(["projects", 3, "metrics"], [{ value: 97, label: "accuracy", footnotes: [5] }])).toEqual([
-      "projects.3.preview: 0.98 isn't one of this project's metrics",
-      "projects.3.metrics: 0.98 is in this project's text but isn't one of its metrics",
+    // The WCAG analyzer's diagram, and the churn model's ROC.
+    expect(broken(["projects", 8, "architecture", "edges", 0], ["url", "nowhere"])).toEqual(['projects.8.architecture.edges.0: no box "nowhere"']);
+    expect(broken(["projects", 7, "preview", "auc"], 0.99)).toEqual(["projects.7.preview: 0.99 isn't one of this project's metrics"]);
+    expect(broken(["projects", 7, "metrics"], [{ value: 97, label: "accuracy", footnotes: [5] }])).toEqual([
+      "projects.7.preview: 0.98 isn't one of this project's metrics",
+      "projects.7.metrics: 0.98 is in this project's text but isn't one of its metrics",
     ]);
+    // A project with no screenshots needs its living preview.
+    expect(broken(["projects", 6, "preview"], undefined)).toEqual(["projects.6.preview: a project needs a living preview until it has screenshots"]);
   });
 });

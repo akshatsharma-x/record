@@ -44,8 +44,8 @@ function evidenceFor(name: string) {
 }
 
 describe("counts", () => {
-  it("counts 4 internships, 2 papers and 5 projects", () => {
-    expect(counts(content)).toMatchObject({ internships: 4, papers: 2, projects: 5, certificates: 0, achievements: 3 });
+  it("counts 5 internships, 2 papers, 11 projects and 15 certificates", () => {
+    expect(counts(content)).toMatchObject({ internships: 5, papers: 2, projects: 11, certificates: 15, achievements: 3 });
   });
 
   it("marks exactly the core six", () => {
@@ -61,12 +61,12 @@ describe("counts", () => {
 });
 
 describe("profile facts", () => {
-  it("knows the current role", () => {
+  it("knows the current role, even one that starts next month (Part 20)", () => {
     expect(nowRole(content)).toEqual({
-      id: "united-airlines",
-      org: "United Airlines",
-      role: "AI & ML Intern (Generative AI)",
-      since: "2026-06",
+      id: "merck",
+      org: "Merck Group",
+      role: "Associate Analyst Intern (Clinical and Digital Innovation and Applications)",
+      since: "2026-12",
     });
   });
 
@@ -85,7 +85,7 @@ describe("profile facts", () => {
 
 describe("credentials heading", () => {
   it('reads "Education." with no certificates, and never counts zero', () => {
-    expect(credentialsHeadline(content)).toBe("Education.");
+    expect(credentialsHeadline(parseContent({ ...structuredClone(data), certificates: [] }))).toBe("Education.");
   });
 
   it('reads "Credentials." once a certificate exists', () => {
@@ -121,12 +121,13 @@ describe("publication status", () => {
 describe("durations and graduation", () => {
   it("counts each role's calendar months, first and last included", () => {
     expect(Object.fromEntries(roleDurations(content, NOW).map((role) => [role.id, role.months]))).toEqual({
+      merck: 0,
       "united-airlines": 6,
       ey: 2,
       truechip: 2,
       walkingtree: 2,
     });
-    expect(roleDurations(content, NOW)[0].label).toBe("6 months");
+    expect(roleDurations(content, NOW)[1].label).toBe("6 months");
   });
 
   it("measures graduation progress from 2023-07 to 2027-07 against today", () => {
@@ -151,18 +152,18 @@ describe("durations and graduation", () => {
 
 describe("skill evidence", () => {
   it("lists where each core skill was used", () => {
-    expect(evidenceFor("Python")).toMatchObject({ roles: [], projects: ["resume-screening"], papers: [] });
-    expect(evidenceFor("TypeScript")).toMatchObject({ roles: ["ey"], projects: [] });
+    expect(evidenceFor("Python")).toMatchObject({ roles: [], projects: ["resume-screening", "bbc-news-retrieval", "cabinmuj"], papers: [] });
+    expect(evidenceFor("TypeScript")).toMatchObject({ roles: ["ey"], projects: ["nexus", "vistara", "cabinmuj", "myhub"] });
     expect(evidenceFor("Java")).toMatchObject({ roles: ["truechip", "walkingtree"], projects: [] });
-    expect(evidenceFor("LangGraph")).toMatchObject({ roles: ["united-airlines"] });
-    expect(evidenceFor("Next.js")).toMatchObject({ roles: ["ey"], projects: ["cognivault-ai"] });
-    expect(evidenceFor("FastAPI")).toMatchObject({ roles: [], projects: ["cognivault-ai"] });
+    expect(evidenceFor("LangGraph")).toMatchObject({ roles: ["united-airlines"], projects: ["researchx"] });
+    expect(evidenceFor("Next.js")).toMatchObject({ roles: ["ey"], projects: ["nexus", "researchx", "vistara", "cognivault-ai", "cabinmuj", "myhub"] });
+    expect(evidenceFor("FastAPI")).toMatchObject({ roles: [], projects: ["researchx", "cognivault-ai"] });
   });
 
   it("matches aliases", () => {
     expect(evidenceFor("LLMs").roles).toEqual(["united-airlines"]);
     expect(evidenceFor("multimodal AI").projects).toEqual(["cognivault-ai"]);
-    expect(evidenceFor("Transformers").projects).toEqual(["resume-screening"]);
+    expect(evidenceFor("Transformers").projects).toEqual(["resume-screening", "bbc-news-retrieval"]);
     expect(evidenceFor("REST APIs").roles).toEqual(["ey"]);
     expect(evidenceFor("code review").roles).toEqual(["ey", "truechip"]);
     expect(evidenceFor("machine learning")).toMatchObject({
@@ -177,7 +178,9 @@ describe("skill evidence", () => {
   });
 
   it("never counts a skill inside another name", () => {
-    expect(evidenceFor("JavaScript")).toMatchObject({ roles: [], projects: [], papers: [] });
+    // QuizMUJ's and BBC News Retrieval's own JavaScript, never Java's.
+    expect(evidenceFor("JavaScript")).toMatchObject({ roles: [], projects: ["quizmuj", "bbc-news-retrieval"], papers: [] });
+    expect(evidenceFor("Java").projects).toEqual([]);
     expect(evidenceFor("SQL")).toMatchObject({ roles: [], projects: [], papers: [] });
     expect(evidenceFor("GitHub").roles).toEqual(["ey"]);
     expect(evidenceFor("Git").roles).toEqual(["ey", "truechip"]);
@@ -186,7 +189,8 @@ describe("skill evidence", () => {
   it("dates a skill by its earliest dated evidence, ignoring undated projects", () => {
     expect(evidenceFor("Java").firstYear).toBe(2025);
     expect(evidenceFor("LangGraph").firstYear).toBe(2026);
-    expect(evidenceFor("FastAPI").firstYear).toBeNull();
+    expect(evidenceFor("FastAPI").firstYear).toBe(2026);
+    expect(evidenceFor("RAG").firstYear).toBeNull();
   });
 });
 
@@ -222,7 +226,7 @@ describe("timeline", () => {
     const lane = (id: string) => work.clips.find((clip) => clip.id === id)!.lane;
     expect(work.lanes).toBe(2);
     expect(lane("united-airlines")).not.toBe(lane("ey"));
-    expect(work.clips.find((clip) => clip.id === "united-airlines")).toMatchObject({ ongoing: true, end: "2026-11-16" });
+    expect(work.clips.find((clip) => clip.id === "united-airlines")).toMatchObject({ ongoing: false, end: "2026-12-01" });
     expect(work.clips.find((clip) => clip.id === "ey")).toMatchObject({ start: "2026-06-01", end: "2026-08-01" });
   });
 
@@ -256,7 +260,7 @@ describe("/compare", () => {
   });
 
   it("counts internships to date", () => {
-    expect(table.years.map((year) => cells("internships")[year].length)).toEqual([0, 0, 2, 4]);
+    expect(table.years.map((year) => cells("internships")[year].length)).toEqual([0, 0, 2, 5]);
   });
 
   it("puts papers and honors in their years", () => {
@@ -280,7 +284,7 @@ describe("the hero", () => {
 
   it("derives the hero's three key facts, each under its label and pointing at the section that tells the rest", () => {
     expect(heroFacts(content)).toEqual([
-      { id: "now", label: "Now", value: "AI & ML Intern, United Airlines", section: "experience", target: "united-airlines-title" },
+      { id: "now", label: "Now", value: "Associate Analyst Intern, Merck Group", section: "experience", target: "merck-title" },
       { id: "studying", label: "Studying", value: "B.Tech CSE \u201927, Manipal University Jaipur", section: "credentials" },
       { id: "presented", label: "Presented", value: "SCI-2026, Springer LNNS", section: "research" },
     ]);
@@ -328,7 +332,12 @@ describe("About", () => {
 
   it("gives the bento its facts, every count from content", () => {
     const facts = glance(content);
-    expect(facts.now).toEqual({ org: "United Airlines", role: "AI & ML Intern (Generative AI)", since: "2026-06", sinceLabel: "June 2026" });
+    expect(facts.now).toEqual({
+      org: "Merck Group",
+      role: "Associate Analyst Intern (Clinical and Digital Innovation and Applications)",
+      since: "2026-12",
+      sinceLabel: "December 2026",
+    });
     expect(facts.studying).toMatchObject({ degree: "B.Tech", field: "CSE", institution: "Manipal University Jaipur", endLabel: "July 2027" });
     expect(facts.research).toEqual({ papers: 2, venues: [{ name: "SCI-2026", proceedings: "Springer LNNS" }] });
     expect(facts.experience.internships).toBe(counts(content).internships);
@@ -389,7 +398,7 @@ describe("search index", () => {
   it("covers every section, role, project, paper and skill", () => {
     const kinds = (kind: string) => index.filter((entry) => entry.kind === kind).length;
     expect(kinds("section")).toBe(9);
-    expect(kinds("work")).toBe(5);
+    expect(kinds("work")).toBe(11);
     expect(kinds("paper")).toBe(2);
     expect(kinds("skill")).toBe(70);
     expect(index.find((entry) => entry.id === "role:united-airlines")).toBeDefined();
@@ -422,7 +431,7 @@ describe("warnings", () => {
       "education[class-x].grade",
     ]);
     expect(paths("paper-without-doi")).toHaveLength(2);
-    expect(paths("project-without-year")).toHaveLength(5);
+    expect(paths("project-without-year")).toHaveLength(6);
   });
 
   it("ignores names, versions and years when looking for numbers", () => {
@@ -438,7 +447,7 @@ describe("warnings", () => {
 describe("gaps and drafts", () => {
   it("lists every null field", () => {
     const list = gaps(content);
-    expect(list).toHaveLength(48);
+    expect(list).toHaveLength(98);
     expect(list).toContain("profile.location.cityConfirmed");
     // The surprises that wait for an address: the résumé's QR code and the RETROGRADE edition.
     expect(list).toContain("profile.links.site");

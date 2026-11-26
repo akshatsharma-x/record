@@ -69,7 +69,8 @@ test("with nothing typed, Ask suggests four questions, and choosing one asks it"
   else await suggestion.click();
   await expect(field(page)).toHaveValue(words.suggestions[1]);
   await expect(answer(page)).toHaveAttribute("data-phase", "done", { timeout: 15_000 });
-  await expect(chips(page).first()).toContainText("Work · Cognivault AI");
+  // The one project that uses RAG is among the sources the stand-in cites.
+  await expect(chips(page).filter({ hasText: "Work · Cognivault AI" })).toHaveCount(1);
 });
 
 test("streams the answer while the glow travels the edges, cites its sources, and stops the glow when it's whole", async ({ page, isMobile }) => {

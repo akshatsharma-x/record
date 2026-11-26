@@ -1,5 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
+import { content } from "@/content";
 import { visibility } from "./visibility";
+
+/**
+ * The typographic edition ships only while content has no photo; since Part 20 it has one,
+ * so "/" ships the portrait edition (its own tests are in portrait.spec.ts) and the tests
+ * of what only the typographic edition does wait for a build without a photo.
+ */
+const typographic = !content.profile.photo;
+const ONLY_TYPOGRAPHIC = "the typographic edition ships only while content has no photo";
 
 /**
  * The hero (DESIGN.md §7), typographic edition: the production build has no photo yet, so
@@ -88,12 +97,12 @@ test("the hero reads like a product's first screen: the role, the name, the line
   // Each fact a label over its value, read as one phrase, its label first.
   const facts = top.getByRole("list", { name: "Key facts" }).getByRole("link");
   await expect(facts.locator(".hero-fact-label")).toHaveText(["Now", "Studying", "Presented"]);
-  await expect(facts.locator(".hero-fact-value")).toHaveText(["AI & ML Intern, United Airlines", "B.Tech CSE ’27, Manipal University Jaipur", "SCI-2026, Springer LNNS"]);
-  const names = ["Now: AI & ML Intern, United Airlines", "Studying: B.Tech CSE ’27, Manipal University Jaipur", "Presented: SCI-2026, Springer LNNS"];
+  await expect(facts.locator(".hero-fact-value")).toHaveText(["Associate Analyst Intern, Merck Group", "B.Tech CSE ’27, Manipal University Jaipur", "SCI-2026, Springer LNNS"]);
+  const names = ["Now: Associate Analyst Intern, Merck Group", "Studying: B.Tech CSE ’27, Manipal University Jaipur", "Presented: SCI-2026, Springer LNNS"];
   for (const [i, name] of names.entries()) await expect(facts.nth(i)).toHaveAccessibleName(name);
   // The current role's fact goes to that role, not to the timeline's start (Part 17).
   expect(await facts.evaluateAll((links) => links.map((link) => link.getAttribute("href")))).toEqual([
-    "#united-airlines-title",
+    "#merck-title",
     "#credentials",
     "#research",
   ]);
@@ -104,6 +113,7 @@ test("the hero reads like a product's first screen: the role, the name, the line
 });
 
 test("the key facts sit on one line on a wide screen: each label over its value, the dots on the values' line", async ({ page, isMobile }) => {
+  test.skip(!typographic, ONLY_TYPOGRAPHIC);
   test.skip(isMobile, "a wide screen");
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
@@ -129,6 +139,7 @@ test("the key facts sit on one line on a wide screen: each label over its value,
 });
 
 test("the light never reaches the role's colors, and every word it does reach is white (Part 5, Part 18)", async ({ page, isMobile }) => {
+  test.skip(!typographic, ONLY_TYPOGRAPHIC);
   await page.goto("/");
   await page.waitForLoadState("networkidle");
   const top = hero(page);
@@ -165,8 +176,10 @@ test.describe("on a fixed clock in India", () => {
     await page.clock.setFixedTime(new Date("2026-11-16T13:30:00Z"));
     await page.goto("/");
     await page.waitForLoadState("networkidle");
-    await expect(hero(page)).toHaveAttribute("data-warm", "");
-    expect(await hero(page).evaluate((element) => element.style.getPropertyValue("--warmth-to"))).toBe("var(--light-dusk)");
+    if (typographic) {
+      await expect(hero(page)).toHaveAttribute("data-warm", "");
+      expect(await hero(page).evaluate((element) => element.style.getPropertyValue("--warmth-to"))).toBe("var(--light-dusk)");
+    }
     // No date line, no clock, no country or time zone: not on screen, and not for screen readers.
     const said = await hero(page).evaluate((element) => element.textContent ?? "");
     for (const place of [/\bIndia\b/, /\bIST\b/, /Kolkata/, /\d{1,2}:\d{2}/, /November/]) expect(said).not.toMatch(place);
@@ -184,6 +197,7 @@ test("the arrival takes at most 1.2s, and the name is painted from the first fra
 });
 
 test("the dot field arrives out of register and settles into it with the name, then holds still", async ({ page }) => {
+  test.skip(!typographic, ONLY_TYPOGRAPHIC);
   await watchArrival(page);
   await page.goto("/");
   await page.waitForFunction(() => "__arrival" in window);
@@ -230,6 +244,7 @@ test("choosing a finish recolors the site from the swatch and says so in the Isl
 });
 
 test("a glint crosses the name as it settles, drawn on a copy nothing reads or finds (Part 19)", async ({ page }) => {
+  test.skip(!typographic, ONLY_TYPOGRAPHIC);
   await watchArrival(page);
   await page.goto("/");
   await page.waitForFunction(() => "__arrival" in window);
@@ -246,6 +261,7 @@ test("a glint crosses the name as it settles, drawn on a copy nothing reads or f
 });
 
 test("under a mouse, the dots near the pointer light up, and the glint follows the pointer across the name (Part 19)", async ({ page, isMobile }) => {
+  test.skip(!typographic, ONLY_TYPOGRAPHIC);
   test.skip(isMobile, "a mouse");
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
@@ -289,10 +305,12 @@ test("nothing loops: once it has arrived the hero holds still, so there's nothin
     (element) => element.getAnimations({ subtree: true }).filter((animation) => animation.effect?.getTiming().iterations === Infinity).length,
   );
   expect(loops).toBe(0);
-  await expect(hero(page).getByRole("button")).toHaveCount(0);
+  // The portrait's one button is the aperture dial's (DESIGN.md §6.1).
+  await expect(hero(page).getByRole("button")).toHaveCount(typographic ? 0 : 1);
 });
 
 test("under a mouse, the upper grid follows the pointer and the light moves against it", async ({ page, isMobile }) => {
+  test.skip(!typographic, ONLY_TYPOGRAPHIC);
   test.skip(isMobile, "a mouse; phones tilt instead");
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
@@ -310,6 +328,7 @@ test("under a mouse, the upper grid follows the pointer and the light moves agai
 });
 
 test("scrolling away, the name lifts, recedes and fades, and the field tilts back into a floor (Part 19)", async ({ page }) => {
+  test.skip(!typographic, ONLY_TYPOGRAPHIC);
   await page.goto("/");
   await page.waitForLoadState("networkidle");
   // Measured once the faces are in: the hero's height is what they make it.
@@ -331,6 +350,7 @@ test("scrolling away, the name lifts, recedes and fades, and the field tilts bac
 });
 
 test("the loupe magnifies the name under the cursor, and the dot stays visible at its center", async ({ page, isMobile }) => {
+  test.skip(!typographic, ONLY_TYPOGRAPHIC);
   test.skip(isMobile, "the loupe needs a pointer; touch users miss nothing");
   await page.goto("/");
   await page.waitForLoadState("networkidle");
@@ -369,7 +389,7 @@ test.describe("without JavaScript", () => {
     await page.goto("/");
     const top = hero(page);
     await expect(top.getByRole("heading", { level: 1 })).toHaveText("Akshat Sharma");
-    for (const text of ["AI & ML Engineer", "I build intelligent systems — and make them clear.", "AI & ML Intern, United Airlines"]) {
+    for (const text of ["AI & ML Engineer", "I build intelligent systems — and make them clear.", "Associate Analyst Intern, Merck Group"]) {
       await expect(top.getByText(text)).toBeVisible();
     }
     await expect(top.getByRole("link", { name: "See my work" })).toBeVisible();
@@ -384,6 +404,7 @@ test.describe("with reduced motion", () => {
   test.use({ reducedMotion: "reduce" });
 
   test("the hero is complete and still: the grids already in register, no glint, no lit dots, no parallax, no scroll-out", async ({ page, isMobile }) => {
+    test.skip(!typographic, ONLY_TYPOGRAPHIC);
     await page.goto("/");
     const top = hero(page);
     await expect(top.getByRole("heading", { level: 1 })).toHaveText("Akshat Sharma");

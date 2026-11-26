@@ -19,6 +19,21 @@ function host(url: string) {
 
 /** Each role's first highlights: enough for one page. */
 const HIGHLIGHTS = 2;
+/**
+ * The bento's first projects, and the latest certificates by title alone (Part 20): with
+ * eleven and fifteen, all of them ran to a second page.
+ */
+const PROJECTS = 4;
+const CERTIFICATES = 2;
+
+/** The latest certificates, the undated last; content's order breaks a tie. */
+export function latestCertificates<T extends { issued: string | null }>(certificates: readonly T[]): T[] {
+  return certificates
+    .map((certificate, index) => ({ certificate, index }))
+    .sort((a, b) => (b.certificate.issued ?? "").localeCompare(a.certificate.issued ?? "") || a.index - b.index)
+    .slice(0, CERTIFICATES)
+    .map(({ certificate }) => certificate);
+}
 
 export function ResumeEdition() {
   const { profile, experience, projects, publications, conferences, education, achievements, certificates } = content;
@@ -80,7 +95,7 @@ export function ResumeEdition() {
 
       <section className="resume-section">
         <h2>Projects</h2>
-        {projects.map((project) => (
+        {projects.slice(0, PROJECTS).map((project) => (
           <p key={project.slug} className="resume-line">
             <strong>{project.name}</strong>: {project.tagline.text}
           </p>
@@ -122,9 +137,13 @@ export function ResumeEdition() {
                   {[achievement.title, achievement.org, achievement.years.join(", ")].filter(Boolean).join(", ")}
                 </p>
               ))}
-              {certificates.map((certificate) => (
-                <p key={certificate.id} className="resume-line">{`${certificate.title}, ${certificate.issuer}`}</p>
-              ))}
+              {certificates.length > 0 ? (
+                <p className="resume-line">
+                  {latestCertificates(certificates)
+                    .map((certificate) => certificate.title)
+                    .join(", ")}
+                </p>
+              ) : null}
             </section>
           ) : null}
         </div>

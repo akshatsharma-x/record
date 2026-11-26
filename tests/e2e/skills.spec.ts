@@ -200,7 +200,9 @@ test.describe("every skill, two ways", () => {
     await expect(jump).toHaveAttribute("href", "#ey-title");
     // The same jump right after the skill, for the keyboard.
     await expect(page.locator(".show-me-inline .show-me-jump")).toHaveAttribute("href", "#ey-title");
-    await expect(page.locator("[data-show-me-status]")).toHaveText("Next.js (App Router): Ernst & Young (EY), Cognivault AI.");
+    await expect(page.locator("[data-show-me-status]")).toHaveText(
+      "Next.js (App Router): Ernst & Young (EY), NEXUS, ResearchX, Vistara, Cognivault AI, CabinMUJ, MyHUB.",
+    );
     if (isMobile) await jump.tap();
     else await jump.click();
     // It lands on Ernst & Young: on desktop the edit's playhead springs to its clip.

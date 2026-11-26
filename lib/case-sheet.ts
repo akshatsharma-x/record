@@ -143,6 +143,9 @@ function openSession(): Session {
     radius: px(styles.getPropertyValue("--radius-card-l")),
     motion: !prefersReducedMotion(),
   };
+  // Keep the scrollbar's room only where it takes some: with overlay or hidden scrollbars a
+  // stable gutter narrows the page, and everything sized by its width moves (Part 20).
+  root.toggleAttribute("data-case-gutter", window.innerWidth > root.clientWidth);
   root.setAttribute("data-case-open", "");
   return session;
 }
@@ -175,6 +178,7 @@ function closeSession() {
     element.style.clipPath = "";
   }
   document.documentElement.removeAttribute("data-case-open");
+  document.documentElement.removeAttribute("data-case-gutter");
   if (Math.abs(window.scrollY - scrollY) > 1) window.scrollTo({ top: scrollY, behavior: "instant" });
   session = null;
 }

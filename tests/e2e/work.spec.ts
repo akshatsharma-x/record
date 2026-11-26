@@ -86,20 +86,21 @@ test.describe("the bento", () => {
     await expect.poll(() => shown(page)).toHaveLength(tiles.length);
     await expect(page.locator("html")).not.toHaveAttribute("data-work-filtering", "");
     const box = async (slug: string) => (await tile(page, slug).boundingBox())!;
-    const [cognivault, quiz, small] = [await box("cognivault-ai"), await box("quizmuj"), await box("wcag-analyzer")];
+    // NEXUS leads (Part 20), ResearchX beside it.
+    const [flagship, second, small] = [await box("nexus"), await box("researchx"), await box("wcag-analyzer")];
     // 8×2, 4×2 and 4×1 on twelve columns: the flagship twice a small tile's width and height.
-    expect(cognivault.width / small.width).toBeCloseTo(2, 0);
-    expect(cognivault.height / small.height).toBeCloseTo(2, 0);
-    expect(quiz.width).toBeCloseTo(small.width, 0);
-    expect(quiz.height).toBeCloseTo(cognivault.height, 0);
+    expect(flagship.width / small.width).toBeCloseTo(2, 0);
+    expect(flagship.height / small.height).toBeCloseTo(2, 0);
+    expect(second.width).toBeCloseTo(small.width, 0);
+    expect(second.height).toBeCloseTo(flagship.height, 0);
   });
 
   test("filters by mouse, touch and keyboard, announces the count, and glides in a View Transition", async ({ page, isMobile }) => {
     await open(page);
     await toWork(page);
     await pick(page, "AI", isMobile);
-    await expect.poll(() => shown(page)).toEqual(["cognivault-ai", "resume-screening"]);
-    await expect(page.locator("[data-work-status]")).toHaveText("AI: 2 projects");
+    await expect.poll(() => shown(page)).toEqual(["nexus", "researchx", "resume-screening", "bbc-news-retrieval", "cognivault-ai"]);
+    await expect(page.locator("[data-work-status]")).toHaveText("AI: 5 projects");
     // A second pick mid-flight lands where it was asked to.
     await pick(page, "ML", isMobile);
     await pick(page, "Accessibility", isMobile);
@@ -111,7 +112,7 @@ test.describe("the bento", () => {
       await page.locator(".work-filter input:checked").focus();
       await page.keyboard.press("ArrowLeft");
       await expect(page.locator(".work-filter input:checked")).toHaveValue("ml");
-      await expect.poll(() => shown(page)).toEqual(["resume-screening", "churn-prediction"]);
+      await expect.poll(() => shown(page)).toEqual(["resume-screening", "bbc-news-retrieval", "churn-prediction"]);
     }
 
     // The reflow is a View Transition with a name per tile, gone when it's done.
@@ -137,7 +138,7 @@ test.describe("the bento", () => {
     const page = await context.newPage();
     await page.goto("/");
     await page.locator(".work-filter label", { hasText: /^Full-stack$/ }).click();
-    await expect.poll(() => shown(page)).toEqual(["quizmuj"]);
+    await expect.poll(() => shown(page)).toEqual(["quizmuj", "vistara", "cabinmuj", "myhub"]);
     await link(page, "quizmuj").click();
     await expect(page).toHaveURL(/\/work\/quizmuj$/);
     await expect(page.locator("h1.case-title")).toHaveText("QuizMUJ");
@@ -151,13 +152,18 @@ test.describe("the bento", () => {
       await expect(card.locator(".work-eyebrow")).toHaveText(entry.category);
       await expect(card.locator(".work-title")).toHaveText(entry.name);
       await expect(card.locator(".work-tagline")).toContainText(entry.tagline.text);
-      await expect(card.locator("[data-work-cover] svg")).toHaveCount(1);
+      // The first screenshot is the cover where content has one; the living preview, until then.
+      await expect(card.locator(entry.screenshot ? "[data-work-cover] img" : "[data-work-cover] svg")).toHaveCount(1);
       await expect(card.locator(".work-metric")).toHaveCount(entry.metric ? 1 : 0);
       await expect(card.locator(".work-link")).toHaveAttribute("data-cursor", "open");
     }
     await expect(tile(page, "churn-prediction").locator(".work-metric-value")).toHaveText("97%");
     // Every figure in the section is one content states.
-    const stated = new Set(content.projects.flatMap((project) => [project.tagline.text, project.summary.text]).flatMap((text) => numbersIn(text)));
+    const stated = new Set(
+      [...content.projects.flatMap((project) => [project.tagline.text, project.summary.text, project.outcome?.text ?? ""]), ...content.footnotes.map((note) => note.note)].flatMap((text) =>
+        numbersIn(text),
+      ),
+    );
     const text = await page.locator("#work").evaluate((element) => (element as HTMLElement).innerText + " " + Array.from(element.querySelectorAll("svg text"), (node) => node.textContent).join(" "));
     const notes = new Set(tiles.flatMap((entry) => [...entry.tagline.footnotes, ...(entry.metric?.footnotes ?? [])]).map(String));
     for (const figure of numbersIn(text)) expect(stated.has(figure) || notes.has(figure), figure).toBe(true);
@@ -279,7 +285,7 @@ test.describe("the case-study sheet", () => {
     await expect(next).toContainText(studies.find((study) => study.slug === "wcag-analyzer")!.next.name);
     if (isMobile) await next.tap();
     else await next.click();
-    await opened(page, "cognivault-ai");
+    await opened(page, studies.find((study) => study.slug === "wcag-analyzer")!.next.slug);
     await page.goBack();
     await closed(page);
   });

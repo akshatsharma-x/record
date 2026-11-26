@@ -48,13 +48,21 @@ export function attachEdit(root: HTMLElement, { start, timeZone, clips }: EditDa
   const honors = buttons.filter((button) => button.dataset.track === "honors");
   const html = document.documentElement;
 
-  // The scale runs from the first clip to today; ongoing clips end there.
+  // The scale runs from the first clip to today; ongoing clips end there. A role that hasn't
+  // begun yet runs through its first month, and the scale reaches that far (Part 20).
   const today = isoToday(timeZone, new Date());
+  const ahead = (clip: { start: string; end: string | null }) => clip.end === null && clip.start > today;
   const from = monthsAt(start);
-  const to = monthsAt(today);
+  const to = Math.max(monthsAt(today), ...clips.filter(ahead).map((clip) => monthsAt(clip.start) + 1));
   root.style.setProperty("--span", (to - from).toFixed(3));
   root.setAttribute("data-today", "");
-  const scrub: ScrubClip[] = clips.map((clip) => ({ id: clip.id, track: clip.track, lane: clip.lane, from: monthsAt(clip.start), to: monthsAt(clip.end ?? today) }));
+  const scrub: ScrubClip[] = clips.map((clip) => ({
+    id: clip.id,
+    track: clip.track,
+    lane: clip.lane,
+    from: monthsAt(clip.start),
+    to: clip.end ? monthsAt(clip.end) : ahead(clip) ? monthsAt(clip.start) + 1 : monthsAt(today),
+  }));
   for (const clip of clips) {
     if (clip.end && monthsAt(clip.end) > to) buttons.find((button) => button.dataset.clip === clip.id)?.setAttribute("data-continues", "");
   }

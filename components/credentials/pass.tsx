@@ -74,7 +74,7 @@ export function PassCard({ pass, index, tone, marks }: { pass: Pass; index: numb
       data-pass={pass.id}
       data-kind={pass.kind}
       data-tone={tone}
-      style={vars({ "--i": index, ...(pass.tone ? { "--pass-tone": pass.tone } : {}) })}
+      style={vars({ "--i": index, "--slot": index, ...(pass.tone ? { "--pass-tone": pass.tone } : {}) })}
     >
       {/* What brings it forward in the stack; only shown once the stack is (with JavaScript). */}
       <button

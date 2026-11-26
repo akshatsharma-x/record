@@ -901,6 +901,9 @@
 /* Where the edit pins (Part 7): wide, tall screens, with JavaScript and motion. lib/edit.ts
    holds the same query (EDIT.query), and tests/unit/edit.test.ts keeps them in step. */
 @custom-variant edit-pinned (@media (min-width: 1069px) and (min-height: 760px) and (scripting: enabled) and (prefers-reduced-motion: no-preference));
+/* Where the wallet stacks (Part 20): with JavaScript and motion, from the first paint, so the
+   page's height is the same before its behavior arrives (lib/credentials-behavior.ts). */
+@custom-variant wallet-stacked (@media (scripting: enabled) and (prefers-reduced-motion: no-preference));
 @custom-variant research-pinned (@media (min-width: 1069px) and (min-height: 760px) and (scripting: enabled) and (prefers-reduced-motion: no-preference));
 /* Too short a viewport for the chip and its labels in one sticky screen: a low window, or a
    page zoomed to 200% (Part 17). There the 3D chip doesn't pin, and shows exploded. */

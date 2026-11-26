@@ -16,15 +16,18 @@ function tones(passes: readonly Pass[]): string[] {
 }
 
 /**
- * The wallet (DESIGN.md §7.8): Education, then each certificate, as passes. The server
- * renders them as a plain grid, which is what reduced motion and no JavaScript keep; the
- * behavior stacks them like a wallet app (lib/credentials-behavior.ts).
+ * The wallet (DESIGN.md §7.8): Education, then each certificate, as passes, stacked like a
+ * wallet app's. The server renders the stack as it starts, which CSS shows only with
+ * JavaScript and motion; without either it's a plain grid. The behavior moves the passes
+ * (lib/credentials-behavior.ts).
  */
 export function Wallet({ passes, marks = {}, id = "wallet" }: { passes: readonly Pass[]; marks?: PassMarks; id?: string }) {
   const words = content.copy.credentials.wallet;
   const tone = tones(passes);
   return (
-    <div className="wallet" data-count={passes.length} style={vars({ "--count": passes.length })}>
+    // Stacked from the first paint where CSS stacks it (the wallet-stacked variant), each pass
+    // in its first slot, so nothing moves when the behavior arrives (Part 20).
+    <div className="wallet" data-count={passes.length} data-stacked="" style={vars({ "--count": passes.length })}>
       {/* Its heading is for the outline (h2, then the passes, then Recognition.); the passes show what it is. */}
       <h3 className="sr-only" id={`${id}-title`}>
         {words.label}

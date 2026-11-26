@@ -306,7 +306,8 @@ const Project = z.strictObject({
   problem: Claim.nullable(),
   /** What came of it, in words, beside or instead of the metrics. */
   outcome: Claim.nullable(),
-  preview: ProjectPreview,
+  /** Its living preview, the cover until it has screenshots; a project with screenshots needn't have one. */
+  preview: ProjectPreview.optional(),
   architecture: z.strictObject({ nodes: z.array(ArchitectureNode).min(2), edges: z.array(ArchitectureEdge) }),
 });
 
@@ -332,7 +333,8 @@ const Certificate = z.strictObject({
   issuer: Text,
   /** Its pass's color (DESIGN.md §7.8); without one, it takes one from the finish. */
   tone: Tone.optional(),
-  issued: YearMonth,
+  /** null until the certificate says when (LinkedIn shows no date for some). */
+  issued: YearMonth.nullable(),
   /** "never" when it doesn't expire. */
   expires: z.union([YearMonth, z.literal("never")]).nullable(),
   credentialId: Text.nullable(),
@@ -864,7 +866,7 @@ function checkReferences(content: z.output<typeof ContentShape>, ctx: z.Refineme
     if (conference.end < conference.start) problem(["conferences", i, "end"], "ends before it starts");
   });
   content.certificates.forEach((certificate, i) => {
-    if (certificate.expires && certificate.expires !== "never" && certificate.expires < certificate.issued) {
+    if (certificate.issued && certificate.expires && certificate.expires !== "never" && certificate.expires < certificate.issued) {
       problem(["certificates", i, "expires"], "expires before it was issued");
     }
   });
@@ -986,7 +988,8 @@ function checkReferences(content: z.output<typeof ContentShape>, ctx: z.Refineme
         if (!stated.includes(value)) problem(["projects", i, "metrics", j], `${value} isn't stated by this project or the notes it cites`);
       }
     });
-    if (project.preview.kind === "roc") {
+    if (!project.preview && !project.screenshots) problem(["projects", i, "preview"], "a project needs a living preview until it has screenshots");
+    if (project.preview?.kind === "roc") {
       for (const figure of [project.preview.auc, project.preview.accuracy]) {
         if (!counted.includes(figure)) problem(["projects", i, "preview"], `${figure} isn't one of this project's metrics`);
       }
@@ -1013,7 +1016,7 @@ function checkReferences(content: z.output<typeof ContentShape>, ctx: z.Refineme
         if (!ids.has(id)) problem(["projects", i, "architecture", "edges", j], `no box "${id}"`);
       }
     });
-    if ("labels" in project.preview) {
+    if (project.preview && "labels" in project.preview) {
       for (const [slot, label] of Object.entries(project.preview.labels)) {
         const missing = ungrounded(label);
         if (missing.length > 0) problem(["projects", i, "preview", "labels", slot], `"${missing.join(", ")}" isn't in this project's own words`);

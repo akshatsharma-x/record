@@ -7,5 +7,6 @@ export default defineConfig({
     include: ["tests/unit/**/*.test.{ts,tsx}"],
     // Node by default. A DOM test opts in with `// @vitest-environment jsdom`.
     environment: "node",
+    setupFiles: ["tests/unit/setup.tsx"],
   },
 });

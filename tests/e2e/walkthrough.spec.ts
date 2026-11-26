@@ -88,16 +88,17 @@ test.describe("the keyboard walkthrough", () => {
     const island = stops.filter((entry) => entry.section === "island");
     expect(island).toHaveLength(4 + SECTIONS.filter((section) => section.nav).length);
     // The hero: its two ways on, its three facts, read with their labels, then the finishes,
-    // one stop for the group. Nothing on it loops, so there's no pause (Part 18).
+    // one stop for the group. Nothing on it loops, so there's no pause (Part 18). The
+    // portrait edition, which ships with Akshat's photo (Part 20), ends on its aperture dial.
     const first = stops.filter((entry) => entry.section === "top").map((entry) => entry.name);
     expect(first.slice(0, 5)).toEqual([
       "See my work",
       "Say hello›",
-      "Now: AI & ML Intern, United Airlines",
+      "Now: Associate Analyst Intern, Merck Group",
       "Studying: B.Tech CSE \u201927, Manipal University Jaipur",
       "Presented: SCI-2026, Springer LNNS",
     ]);
-    expect(first).toHaveLength(6);
+    expect(first).toHaveLength(content.profile.photo ? 7 : 6);
     // The highlights: the card in view, its footnote and its +, then the pause.
     const reel = stops.filter((entry) => entry.section === "highlights").map((entry) => entry.name);
     expect(reel).toHaveLength(3);

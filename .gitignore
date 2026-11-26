@@ -54,3 +54,6 @@ next-env.d.ts
 
 # Lighthouse CI's runs (lighthouserc.json); its reports go to /reports/lighthouse.
 /.lighthouseci/
+
+# The source photo for the hero portrait: never committed (its metadata can carry where it was taken).
+/me.jpeg

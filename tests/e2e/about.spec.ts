@@ -187,7 +187,9 @@ test.describe("About", () => {
       await page.clock.setFixedTime(new Date("2026-11-16T09:11:00Z"));
       await page.goto("/");
       await page.locator(".glance").scrollIntoViewIfNeeded();
-      await expect(page.locator('[data-tile="now"]')).toContainText("since June 2026 · 6 months");
+      // Merck from December (Part 20): a role that hasn't begun has no length yet.
+      await expect(page.locator('[data-tile="now"]')).toContainText("since December 2026");
+      await expect(page.locator('[data-tile="now"]')).not.toContainText("months");
       const studying = page.locator('[data-tile="studying"] button');
       await expect(studying).toContainText("84%");
       await studying.click();
