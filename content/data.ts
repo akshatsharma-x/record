@@ -37,13 +37,17 @@ export const data = {
       retrograde: null, // TODO(akshat): the RETROGRADE edition's address, for Search's "retro".
     },
     resumePdf: null, // TODO(akshat): a résumé PDF without the phone number. Until then, no download.
-    // TODO(akshat): a portrait, at least 3000px tall, with soft side light and a plain
-    // background, framed head and shoulders with the top of the head about 15–20% from
-    // the top. Make two layers from it (DESIGN.md §7, Part 5): the subject cut out with
-    // alpha, and the background plate with Akshat removed. Put both in /public and
-    // describe them here, with headTop (where the top of the head sits, as a share of
-    // the height); the hero's portrait edition switches on by itself.
-    photo: null,
+    // The portrait (DESIGN.md §7, Part 5), from Akshat's photo (Part 20): a 3:4 crop with
+    // the top of the head a quarter of the way down, the highest a frame 3000px tall
+    // allows. The subject is cut out with macOS Vision's subject mask; the plate fills
+    // where Akshat stood from its surroundings, and is only ever shown blurred. Neither
+    // file carries the photo's metadata.
+    photo: {
+      alt: "Akshat standing in a red, book-lined alcove, in a dark jacket over a red T-shirt, one arm resting on a shelf, smiling.",
+      subject: { src: "/portrait/subject.png", width: 2268, height: 3024 },
+      plate: { src: "/portrait/plate.jpg", width: 2268, height: 3024 },
+      headTop: 0.25,
+    },
     // Résumé facts only.
     bio: [
       {

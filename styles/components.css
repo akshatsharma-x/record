@@ -2065,6 +2065,14 @@
       height: var(--hero-height);
     }
 
+    /* The name starts under the Island: the frame below places the head against it, so the
+       desktop's rule (the name half a line above the head, Part 5) mustn't move it down.
+       With a head a quarter of the way down the photo, it put the head across the first
+       line (Part 20). */
+    .hero-portrait .hero-name-layer {
+      padding-top: var(--hero-name-top);
+    }
+
     /* The frame spans the width, set down so the top of the head lands across the foot of
        the name: the frame's own height places the head, whatever the photo's framing. */
     .hero-portrait .hero-frame {
