@@ -38,7 +38,7 @@ describe("JSON-LD", () => {
       "@id": personId(),
       name: content.profile.name,
       jobTitle: content.experience.find((role) => role.end === "present")!.role,
-      worksFor: { "@type": "Organization", name: "United Airlines" },
+      worksFor: { "@type": "Organization", name: "Merck Group" },
       alumniOf: { "@type": "CollegeOrUniversity", name: "Manipal University Jaipur" },
     });
     expect(node.sameAs).toEqual([content.profile.links.linkedin, content.profile.links.github]);

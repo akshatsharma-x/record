@@ -99,12 +99,30 @@ describe("the core six and their evidence", () => {
 
   it("link each role, project and paper that uses them, to where it is", () => {
     const where = (name: string) => skill(name).evidence.map((hit) => `${hit.kind} ${hit.title} ${hit.href}`);
-    expect(where("Python")).toEqual(["project Automated Resume Screening /work/resume-screening"]);
-    expect(where("TypeScript")).toEqual(["role Ernst & Young (EY) /#ey-title"]);
+    expect(where("Python")).toEqual([
+      "project CV-Scan /work/resume-screening",
+      "project BBC News Retrieval /work/bbc-news-retrieval",
+      "project CabinMUJ /work/cabinmuj",
+    ]);
+    expect(where("TypeScript")).toEqual([
+      "role Ernst & Young (EY) /#ey-title",
+      "project NEXUS /work/nexus",
+      "project Vistara /work/vistara",
+      "project CabinMUJ /work/cabinmuj",
+      "project MyHUB /work/myhub",
+    ]);
     expect(where("Java")).toEqual(["role Truechip Solutions Pvt. Ltd. /#truechip-title", "role WalkingTree Technologies /#walkingtree-title"]);
-    expect(where("LangGraph")).toEqual(["role United Airlines /#united-airlines-title"]);
-    expect(where("Next.js")).toEqual(["role Ernst & Young (EY) /#ey-title", "project Cognivault AI /work/cognivault-ai"]);
-    expect(where("FastAPI")).toEqual(["project Cognivault AI /work/cognivault-ai"]);
+    expect(where("LangGraph")).toEqual(["role United Airlines /#united-airlines-title", "project ResearchX /work/researchx"]);
+    expect(where("Next.js")).toEqual([
+      "role Ernst & Young (EY) /#ey-title",
+      "project NEXUS /work/nexus",
+      "project ResearchX /work/researchx",
+      "project Vistara /work/vistara",
+      "project Cognivault AI /work/cognivault-ai",
+      "project CabinMUJ /work/cabinmuj",
+      "project MyHUB /work/myhub",
+    ]);
+    expect(where("FastAPI")).toEqual(["project ResearchX /work/researchx", "project Cognivault AI /work/cognivault-ai"]);
     expect(skill("machine learning").evidence.map((hit) => hit.href)).toEqual([
       "/#united-airlines-title",
       "/work/churn-prediction",

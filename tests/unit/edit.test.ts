@@ -39,17 +39,19 @@ describe("dates as a résumé writes them", () => {
 });
 
 describe("the tracks", () => {
-  it("start in July 2023 and know dates up to EY's end, until the browser knows today", () => {
+  it("start in July 2023 and know dates up to United's end, until the browser knows today", () => {
     expect(result.start).toBe("2023-07-01");
-    expect(result.known).toBe("2026-08-01");
+    expect(result.known).toBe("2026-12-01");
   });
 
   it("stack EY over United where they overlap, honestly: same start, both whole", () => {
     expect(track("work").lanes).toBe(2);
-    expect(clip("united-airlines")).toMatchObject({ lane: 0, start: "2026-06-01", end: null });
+    expect(clip("united-airlines")).toMatchObject({ lane: 0, start: "2026-06-01", end: "2026-12-01" });
     expect(clip("ey")).toMatchObject({ lane: 1, start: "2026-06-01", end: "2026-08-01" });
+    // Merck follows United on its lane, from December (Part 20).
+    expect(clip("merck")).toMatchObject({ lane: 0, start: "2026-12-01", end: null });
     // Tab order runs through time: EY ends first, so it comes before United.
-    expect(track("work").clips.map((entry) => entry.id)).toEqual(["walkingtree", "truechip", "ey", "united-airlines"]);
+    expect(track("work").clips.map((entry) => entry.id)).toEqual(["walkingtree", "truechip", "ey", "united-airlines", "merck"]);
   });
 
   it("name each clip, by the org's short name where content gives one", () => {
@@ -58,6 +60,7 @@ describe("the tracks", () => {
       ["Truechip Solutions Pvt. Ltd.", "Truechip"],
       ["Ernst & Young (EY)", "EY"],
       ["United Airlines", "United Airlines"],
+      ["Merck Group", "Merck"],
     ]);
     expect(clip("sci-2026").label).toBe("SCI-2026");
   });
@@ -76,7 +79,8 @@ describe("the tracks", () => {
 
 describe("the panels", () => {
   it("give each role its dates, location (only when known), summary and three highlights", () => {
-    expect(panel("united-airlines")).toMatchObject({ dates: "Jun 2026 – present", location: null });
+    expect(panel("merck")).toMatchObject({ dates: "Dec 2026 – present", location: null });
+    expect(panel("united-airlines")).toMatchObject({ dates: "Jun–Nov 2026", location: null });
     expect(panel("ey")).toMatchObject({ dates: "Jun–Jul 2026", location: "Hybrid" });
     expect(panel("truechip")).toMatchObject({ dates: "Dec 2025 – Jan 2026" });
     expect(panel("walkingtree")).toMatchObject({ dates: "Jul–Aug 2025" });

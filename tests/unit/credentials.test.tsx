@@ -35,10 +35,11 @@ function problemsOf(input: unknown): string[] {
 }
 
 describe("the heading", () => {
-  it('reads "Education." while content has no certificates', () => {
-    expect(content.certificates).toEqual([]);
-    expect(credentialsHeadline(content)).toBe("Education.");
-    expect(wallet(content).headline).toBe("Education.");
+  it('reads "Education." while content has no certificates, and "Credentials." now it has them (Part 20)', () => {
+    expect(wallet(withCertificates([])).headline).toBe("Education.");
+    expect(content.certificates.length).toBeGreaterThan(0);
+    expect(credentialsHeadline(content)).toBe("Credentials.");
+    expect(wallet(content).headline).toBe("Credentials.");
   });
 
   it('reads "Credentials." with one certificate, and with several', () => {

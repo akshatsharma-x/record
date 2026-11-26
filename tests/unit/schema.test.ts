@@ -31,20 +31,20 @@ describe("content schema", () => {
   });
 
   it("names the field when a date is malformed", () => {
-    expect(problemsOf(broken([["experience", 2, "start"], "2025-13"]))).toEqual([
+    expect(problemsOf(broken([["experience", 3, "start"], "2025-13"]))).toEqual([
       'experience[truechip].start: use "YYYY-MM" (got "2025-13")',
     ]);
   });
 
   it("names a footnote that doesn't exist", () => {
-    expect(problemsOf(broken([["highlights", 0, "footnotes"], [9]]))).toEqual([
-      "highlights[cartographer].footnotes[0]: footnote 9 doesn't exist",
+    expect(problemsOf(broken([["highlights", 0, "footnotes"], [99]]))).toEqual([
+      "highlights[cartographer].footnotes[0]: footnote 99 doesn't exist",
     ]);
   });
 
   it("rejects a misspelled key, naming it", () => {
     expect(problemsOf(broken([["projects", 0, "yera"], 2025]))).toEqual([
-      'projects[cognivault-ai]: Unrecognized key: "yera"',
+      'projects[nexus]: Unrecognized key: "yera"',
     ]);
   });
 
@@ -55,7 +55,7 @@ describe("content schema", () => {
   it("rejects anything shaped like a phone number, anywhere", () => {
     // Built at runtime from fake digits, so no phone-shaped literal exists in this file.
     const fake = ["+91", "9".padEnd(10, "0")].join(" ");
-    expect(problemsOf(broken([["experience", 0, "bullets", 1, "text"], `Call ${fake}`]))).toEqual([
+    expect(problemsOf(broken([["experience", 1, "bullets", 1, "text"], `Call ${fake}`]))).toEqual([
       "experience[united-airlines].bullets[1].text: looks like a phone number, and the phone number is never published (DESIGN.md §2 rule 2)",
     ]);
   });
@@ -144,29 +144,29 @@ describe("content schema", () => {
 
   describe("a role's metrics and visual", () => {
     it("state only what the role and its notes state", () => {
-      expect(problemsOf(broken([["experience", 0, "metrics", 0, "value"], 7]))).toEqual(
+      expect(problemsOf(broken([["experience", 1, "metrics", 0, "value"], 7]))).toEqual(
         expect.arrayContaining(["experience[united-airlines].metrics[0]: 7 isn't stated by this role or the notes it cites"]),
       );
-      expect(problemsOf(broken([["experience", 2, "visual", "coverage"], 95]))).toEqual([
+      expect(problemsOf(broken([["experience", 3, "visual", "coverage"], 95]))).toEqual([
         "experience[truechip].visual: 95 isn't stated by this role or the notes it cites",
       ]);
     });
 
     it("cover every number the role's text states, so the edit can footnote each once", () => {
-      const metrics = data.experience[3].metrics!.filter((metric) => metric.value !== 2500);
-      expect(problemsOf(broken([["experience", 3, "metrics"], metrics]))).toEqual([
+      const metrics = data.experience[4].metrics!.filter((metric) => metric.value !== 2500);
+      expect(problemsOf(broken([["experience", 4, "metrics"], metrics]))).toEqual([
         "experience[walkingtree].metrics: 2500 is in this role's text but isn't one of its metrics",
       ]);
     });
 
     it("cite footnotes that exist", () => {
-      expect(problemsOf(broken([["experience", 0, "metrics", 0, "footnotes"], [9]]))).toEqual([
-        "experience[united-airlines].metrics[0].footnotes[0]: footnote 9 doesn't exist",
+      expect(problemsOf(broken([["experience", 1, "metrics", 0, "footnotes"], [99]]))).toEqual([
+        "experience[united-airlines].metrics[0].footnotes[0]: footnote 99 doesn't exist",
       ]);
     });
 
     it("shorten the org's name only to a part of it", () => {
-      expect(problemsOf(broken([["experience", 1, "short"], "E&Y"]))).toEqual(['experience[ey].short: "E&Y" isn\'t part of "Ernst & Young (EY)"']);
+      expect(problemsOf(broken([["experience", 2, "short"], "E&Y"]))).toEqual(['experience[ey].short: "E&Y" isn\'t part of "Ernst & Young (EY)"']);
     });
   });
 
@@ -177,7 +177,7 @@ describe("content schema", () => {
   });
 
   it("reports every problem at once", () => {
-    const problems = problemsOf(broken([["experience", 1, "end"], "2026-13"], [["profile", "email"], "not-an-email"]));
+    const problems = problemsOf(broken([["experience", 2, "end"], "2026-13"], [["profile", "email"], "not-an-email"]));
     expect(problems).toHaveLength(2);
   });
 });
