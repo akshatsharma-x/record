@@ -17,9 +17,13 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 
 const data = edit(content);
 const clips = data.tracks.flatMap((track) => track.clips.map((clip) => ({ ...clip, track: track.id })));
-const scrub: ScrubClip[] = clips.map((clip) => ({ id: clip.id, track: clip.track, lane: clip.lane, from: monthsAt(clip.start), to: monthsAt(clip.end ?? TODAY) }));
+// As lib/edit-behavior.ts lays the scale: to today, and a role that hasn't begun (Merck,
+// from December: Part 20) through its first month.
+const ahead = (clip: { start: string; end: string | null }) => clip.end === null && clip.start > TODAY;
+const endOf = (clip: { start: string; end: string | null }) => (clip.end ? monthsAt(clip.end) : ahead(clip) ? monthsAt(clip.start) + 1 : monthsAt(TODAY));
+const scrub: ScrubClip[] = clips.map((clip) => ({ id: clip.id, track: clip.track, lane: clip.lane, from: monthsAt(clip.start), to: endOf(clip) }));
 const from = monthsAt(data.start);
-const to = monthsAt(TODAY);
+const to = Math.max(monthsAt(TODAY), ...clips.filter(ahead).map(endOf));
 const map = scrubMap(scrub, from, to);
 const panelOf = (id: string) => clips.find((clip) => clip.id === id)!.panel;
 const scrubOf = (id: string) => scrub.find((clip) => clip.id === id)!;
@@ -108,7 +112,7 @@ test.describe("pinned, on a wide, tall screen", () => {
       const box = (await clip(page, entry.id).boundingBox())!;
       const x = (t: number) => lanes.x + ((Math.min(t, to) - from) / span) * lanes.width;
       expect(Math.abs(box.x - x(monthsAt(entry.start))), `${entry.id} starts on its date`).toBeLessThan(1.5);
-      const end = x(monthsAt(entry.end ?? TODAY));
+      const end = x(endOf(entry));
       // A two-day clip is a sliver, never wider than its dates need to be seen.
       if (end - box.x >= 6) expect(Math.abs(box.x + box.width - end), `${entry.id} ends on its date`).toBeLessThan(1.5);
       else expect(box.width).toBeLessThanOrEqual(6.5);
@@ -119,7 +123,8 @@ test.describe("pinned, on a wide, tall screen", () => {
     expect(Math.abs(ey.x - united.x)).toBeLessThan(1);
     expect(ey.y + ey.height).toBeLessThanOrEqual(united.y + 1);
     expect(united.width).toBeGreaterThan(ey.width);
-    await expect(clip(page, "united-airlines")).toHaveAttribute("data-ongoing", "true");
+    await expect(clip(page, "merck")).toHaveAttribute("data-ongoing", "true");
+    await expect(clip(page, "united-airlines")).not.toHaveAttribute("data-ongoing", "true");
     // Honors with only a year are year brackets, spanning exactly their year.
     for (const honor of data.tracks.find((track) => track.id === "honors")!.clips) {
       await expect(clip(page, honor.id)).toHaveAttribute("data-precision", "year");
@@ -169,14 +174,15 @@ test.describe("pinned, on a wide, tall screen", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
     await page.getByRole("list", { name: "Key facts" }).getByRole("link").first().click();
-    await expect(active(page)).toHaveAttribute("data-panel", "united-airlines");
-    await settledOn(page, "united-airlines");
+    await expect(active(page)).toHaveAttribute("data-panel", "merck");
+    await settledOn(page, "merck");
   });
 
   test("a click springs the playhead to the clip", async ({ page }) => {
     await open(page);
+    // The scrub ends on the latest role: Merck's, from December (Part 20).
     await scrubTo(page, 0.98);
-    await expect(active(page)).toHaveAttribute("data-panel", "united-airlines");
+    await expect(active(page)).toHaveAttribute("data-panel", "merck");
     const start = await page.evaluate(() => window.scrollY);
     await clip(page, "walkingtree").click();
     // It travels there over several frames, not in one jump.
@@ -350,8 +356,9 @@ test.describe("pinned, on a wide, tall screen", () => {
     const mark = panel(page, "truechip").locator("a[role=doc-noteref]").first();
     const id = await mark.getAttribute("id");
     expect(id).toBeTruthy();
+    // The scrub ends on the latest role: Merck's, from December (Part 20).
     await scrubTo(page, 0.98);
-    await expect(active(page)).toHaveAttribute("data-panel", "united-airlines");
+    await expect(active(page)).toHaveAttribute("data-panel", "merck");
     await page.locator(`a[role=doc-backlink][href="#${id}"]`).click();
     await expect(active(page)).toHaveAttribute("data-panel", "truechip");
     await settledOn(page, "truechip");
@@ -371,7 +378,7 @@ test.describe("pinned, on a wide, tall screen", () => {
   test("finishes in its own light: the lights go down only after the pin lets go", async ({ page }) => {
     await open(page);
     await scrubTo(page, 1);
-    await expect(active(page)).toHaveAttribute("data-panel", "united-airlines");
+    await expect(active(page)).toHaveAttribute("data-panel", "merck");
     const fade = () => page.locator("[data-backdrop-surface]").nth(1).evaluate((layer) => Number((layer as HTMLElement).style.opacity));
     await page.waitForTimeout(400);
     expect(await fade()).toBe(0);
@@ -400,7 +407,8 @@ async function expectStack(page: Page) {
   expect(await page.locator(".edit-clip").evaluateAll((all) => all.filter((button) => (button as HTMLElement).tabIndex >= 0).length)).toBe(0);
   for (const role of roles) {
     await expect(panel(page, role.id)).toBeVisible();
-    await expect(panel(page, role.id).locator(".role-visual")).toBeVisible();
+    // A role has a visual where content gives it one (Merck's waits for its work: Part 20).
+    if (role.visual) await expect(panel(page, role.id).locator(".role-visual")).toBeVisible();
   }
   for (const entry of data.panels.filter((item) => item.kind !== "role")) await expect(panel(page, entry.id)).toBeHidden();
   await page.locator("#experience").scrollIntoViewIfNeeded();

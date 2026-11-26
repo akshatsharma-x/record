@@ -582,8 +582,11 @@ export function edit(content: Content) {
     lanes("honors", "Honors", honors),
   ];
   const clips = tracks.flatMap((track) => track.clips);
-  // The latest date content knows has passed: where the scale ends until the browser knows today.
-  const known = [...work.flatMap((clip) => [clip.start, clip.end]), ...research.map((clip) => clip.end)]
+  // The latest date content knows has passed: where the scale ends until the browser knows
+  // today. A role that hasn't begun yet (Part 20) is known through its first month, so its clip
+  // is on the scale; one long under way has passed its first month already.
+  const firstMonths = work.filter((clip) => clip.end === null).map((clip) => toIsoDate(endOfMonthExclusive(parseYearMonth(clip.start.slice(0, 7)))));
+  const known = [...work.flatMap((clip) => [clip.start, clip.end]), ...firstMonths, ...research.map((clip) => clip.end)]
     .filter((date): date is string => date !== null)
     .sort()
     .at(-1)!;
@@ -608,7 +611,9 @@ export type CompareRowId = "studying" | "internships" | "papers" | "honors" | "s
  */
 export function compareTable(content: Content, now?: Date) {
   const firstYear = Number(edit(content).start.slice(0, 4));
-  const lastYear = now ? todayFor(content, now).year : Number(edit(content).known.slice(0, 4));
+  // The edit's known date is an exclusive end: 2027-01-01 closes December 2026.
+  const known = parseIsoDate(edit(content).known);
+  const lastYear = now ? todayFor(content, now).year : known.month === 1 && known.day === 1 ? known.year - 1 : known.year;
   const years = range(firstYear, lastYear);
   const labels = content.copy.surprises.compare.rows;
   const conferences = new Map(content.conferences.map((conference) => [conference.id, conference]));

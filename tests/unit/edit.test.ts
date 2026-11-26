@@ -39,9 +39,9 @@ describe("dates as a résumé writes them", () => {
 });
 
 describe("the tracks", () => {
-  it("start in July 2023 and know dates up to United's end, until the browser knows today", () => {
+  it("start in July 2023 and know dates through Merck's first month, until the browser knows today", () => {
     expect(result.start).toBe("2023-07-01");
-    expect(result.known).toBe("2026-12-01");
+    expect(result.known).toBe("2027-01-01");
   });
 
   it("stack EY over United where they overlap, honestly: same start, both whole", () => {
