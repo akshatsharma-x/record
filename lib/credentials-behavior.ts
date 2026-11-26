@@ -131,6 +131,9 @@ export function attachWallet(wallet: HTMLElement): () => void {
     badge?.removeAttribute("hidden");
   }
 
+  // The server stacks the first paint where CSS will (Part 20); from here the behavior decides,
+  // in this same task, so nothing paints in between.
+  wallet.removeAttribute("data-stacked");
   mode();
   const query = window.matchMedia(REDUCED_MOTION_QUERY);
   query.addEventListener("change", mode);
