@@ -880,10 +880,178 @@ export const data = {
     },
   ],
 
-  // TODO(akshat): for each certificate, the title, issuer, issue date, expiry, credential ID,
-  // a public verify URL, the skills covered and what it proves; optionally the issuer's
-  // tone for its pass (a #rrggbb that carries white text). Each one becomes a pass.
-  certificates: [],
+  // From LinkedIn (2026-11-25), in its order. LinkedIn shows no expiry for any, and its
+  // certifications page needs a sign-in, so it isn't a verify URL. TODO(akshat): for each,
+  // the issuer's own credential link (a public page to verify it), the missing dates and
+  // credential IDs as printed on the certificates, and a line on what it proves. The Smart
+  // India Hackathon's internal round is an honor already (achievements), so it isn't here.
+  certificates: [
+    {
+      id: "claude-code-in-action",
+      title: "Claude Code in Action",
+      issuer: "Anthropic",
+      issued: "2026-07",
+      expires: "never",
+      credentialId: "A3WZHUFAVB2T",
+      verifyUrl: null, // TODO(akshat)
+      skills: [],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "red-hat-rh134",
+      title: "Red Hat System Administration II (RH134 - RHA) - Ver. 9.3",
+      issuer: "Red Hat",
+      issued: "2025-03",
+      expires: "never",
+      credentialId: null, // TODO(akshat)
+      verifyUrl: null, // TODO(akshat)
+      skills: ["Linux"],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "red-hat-rh124",
+      title: "Red Hat System Administration I (RH124 - RHA) - Ver. 9.3",
+      issuer: "Red Hat",
+      issued: "2025-03",
+      expires: "never",
+      credentialId: null, // TODO(akshat)
+      verifyUrl: null, // TODO(akshat)
+      skills: ["Linux"],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "ibm-containers",
+      title: "Introduction to Containers w/ Docker, Kubernetes & OpenShift",
+      issuer: "IBM",
+      issued: "2026-03",
+      expires: "never",
+      credentialId: "Z8JB88YRGJCV",
+      verifyUrl: null, // TODO(akshat)
+      skills: ["Docker"],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "simplilearn-devops-git",
+      title: "Introduction to DevOps and Git for Beginners",
+      issuer: "Simplilearn",
+      issued: "2026-03",
+      expires: "never",
+      credentialId: "EO663YJ19PUX",
+      verifyUrl: null, // TODO(akshat)
+      skills: ["Git"],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "aws-cloud-practitioner-essentials",
+      title: "AWS Cloud Practitioner Essentials",
+      issuer: "Amazon Web Services (AWS)",
+      issued: "2026-07",
+      expires: "never",
+      credentialId: "CO9GMSYMB8XC",
+      verifyUrl: null, // TODO(akshat)
+      skills: [],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "cisco-network-fundamentals",
+      title: "Network Fundamentals",
+      issuer: "Cisco",
+      issued: null, // TODO(akshat)
+      expires: "never",
+      credentialId: "UOTYMANQCF0A",
+      verifyUrl: null, // TODO(akshat)
+      skills: ["computer networks"],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "coding-ninjas-data-analytics",
+      title: "Data Analytics Workshop",
+      issuer: "Coding Ninjas 10X Club",
+      issued: null, // TODO(akshat)
+      expires: "never",
+      credentialId: null, // TODO(akshat)
+      verifyUrl: null, // TODO(akshat)
+      skills: ["Power BI"],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "ibm-java",
+      title: "Java Programming for Beginners",
+      issuer: "IBM",
+      issued: "2025-07",
+      expires: "never",
+      credentialId: null, // TODO(akshat)
+      verifyUrl: null, // TODO(akshat)
+      skills: ["Java", "OOP"],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "oracle-database-design",
+      title: "Database Design",
+      issuer: "Oracle",
+      issued: "2024-11",
+      expires: "never",
+      credentialId: null, // TODO(akshat)
+      verifyUrl: null, // TODO(akshat)
+      skills: ["Oracle Database"],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "oracle-sql",
+      title: "Database Programming with SQL",
+      issuer: "Oracle",
+      issued: "2024-11",
+      expires: "never",
+      credentialId: null, // TODO(akshat)
+      verifyUrl: null, // TODO(akshat)
+      skills: ["Oracle Database", "SQL"],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "codechef-dsa-lab",
+      title: "Data Structures & Algorithms lab",
+      issuer: "CodeChef",
+      issued: "2024-11",
+      expires: "never",
+      credentialId: "6d3d989",
+      verifyUrl: null, // TODO(akshat)
+      skills: ["data structures & algorithms", "C/C++"],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "gfg-oop-java",
+      title: "Object Oriented Programming Using JAVA",
+      issuer: "GeeksforGeeks",
+      issued: null, // TODO(akshat)
+      expires: "never",
+      credentialId: null, // TODO(akshat)
+      verifyUrl: null, // TODO(akshat)
+      skills: ["Java", "OOP"],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "nptel-design-analysis-algorithms",
+      title: "Design and analysis of algorithms",
+      issuer: "NPTEL",
+      issued: "2025-04",
+      expires: "never",
+      credentialId: null, // TODO(akshat)
+      verifyUrl: null, // TODO(akshat)
+      skills: ["data structures & algorithms"],
+      proves: null, // TODO(akshat)
+    },
+    {
+      id: "nptel-dsa-java",
+      title: "Data Structures and Algorithms using Java",
+      issuer: "NPTEL",
+      issued: "2024-11",
+      expires: "never",
+      credentialId: null, // TODO(akshat)
+      verifyUrl: null, // TODO(akshat)
+      skills: ["data structures & algorithms", "Java"],
+      proves: null, // TODO(akshat)
+    },
+  ],
 
   achievements: [
     {

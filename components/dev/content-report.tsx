@@ -469,7 +469,7 @@ export function ContentReport({ content, derived, todos }: { content: Content; d
             head={["Certificate", "Issued", "Expires", "Credential ID", "Verify", "Skills", "Proves"]}
             rows={content.certificates.map((certificate) => [
               `${certificate.title} · ${certificate.issuer}`,
-              formatYearMonth(certificate.issued),
+              certificate.issued ? formatYearMonth(certificate.issued) : <Value key="issued" value={null} />,
               <Value key="expires" value={certificate.expires} />,
               <Value key="id" value={certificate.credentialId} />,
               <Value key="verify" value={certificate.verifyUrl} />,

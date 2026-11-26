@@ -1292,7 +1292,7 @@ export function wallet(content: Content): { headline: string; passes: Pass[] } {
       title: certificate.title,
       subtitle: certificate.issuer,
       fields: [
-        { label: words.issued, value: formatYearMonth(certificate.issued), mono: false, footnotes: [] },
+        ...(certificate.issued ? [{ label: words.issued, value: formatYearMonth(certificate.issued), mono: false, footnotes: [] }] : []),
         ...(certificate.credentialId ? [{ label: words.credentialId, value: certificate.credentialId, mono: true, footnotes: [] }] : []),
       ],
       verifyUrl: certificate.verifyUrl,

@@ -333,7 +333,8 @@ const Certificate = z.strictObject({
   issuer: Text,
   /** Its pass's color (DESIGN.md §7.8); without one, it takes one from the finish. */
   tone: Tone.optional(),
-  issued: YearMonth,
+  /** null until the certificate says when (LinkedIn shows no date for some). */
+  issued: YearMonth.nullable(),
   /** "never" when it doesn't expire. */
   expires: z.union([YearMonth, z.literal("never")]).nullable(),
   credentialId: Text.nullable(),
@@ -865,7 +866,7 @@ function checkReferences(content: z.output<typeof ContentShape>, ctx: z.Refineme
     if (conference.end < conference.start) problem(["conferences", i, "end"], "ends before it starts");
   });
   content.certificates.forEach((certificate, i) => {
-    if (certificate.expires && certificate.expires !== "never" && certificate.expires < certificate.issued) {
+    if (certificate.issued && certificate.expires && certificate.expires !== "never" && certificate.expires < certificate.issued) {
       problem(["certificates", i, "expires"], "expires before it was issued");
     }
   });
