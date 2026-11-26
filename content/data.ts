@@ -16,7 +16,7 @@ export const data = {
     role: "AI & ML Engineer",
     headline: "I build intelligent systems — and make them clear.",
     // AI & ML Intern (Generative AI) at United Airlines, since 2026-06.
-    now: "united-airlines",
+    now: "merck",
     location: {
       city: "Jaipur",
       // TODO(akshat): inferred from the university. Until it's confirmed, show only "India" or "IST".
@@ -70,12 +70,26 @@ export const data = {
   // Newest first.
   experience: [
     {
+      id: "merck",
+      org: "Merck Group",
+      short: "Merck",
+      role: "Associate Analyst Intern (Clinical and Digital Innovation and Applications)",
+      kind: "internship",
+      start: "2026-12",
+      end: "present",
+      location: null, // TODO(akshat)
+      summary: { text: "Associate Analyst intern in Merck Group's Clinical and Digital Innovation and Applications team, from December 2026." },
+      // TODO(akshat): what the work is, once it has begun, with its stack.
+      bullets: [{ text: "Joins the Clinical and Digital Innovation and Applications team in December 2026." }],
+      stack: ["Clinical and digital innovation"],
+    },
+    {
       id: "united-airlines",
       org: "United Airlines",
       role: "AI & ML Intern (Generative AI)",
       kind: "internship",
       start: "2026-06",
-      end: "present",
+      end: "2026-11",
       location: null, // TODO(akshat)
       summary: { text: "LLM model monitoring and automation for Fortune 500 enterprise-level ML models." },
       bullets: [

@@ -237,12 +237,15 @@ export function timeline(content: Content, now: Date) {
   const work = content.experience.map((role): Omit<Clip, "lane"> => {
     const start = parseYearMonth(role.start);
     const ongoing = role.end === "present";
+    const begins = toIsoDate(utcDate(start.year, start.month));
+    // A role that hasn't begun yet runs through its first month, so its clip has a length.
+    const sofar = afterToday > begins ? afterToday : toIsoDate(endOfMonthExclusive(start));
     return {
       id: role.id,
       title: role.org,
       subtitle: role.role,
-      start: toIsoDate(utcDate(start.year, start.month)),
-      end: ongoing ? afterToday : toIsoDate(endOfMonthExclusive(parseYearMonth(role.end))),
+      start: begins,
+      end: ongoing ? sofar : toIsoDate(endOfMonthExclusive(parseYearMonth(role.end))),
       ongoing,
       precision: "month",
       ref: { section: "experience", id: role.id },
