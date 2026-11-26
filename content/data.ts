@@ -288,6 +288,289 @@ export const data = {
 
   projects: [
     {
+      slug: "nexus",
+      name: "NEXUS",
+      tagline: { text: "A personalized learning platform for career transitions" },
+      category: "AI system",
+      summary: {
+        text: "Conversational onboarding draws out the target role, timeline, experience and skills, and shows the learner's profile as it's built; an adaptive learning path of skills, resources, projects and assessments unlocks each step as its prerequisites complete, and writes assessment results back into per-skill mastery; the Skill Universe draws every skill as a knowledge map in three dimensions, coloured by mastery; and a tutor answers from the learner's own progress, offline by default, with Claude optional. No accounts: all data stays in the browser.",
+      },
+      stack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Framer Motion", "Three.js", "React Three Fiber", "Anthropic SDK"],
+      year: 2026,
+      role: null, // TODO(akshat): solo or team.
+      links: { repo: "https://github.com/akshatsharma-x/nexus", live: "https://nexus-opal-phi-60.vercel.app" },
+      screenshots: [
+        { src: "/work/nexus/01-home-dark.png", alt: "The NEXUS dashboard: the goal ML Engineer, journey progress, level, XP, streak and the next step" },
+        { src: "/work/nexus/02-onboarding.png", alt: "Conversational onboarding: the learner states a goal and a profile panel fills in goal, starting point and skills" },
+        { src: "/work/nexus/03-journey.png", alt: "A journey step opened as a sheet: a video lesson with its skills, why it's in the path and what it teaches" },
+        { src: "/work/nexus/04-skills.png", alt: "The Skill Universe: a 3D knowledge map of skills coloured by mastery, with one skill's details beside it" },
+        { src: "/work/nexus/05-assessment.png", alt: "A Python foundations assessment: a multiple-choice question, question 1 of 5" },
+        { src: "/work/nexus/06-tutor.png", alt: "The tutor answering how far the learner is from being job-ready, from their own progress, offline" },
+      ],
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      outcome: { text: "A staged journey whose steps unlock as prerequisites complete, and a tutor that runs fully offline, with no accounts." },
+      architecture: {
+        nodes: [
+          { id: "onboarding", label: "Conversational onboarding" },
+          { id: "path", label: "Adaptive learning path" },
+          { id: "assessments", label: "Assessments" },
+          { id: "mastery", label: "Per-skill mastery" },
+          { id: "universe", label: "Skill Universe", detail: "knowledge map" },
+          { id: "tutor", label: "Tutor", detail: "offline by default" },
+          { id: "browser", label: "In the browser", from: "all data stays in the browser" },
+        ],
+        edges: [
+          ["onboarding", "path"],
+          ["path", "assessments"],
+          ["assessments", "mastery"],
+          ["mastery", "universe"],
+          ["mastery", "tutor"],
+          ["tutor", "browser", "dashed"],
+        ],
+      },
+    },
+    {
+      slug: "researchx",
+      name: "ResearchX",
+      tagline: { text: "An autonomous multi-agent research platform" },
+      category: "AI system",
+      summary: {
+        text: "A LangGraph pipeline of 17 agents plans the research, searches the web, academic sources and news in parallel, fact-checks claims against the evidence, hunts for counter-evidence, and writes a report in which every citation points to a real, numbered source. A replanner and a critic send weak drafts back within a budget, and the graph's state is checkpointed to PostgreSQL after every step, so a job resumes where its worker stopped.",
+        footnotes: [7],
+      },
+      stack: ["LangGraph", "LangChain", "Gemini", "Tavily", "FastAPI", "Celery", "Redis", "PostgreSQL", "Next.js", "React", "Tailwind CSS"],
+      year: 2026,
+      // TODO(akshat): the role line. A fork of Adyashas/ResearchX: Akshat's commits wire up the full research pipeline and make it deployable. And is it Cognivault AI?
+      role: null,
+      links: { repo: "https://github.com/akshatsharma-x/ResearchX" },
+      screenshots: [
+        { src: "/work/researchx/01-hero.png", alt: "The ResearchX landing page: from question to verified report, with agents that plan, search, verify and synthesize" },
+        { src: "/work/researchx/02-pipeline-running.png", alt: "The agent pipeline as a grid of 17 stages, from the query analyzer to the critic, with the claim verifier running" },
+        { src: "/work/researchx/03-agent-trace.png", alt: "An agent execution trace: the query analyzer, planner and academic, web and news agents, each completed" },
+      ],
+      metrics: [{ value: 17, label: "agents", footnotes: [7] }],
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      outcome: { text: "Grounded citations: the reference list comes from the source data, not the model, so a citation can only point to a source that exists." },
+      architecture: {
+        nodes: [
+          { id: "plan", label: "Planner", from: "plans the research" },
+          { id: "web", label: "Web", from: "searches the web" },
+          { id: "academic", label: "Academic sources" },
+          { id: "news", label: "News" },
+          { id: "check", label: "Fact-check", from: "fact-checks claims against the evidence" },
+          { id: "counter", label: "Counter-evidence" },
+          { id: "report", label: "Report", detail: "numbered sources", from: "writes a report" },
+          { id: "state", label: "Checkpoints", detail: "PostgreSQL", from: "checkpointed to PostgreSQL" },
+        ],
+        edges: [
+          ["plan", "web"],
+          ["plan", "academic"],
+          ["plan", "news"],
+          ["web", "check"],
+          ["academic", "check"],
+          ["news", "check"],
+          ["check", "counter"],
+          ["counter", "report"],
+          ["report", "state", "dashed"],
+        ],
+      },
+    },
+    {
+      slug: "resume-screening",
+      name: "CV-Scan",
+      tagline: { text: "Explainable AI resume screening" },
+      category: "NLP",
+      summary: {
+        text: "Ranks resumes against a job description with a hybrid TF-IDF + Sentence-BERT score (Python, Streamlit, Transformers), shows which skills drive each score next to the job's requirements found and missing, and benchmarks each candidate against 2,361 historical resumes; batch screening of PDF, DOCX and TXT resumes into a ranked leaderboard with CSV export; a PCA semantic map, and a calibrated SVM that predicts each resume's domain out of 24.",
+        footnotes: [8],
+      },
+      stack: ["Python", "Streamlit", "Transformers", "Sentence-BERT", "TF-IDF", "LinearSVC", "PCA", "NLTK", "Plotly"],
+      year: 2026,
+      role: null, // TODO(akshat)
+      links: { repo: "https://github.com/akshatsharma-x/cv-scan" }, // TODO(akshat): the Streamlit app's link, if it's up.
+      screenshots: [
+        { src: "/work/resume-screening/01-home.png", alt: "The CV-Scan home: screen resumes with intelligent precision, with the resumes indexed, the categories and the ROC-AUC" },
+        { src: "/work/resume-screening/02-results.png", alt: "The results leaderboard: candidates ranked by hybrid, keyword and semantic scores, with pool rank and domain" },
+        { src: "/work/resume-screening/03-deep-dive.png", alt: "One resume's deep dive: its scores, the terms driving them, and the job's requirements missing" },
+        { src: "/work/resume-screening/04-benchmark.png", alt: "The pool benchmark: a candidate's scores against the historical pool's median and top tenth" },
+        { src: "/work/resume-screening/05-semantic-map.png", alt: "The semantic map: a PCA projection of Sentence-BERT vectors, historical resumes coloured by match" },
+        { src: "/work/resume-screening/06-evaluation.png", alt: "Model evaluation: TF-IDF, BERT and the hybrid compared on accuracy, F1, MCC and ranking" },
+      ],
+      metrics: [
+        { value: 0.786, label: "category accuracy", footnotes: [8] },
+        { value: 2361, label: "historical resumes", footnotes: [8] },
+        { value: 24, label: "domains", footnotes: [8] },
+        { value: 0.704, label: "TF-IDF alone", footnotes: [8] },
+        { value: 0.892, label: "ranking ROC-AUC", footnotes: [8] },
+      ],
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      outcome: {
+        text: "On a held-out evaluation, the hybrid's category accuracy is 0.786, against 0.704 for TF-IDF alone, and job-to-resume ranking reaches a ROC-AUC of 0.892.",
+        footnotes: [8],
+      },
+      preview: { kind: "lanes", labels: { left: "TF-IDF", right: "Sentence-BERT", ranked: "Ranked leaderboard", scatter: "PCA" } },
+      architecture: {
+        nodes: [
+          { id: "resumes", label: "Resumes", detail: "PDF, DOCX, TXT" },
+          { id: "tfidf", label: "TF-IDF" },
+          { id: "sbert", label: "Sentence-BERT" },
+          { id: "hybrid", label: "Hybrid score" },
+          { id: "leaderboard", label: "Ranked leaderboard" },
+          { id: "benchmark", label: "Benchmark", detail: "historical resumes" },
+          { id: "svm", label: "Calibrated SVM", detail: "domain" },
+          { id: "map", label: "PCA semantic map" },
+        ],
+        edges: [
+          ["resumes", "tfidf"],
+          ["resumes", "sbert"],
+          ["tfidf", "hybrid"],
+          ["sbert", "hybrid"],
+          ["hybrid", "leaderboard"],
+          ["leaderboard", "benchmark"],
+          ["resumes", "svm"],
+          ["sbert", "map"],
+        ],
+      },
+    },
+    {
+      slug: "quizmuj",
+      name: "QuizMUJ",
+      tagline: { text: "A proctored quiz and assessment platform for Manipal University Jaipur" },
+      category: "Full-stack",
+      summary: {
+        text: "Focus-mode exams with a server-controlled timer, and autosave to the server and the device, so a reload, crash or device switch resumes the attempt; proctoring that streams tab switches, leaving the window, exiting full screen, copy attempts and disconnects live to faculty, on Socket.io; a quiz builder with cohort targeting and CSV import, and per-quiz analytics down to each question's most common wrong answer. Sign-up takes only university email addresses, verified by one-time codes, and answers stay hidden until the quiz's reveal policy allows. Built with HTML, CSS, JavaScript, Node.js, Express, MongoDB and Docker.",
+      },
+      stack: ["HTML", "CSS", "JavaScript", "Node.js", "Express", "MongoDB", "Socket.io", "Nodemailer", "Docker"],
+      year: 2026,
+      role: null, // TODO(akshat)
+      links: { repo: "https://github.com/akshatsharma-x/Quiz-App" }, // TODO(akshat): the live link, if the Render app is up.
+      screenshots: [
+        { src: "/work/quizmuj/01-student-dashboard.png", alt: "The student dashboard: XP, rank, quizzes completed and average score, open and upcoming quizzes, recent results" },
+        { src: "/work/quizmuj/02-exam-focus-mode.png", alt: "An exam in focus mode: a timed multiple-choice question, a question palette and proctoring on" },
+        { src: "/work/quizmuj/04-analytics.png", alt: "Student analytics: average and best score, XP and time on exams, a score trend and mastery per topic" },
+        { src: "/work/quizmuj/05-quiz-builder.png", alt: "The quiz builder: cohort targeting by programme and year, a question with four options, a pre-publish checklist" },
+      ],
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      outcome: { text: "Real-time exams with proctoring, where a reload, crash or device switch resumes the attempt." },
+      preview: { kind: "exam-room", labels: { room: "Focus-mode exams", alert: "Tab switches", proctor: "Proctoring" } },
+      architecture: {
+        nodes: [
+          { id: "exam", label: "Focus-mode exams", detail: "server-controlled timer" },
+          { id: "autosave", label: "Autosave", detail: "server and device", from: "autosave to the server and the device" },
+          { id: "proctor", label: "Proctoring", detail: "Socket.io" },
+          { id: "faculty", label: "Faculty", from: "live to faculty" },
+          { id: "builder", label: "Quiz builder", detail: "CSV import" },
+          { id: "analytics", label: "Analytics", from: "per-quiz analytics" },
+          { id: "api", label: "Express", detail: "MongoDB" },
+        ],
+        edges: [
+          ["exam", "autosave"],
+          ["exam", "proctor"],
+          ["proctor", "faculty"],
+          ["builder", "api"],
+          ["autosave", "api"],
+          ["api", "analytics"],
+        ],
+      },
+    },
+    {
+      slug: "bbc-news-retrieval",
+      name: "BBC News Retrieval",
+      tagline: { text: "Lexical, semantic and hybrid search over the BBC News archive" },
+      category: "NLP",
+      summary: {
+        text: "Four rankers over one inverted index: TF-IDF, BM25, a Sentence Transformer, and a hybrid that fuses BM25 and the Sentence Transformer by Reciprocal Rank Fusion; a TREC-style test collection built from scratch, with 25 topics and 957 graded relevance judgments; and a live app that runs entirely in the browser, the engine ported to JavaScript and the encoder an ONNX model through transformers.js. An Information Retrieval course project.",
+        footnotes: [9],
+      },
+      stack: ["Python", "Sentence Transformers", "BM25", "TF-IDF", "NLTK", "Streamlit", "Altair", "transformers.js", "ONNX"],
+      year: null, // TODO(akshat): first committed on 2026-11-25, which may be when it was uploaded.
+      role: null, // TODO(akshat)
+      links: { repo: "https://github.com/akshatsharma-x/BBC-News-Retrieval", live: "https://akshatsharma-x.github.io/BBC-News-Retrieval/app/" },
+      screenshots: [
+        { src: "/work/bbc-news-retrieval/02-ui-compare.png", alt: "Comparing models: one query's top five from TF-IDF, BM25, the Sentence Transformer and the hybrid, side by side" },
+        { src: "/work/bbc-news-retrieval/01-ui-search.png", alt: "Search over the BBC News archive, ranked by the hybrid, with the matched terms highlighted" },
+        { src: "/work/bbc-news-retrieval/03-ui-benchmark.png", alt: "The benchmark: MAP, nDCG, recall and MRR per model, with precision–recall curves and a results table" },
+        { src: "/work/bbc-news-retrieval/04-ui-explorer.png", alt: "The topic explorer: a test topic's live metrics per model, and the hybrid's top ten with relevance judgments" },
+      ],
+      metrics: [
+        { value: 0.811, label: "hybrid MAP", footnotes: [9] },
+        { value: 25, label: "topics", footnotes: [9] },
+        { value: 957, label: "relevance judgments", footnotes: [9] },
+        { value: 0.812, label: "hybrid MRR", footnotes: [9] },
+        { value: 2066, label: "known-item queries", footnotes: [9] },
+      ],
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      outcome: {
+        text: "A hybrid MAP of 0.811 on the 25 topics, and on 2,066 known-item queries a hybrid MRR of 0.812, ahead of every other model.",
+        footnotes: [9],
+      },
+      preview: { kind: "lanes", labels: { left: "BM25", right: "Sentence Transformer", ranked: "Reciprocal Rank Fusion", scatter: "Test collection" } },
+      architecture: {
+        nodes: [
+          { id: "index", label: "Inverted index" },
+          { id: "tfidf", label: "TF-IDF" },
+          { id: "bm25", label: "BM25" },
+          { id: "encoder", label: "Sentence Transformer" },
+          { id: "fusion", label: "Reciprocal Rank Fusion", detail: "hybrid" },
+          { id: "collection", label: "Test collection", detail: "relevance judgments", from: "TREC-style test collection" },
+          { id: "browser", label: "Browser app", detail: "ONNX", from: "runs entirely in the browser" },
+        ],
+        edges: [
+          ["index", "tfidf"],
+          ["index", "bm25"],
+          ["index", "encoder"],
+          ["bm25", "fusion"],
+          ["encoder", "fusion"],
+          ["collection", "fusion", "dashed"],
+          ["fusion", "browser"],
+        ],
+      },
+    },
+    {
+      slug: "vistara",
+      name: "Vistara",
+      tagline: { text: "Credit scoring from the rhythm of recurring life events" },
+      category: "Full-stack",
+      summary: {
+        text: "For thin-file applicants, it reads only the timing of recurring life events (vehicle service, UPI mandates, utility bills, phone recharges, FASTag), never amounts. Each signal has an expected cadence and a weight and is scored on how steady its gaps are, and coherence across the signals carries a quarter of the score, so being evenly consistent beats excelling at one habit. The result is a 300–900 score with a tier, a loan offer, a recommended EMI date and a dated path to the next tier; thin files get a rhythm-building path instead.",
+        footnotes: [10],
+      },
+      stack: ["Next.js", "TypeScript"],
+      year: null, // TODO(akshat): the TVS Credit hackathon's year; first committed on 2026-11-25, which may be when it was uploaded.
+      role: null, // TODO(akshat)
+      links: { repo: "https://github.com/akshatsharma-x/Vistara", live: "https://vistara-delta-fawn.vercel.app" },
+      screenshots: [
+        { src: "/work/vistara/01-landing.png", alt: "The Vistara landing page: credit scoring that reads how you live" },
+        { src: "/work/vistara/02-score-hero.png", alt: "A Vistara score of 708 out of 900, Near Prime, beside a bureau score of no hit for the same applicant" },
+        { src: "/work/vistara/03-score-strips.png", alt: "Event strips for five rhythms over 18 months, each event on beat, off beat or missed" },
+        { src: "/work/vistara/04-score-factors.png", alt: "The consistency index by domain, and the band and weight of each signal" },
+        { src: "/work/vistara/05-path-to-prime.png", alt: "The path to Prime: the points to the next tier, and the gain from fixing each rhythm" },
+        { src: "/work/vistara/06-method.png", alt: "The method: cross-domain coherence compared with an arithmetic mean, and the rhythms with their weights" },
+      ],
+      metrics: [{ value: [300, 900], label: "score range", footnotes: [10] }],
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      outcome: { text: "A prototype for the TVS Credit hackathon, on synthetic data: the engine is plain TypeScript with no ML library, and seeded, so the same input always gives the same score." },
+      architecture: {
+        nodes: [
+          { id: "events", label: "Recurring life events" },
+          { id: "cadence", label: "Expected cadence", detail: "and a weight" },
+          { id: "gaps", label: "Steady gaps", from: "how steady its gaps are" },
+          { id: "coherence", label: "Coherence across the signals" },
+          { id: "score", label: "Score", detail: "and a tier" },
+          { id: "offer", label: "Loan offer" },
+          { id: "path", label: "Path to the next tier", from: "dated path to the next tier" },
+        ],
+        edges: [
+          ["events", "cadence"],
+          ["cadence", "gaps"],
+          ["gaps", "coherence"],
+          ["coherence", "score"],
+          ["score", "offer"],
+          ["score", "path"],
+        ],
+      },
+    },
+    {
       slug: "cognivault-ai",
       name: "Cognivault AI",
       tagline: { text: "A multi-agent research assistant" },
@@ -337,77 +620,6 @@ export const data = {
       },
     },
     {
-      slug: "quizmuj",
-      name: "QuizMUJ",
-      tagline: { text: "A real-time learning management system" },
-      category: "Full-stack",
-      summary: {
-        text: "Role-based examination platform (Node.js, Express, MongoDB, Tailwind CSS); a real-time Live Exam Room on Socket.io with proctoring such as browser tab-switch tracking; Docker; admin tools including CSV bulk upload and an analytics API for exporting results; secure session handling and data integrity.",
-      },
-      stack: ["Node.js", "Express", "MongoDB", "Tailwind CSS", "Socket.io", "Docker"],
-      year: null, // TODO(akshat)
-      role: null, // TODO(akshat)
-      links: null, // TODO(akshat): repo and live links
-      screenshots: null, // TODO(akshat)
-      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
-      outcome: { text: "Real-time exams with proctoring, secure session handling and data integrity." },
-      preview: { kind: "exam-room", labels: { room: "Live Exam Room", alert: "Tab switch", proctor: "Proctoring" } },
-      architecture: {
-        nodes: [
-          { id: "roles", label: "Roles", from: "Role-based" },
-          { id: "api", label: "Express API", from: "Express" },
-          { id: "db", label: "MongoDB" },
-          { id: "room", label: "Live Exam Room", detail: "Socket.io" },
-          { id: "proctor", label: "Proctor events", detail: "tab-switch tracking", from: "proctoring such as browser tab-switch tracking" },
-          { id: "csv", label: "CSV bulk upload" },
-          { id: "export", label: "Analytics export", from: "analytics API for exporting results" },
-          { id: "docker", label: "Docker" },
-        ],
-        edges: [
-          ["roles", "api"],
-          ["api", "db"],
-          ["room", "proctor"],
-        ],
-      },
-    },
-    {
-      slug: "resume-screening",
-      name: "Automated Resume Screening",
-      tagline: { text: "Candidate classification with an explainability dashboard" },
-      category: "NLP",
-      summary: {
-        text: "NLP screening (Python, Streamlit, Transformers) for automated classification and data extraction; a hybrid TF-IDF + BERT model with an optimized weighted ensemble for candidate matching; an XAI dashboard with PCA visualizations.",
-      },
-      stack: ["Python", "Streamlit", "Transformers", "TF-IDF", "BERT", "PCA"],
-      year: null, // TODO(akshat)
-      role: null, // TODO(akshat)
-      links: null, // TODO(akshat): repo and live links
-      screenshots: null, // TODO(akshat)
-      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
-      outcome: { text: "Automated classification and data extraction, with an XAI dashboard of PCA visualizations." },
-      preview: { kind: "lanes", labels: { left: "TF-IDF", right: "BERT", ranked: "Candidate matching", scatter: "PCA" } },
-      architecture: {
-        nodes: [
-          { id: "resumes", label: "Resumes", from: "Resume Screening" },
-          { id: "extraction", label: "Extraction", from: "data extraction" },
-          { id: "tfidf", label: "TF-IDF" },
-          { id: "bert", label: "BERT" },
-          { id: "ensemble", label: "Weighted ensemble", from: "optimized weighted ensemble" },
-          { id: "ranking", label: "Ranking", from: "candidate matching" },
-          { id: "dashboard", label: "XAI dashboard", detail: "PCA", from: "XAI dashboard with PCA visualizations" },
-        ],
-        edges: [
-          ["resumes", "extraction"],
-          ["extraction", "tfidf"],
-          ["extraction", "bert"],
-          ["tfidf", "ensemble"],
-          ["bert", "ensemble"],
-          ["ensemble", "ranking"],
-          ["ranking", "dashboard"],
-        ],
-      },
-    },
-    {
       slug: "churn-prediction",
       name: "Predictive Customer Churn",
       tagline: { text: "A stacking ensemble at 97% accuracy and 0.98 ROC-AUC", footnotes: [5] },
@@ -419,7 +631,7 @@ export const data = {
       stack: ["SMOTE", "KerasTuner", "TensorFlow"],
       year: null, // TODO(akshat)
       role: null, // TODO(akshat)
-      links: null, // TODO(akshat): repo and live links
+      links: { repo: "https://github.com/akshatsharma-x/customer-churn-prediction" },
       screenshots: null, // TODO(akshat)
       metrics: [
         { value: 97, label: "accuracy", footnotes: [5] },
@@ -477,6 +689,87 @@ export const data = {
           ["crawler", "rules"],
           ["rules", "score"],
           ["score", "report"],
+        ],
+      },
+    },
+    {
+      slug: "cabinmuj",
+      name: "CabinMUJ",
+      tagline: { text: "Find any Manipal University Jaipur faculty member's cabin in seconds" },
+      category: "Full-stack",
+      summary: {
+        text: "Live search that shows a faculty member's block, floor and cabin as you type; a directory filtered by department, block, floor, designation or HoD; and a campus map, block by block and floor by floor. Students report outdated locations; an admin panel tracks verification, resolves those reports, keeps a full change history with restore, and backs up all data as JSON. A Python scraper gathers the faculty.",
+      },
+      stack: ["Next.js", "TypeScript", "Upstash Redis", "Vercel", "Python"],
+      year: 2026,
+      role: null, // TODO(akshat)
+      links: { repo: "https://github.com/akshatsharma-x/CabinMUJ", live: "https://cabin-muj.vercel.app" },
+      // Only the screens without people's names and details.
+      screenshots: [
+        { src: "/work/cabinmuj/01-home.png", alt: "The CabinMUJ home: find any faculty at MUJ in seconds, with a search and an illustration of a campus building" },
+        { src: "/work/cabinmuj/04-campus-map.png", alt: "The campus directory: four blocks with their faculty counts, floor by floor" },
+      ],
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      // Not "accurate": its seed data's cabins were assigned at random and start unverified.
+      outcome: { text: "Every location carries its verification, and students' reports of outdated ones reach the admin to resolve." },
+      architecture: {
+        nodes: [
+          { id: "scraper", label: "Python scraper" },
+          { id: "redis", label: "Upstash Redis" },
+          { id: "search", label: "Live search" },
+          { id: "directory", label: "Directory" },
+          { id: "map", label: "Campus map" },
+          { id: "reports", label: "Reports", from: "Students report outdated locations" },
+          { id: "admin", label: "Admin panel", detail: "change history" },
+        ],
+        edges: [
+          ["scraper", "redis"],
+          ["redis", "search"],
+          ["redis", "directory"],
+          ["redis", "map"],
+          ["reports", "admin"],
+          ["admin", "redis"],
+        ],
+      },
+    },
+    {
+      slug: "myhub",
+      name: "MyHUB",
+      tagline: { text: "Your life, in receipts" },
+      category: "Full-stack",
+      summary: {
+        text: "Three public datasets read as one person's decade: receipts in nine kinds, the connections between them, and a story about what they add up to. None of the rows is Akshat's, and the site says so on its sources page. Searchable receipts, threads with the reason printed on every link, a constellation of entities, eras, rhythms and a story, from a deterministic build-time ETL, with no server and no network calls at run time: every page is static, on GitHub Pages.",
+      },
+      stack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Framer Motion", "GitHub Pages"],
+      year: null, // TODO(akshat): first committed on 2026-11-25, which may be when it was uploaded.
+      role: null, // TODO(akshat)
+      links: { repo: "https://github.com/akshatsharma-x/MyHub", live: "https://akshatsharma-x.github.io/MyHub/" },
+      screenshots: [
+        { src: "/work/myhub/01-archive.png", alt: "The MyHUB archive: a decade of receipts read as one person's, with totals and a chart of the years by kind" },
+        { src: "/work/myhub/02-story.png", alt: "The story, in beats, opening with nobody wrote any of this down on purpose" },
+        { src: "/work/myhub/03-constellation.png", alt: "The constellation: names, artists, places and merchants on a radial graph, linked by shared receipts" },
+        { src: "/work/myhub/04-rhythms-light.png", alt: "Rhythms, in the light theme: plays by hour of day, the busiest hour and the emptiest" },
+        { src: "/work/myhub/05-receipt.png", alt: "A receipt opened from the roll: a night's listening session with its tracks, details and join keys" },
+      ],
+      problem: null, // TODO(akshat): the problem it solves, in a sentence or two.
+      outcome: { text: "A verification suite drives the production build in headless Chrome at several widths, in both themes, checking overflow, a type floor, keyboard paths, WCAG contrast and layout shift." },
+      architecture: {
+        nodes: [
+          { id: "datasets", label: "Three public datasets" },
+          { id: "etl", label: "Build-time ETL", from: "deterministic build-time ETL" },
+          { id: "receipts", label: "Receipts" },
+          { id: "threads", label: "Threads" },
+          { id: "constellation", label: "Constellation" },
+          { id: "story", label: "Story" },
+          { id: "pages", label: "Static pages", detail: "GitHub Pages", from: "every page is static, on GitHub Pages" },
+        ],
+        edges: [
+          ["datasets", "etl"],
+          ["etl", "receipts"],
+          ["receipts", "threads"],
+          ["threads", "constellation"],
+          ["constellation", "story"],
+          ["etl", "pages", "dashed"],
         ],
       },
     },
@@ -703,6 +996,26 @@ export const data = {
       id: 6,
       // The note names its own source.
       note: "Smart India Hackathon, college-level round: top 50 of 300+ teams, in 2024 and 2025.",
+    },
+    {
+      id: 7,
+      note: "ResearchX's pipeline is a LangGraph graph of 17 agents.",
+      source: "ResearchX's README, github.com/akshatsharma-x/ResearchX.",
+    },
+    {
+      id: 8,
+      note: "CV-Scan, held-out evaluation: hybrid category accuracy 0.786, against 0.704 for TF-IDF alone; job-to-resume ranking ROC-AUC 0.892; 2,361 historical resumes in the benchmark pool; 24 domains.",
+      source: "CV-Scan's README, github.com/akshatsharma-x/cv-scan.",
+    },
+    {
+      id: 9,
+      note: "BBC News Retrieval: 25 topics with 957 graded relevance judgments; hybrid MAP 0.811; on 2,066 known-item queries, hybrid MRR 0.812, ahead of every other model.",
+      source: "BBC News Retrieval's README and report, github.com/akshatsharma-x/BBC-News-Retrieval.",
+    },
+    {
+      id: 10,
+      note: "Vistara's score runs 300–900, and coherence across its signals carries 25% of it.",
+      source: "Vistara's README, github.com/akshatsharma-x/Vistara.",
     },
   ],
 

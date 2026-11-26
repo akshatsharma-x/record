@@ -931,7 +931,8 @@ export interface WorkTile {
   metric: WorkMetric | null;
   /** The filters it shows under. */
   filters: string[];
-  preview: WorkPreview;
+  /** null when the project has screenshots and no living preview: its cover is the first. */
+  preview: WorkPreview | null;
   /** Once content has screenshots, the first one is the cover. */
   screenshot: { src: string; alt: string } | null;
   /** Where it sits on desktop (lg) and tablets (md) under each filter it shows under. */
@@ -956,7 +957,8 @@ export interface CaseStudy {
   /** Its architecture, drawn top to bottom (lib/architecture.ts), and the boxes with no arrows. */
   diagram: { down: DiagramLayout; apart: DiagramNode[]; footnotes: number[] };
   links: { repo: string | null; live: string | null };
-  preview: WorkPreview;
+  /** null when the project has screenshots and no living preview: its cover is the first. */
+  preview: WorkPreview | null;
   screenshot: { src: string; alt: string } | null;
   /** The next project, for the peek card that ends a case study. */
   next: Pick<WorkTile, "slug" | "href" | "name" | "category" | "tagline" | "preview" | "screenshot">;
@@ -978,8 +980,9 @@ function metricsOf(content: Content, project: Project): WorkMetric[] {
   });
 }
 
-function previewOf(content: Content, project: Project): WorkPreview {
+function previewOf(content: Content, project: Project): WorkPreview | null {
   const { preview } = project;
+  if (!preview) return null;
   if (preview.kind !== "roc") return preview;
   const stated = statedBy(content, project);
   // The schema checks that both figures are the project's metrics; they're named as those are.
