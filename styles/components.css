@@ -5997,8 +5997,12 @@
      Its ghost (lib/case-sheet.ts) is a copy that flies home after the route has gone. */
   html[data-case-open] {
     overflow: hidden;
-    scrollbar-gutter: stable;
     background-color: var(--case-desk);
+  }
+
+  /* The scrollbar's room, kept while it's hidden, where it took some (lib/case-sheet.ts). */
+  html[data-case-open][data-case-gutter] {
+    scrollbar-gutter: stable;
   }
 
   html[data-case-open] body {
