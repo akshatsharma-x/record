@@ -1468,7 +1468,7 @@ export const data = {
       label: "Ask",
       hint: "Answered from this site",
       suggestions: [
-        "What does Akshat do at United Airlines?",
+        "What did Akshat do at United Airlines?",
         "Which projects use RAG?",
         "What is the research about?",
         "How do I get in touch?",

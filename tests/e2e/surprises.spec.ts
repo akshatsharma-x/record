@@ -83,9 +83,18 @@ async function watch(page: Page, selector: string, attribute: string) {
 }
 
 test.describe("the hero", () => {
-  test("[surprise:hero-lens] the loupe magnifies the name under the pointer", async ({ page, isMobile }) => {
+  test("[surprise:hero-lens] the loupe magnifies the name under the pointer; with a portrait, the ƒ dial sets the background's blur", async ({ page, isMobile }) => {
     test.skip(isMobile, "The loupe needs a pointer; touch misses nothing");
     await open(page);
+    if (content.profile.photo) {
+      // The portrait edition ships (Part 20): its lens is the aperture dial.
+      const aperture = page.locator("#top").getByRole("button", { name: "Aperture" });
+      await expect(aperture).toHaveAttribute("aria-expanded", "false");
+      await aperture.click();
+      await expect(aperture).toHaveAttribute("aria-expanded", "true");
+      await expect(page.locator("#top").getByRole("slider", { name: "Aperture" })).toBeVisible();
+      return;
+    }
     const name = page.locator("#top-title");
     await expect(name).toHaveAttribute("data-cursor", "loupe");
     await page.mouse.move(40, 400);
@@ -101,7 +110,9 @@ test.describe("the hero", () => {
     await expect(name).toHaveText(content.profile.name);
     await expect(name).not.toHaveAttribute("data-morph");
     await expect(page.locator(".hero-devanagari")).toHaveCount(0);
-    if (isMobile) await name.tap();
+    // Straight to the heading: in the portrait edition the subject stands in front of it.
+    if (content.profile.photo) await name.dispatchEvent("click");
+    else if (isMobile) await name.tap();
     else await name.click();
     await expect(name).not.toHaveAttribute("data-morphed");
     await expect(page.getByText(words.devanagari.note)).toHaveCount(0);
@@ -463,7 +474,8 @@ test.describe("the site's own", () => {
     await expect(page.locator(".compare-footnote")).toHaveText(words.compare.footnote);
     // A picker swaps its column's year: in 2023 there were no internships yet.
     const internships = page.locator(".compare-row").nth(1).locator(".compare-cell:visible");
-    await expect(internships.last()).toContainText("4");
+    // Five to date, with Merck (Part 20).
+    await expect(internships.last()).toContainText("5");
     await pickers.last().selectOption("2023");
     await expect(pickers.last()).toHaveValue("2023");
     await expect(internships.last()).toHaveText(words.compare.none);

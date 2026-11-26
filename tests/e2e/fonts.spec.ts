@@ -2,8 +2,9 @@ import { expect, test } from "@playwright/test";
 
 /**
  * DESIGN.md §4.4: Apple devices render SF Pro, the visitor's own system font, and never
- * download Inter. Serif text is New York in Safari; Chromium has no ui-serif, so it may
- * fetch Newsreader, and nothing else. Run on macOS, where both use the system fonts.
+ * download Inter. Serif text is New York and mono SF Mono in Safari; Chromium has neither
+ * ui-serif nor ui-monospace, so it may fetch Newsreader and JetBrains Mono (the credentials'
+ * IDs, since Part 20), and nothing else. Run on macOS, where both use the system fonts.
  */
 test.skip(process.platform !== "darwin", "needs Apple's system fonts");
 
@@ -22,8 +23,8 @@ test("SF Pro renders and Inter is never requested", async ({ page, browserName }
       .map((face) => face.family);
   });
   if (browserName === "webkit") expect(fontRequests).toEqual([]);
-  // Whatever did load is the serif fallback, never a sans.
-  expect(loaded.every((family) => /newsreader/i.test(family)), loaded.join(", ")).toBe(true);
+  // Whatever did load is the serif or the mono fallback, never a sans.
+  expect(loaded.every((family) => /newsreader|jetbrains mono/i.test(family)), loaded.join(", ")).toBe(true);
   expect(fontRequests.length).toBeLessThanOrEqual(loaded.length);
 
   // Inter's @font-face is declared, but the browser never needed it.

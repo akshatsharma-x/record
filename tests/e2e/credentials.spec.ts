@@ -33,11 +33,11 @@ const face = (page: Page, id: string, side: "front" | "back") => pass(page, id).
 const webgl = (page: Page) => page.evaluate(() => document.querySelectorAll(".stage-canvas canvas").length);
 
 test.describe("the wallet", () => {
-  test('is headed "Education." while content has no certificates, and never counts them', async ({ page }) => {
+  test('is headed "Credentials." now content has certificates, a pass for each after Education, and never counts them (Part 20)', async ({ page }) => {
     await open(page);
-    await expect(page.locator("#credentials-title")).toHaveText(words.headlineWithoutCertificates);
+    await expect(page.locator("#credentials-title")).toHaveText(words.headline);
     await expect(page.locator("#credentials")).not.toContainText(/\d+ certificates?/i);
-    await expect(page.locator("#credentials .pass")).toHaveCount(1);
+    await expect(page.locator("#credentials .pass")).toHaveCount(1 + content.certificates.length);
   });
 
   test("opens with Education: the university, the degree, the class and the grade", async ({ page }) => {
